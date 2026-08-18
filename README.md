@@ -41,6 +41,11 @@
 - [P/D Disaggregation Master Plan](pd-disaggregation/2026-08-18-vllm-stack-pd-disaggregation-master-plan.md)
 - [Node-local P/D Cell 0.1.8 계획](pd-disaggregation/2026-08-18-node-local-pd-cell-0.1.8-plan.md)
 
+### GPU Architecture / CUDA
+
+- [GPU Architecture: 구조에서 LLM Serving 병목까지](study/gpu-architecture/README.md)
+- [Study 인덱스](study/README.md)
+
 ### Speculative Decoding
 
 - [전통 SD, MTP, DFlash, DSpark의 구조적 차이](study/speculative-decoding/2026-08-18-speculative-decoding-mtp-dspark.md)
