@@ -52,7 +52,7 @@ Q3 Gate:
 범위:
 - Node-local P/D Disaggregation
 - Kimi-K3 Multi-node
-- HPC IB / GPUDirect RDMA
+- 망A IB / GPUDirect RDMA
 - 향후 Multi-node P/D
 - Native Multiprocess / LWS 검토
 
@@ -67,9 +67,9 @@ Q3 Gate:
 - topology-aware scheduling
 
 현재 확정 상태:
-- HPC H200 환경에서 vLLM NCCL 로그를 통해 IB/GDRDMA channel 확인
+- 망A H200 환경에서 vLLM NCCL 로그를 통해 IB/GDRDMA channel 확인
 - NVIDIA Network Operator 기반 RDMA resource 사용
-- DSCloud는 IB가 없어 Node-local P/D가 우선 topology
+- 망B는 IB가 없어 Node-local P/D가 우선 topology
 - 0.1.8에서는 한 Pod = 한 P/D Cell 구조로 시작
 
 Q3 Gate:
@@ -167,7 +167,7 @@ Q3 Gate:
 
 설계 원칙:
 - `Offloading`, `P/D Transfer`, `Shared KV Reuse`를 하나의 기능으로 묶지 않는다.
-- DSCloud와 HPC의 network capability 차이를 cache architecture에 반영한다.
+- 망B와 망A의 network capability 차이를 cache architecture에 반영한다.
 - 중앙 remote cache를 기본값으로 가정하지 않는다.
 
 Q3 Gate:
