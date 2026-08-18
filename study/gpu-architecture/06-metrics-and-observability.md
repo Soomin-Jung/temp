@@ -154,9 +154,9 @@ Warp stall reason은 issue가 제대로 되지 않을 때만 깊게 본다. stal
 
 application이 실제로 유용하게 사용한 byte 기준 bandwidth를 계산할 수 있다.
 
-$$
+```math
 B_{effective}=\frac{bytes_{useful\ read}+bytes_{useful\ written}}{time}
-$$
+```
 
 requested byte와 DRAM에서 실제 전송된 byte가 다르면 coalescing, cache line, unused sector, writeback 때문에 효율 차이가 난다.
 
@@ -183,9 +183,9 @@ requested byte와 DRAM에서 실제 전송된 byte가 다르면 coalescing, cach
 
 성능과 전력을 함께 본다.
 
-$$
+```math
 Energy\ per\ token=\frac{Power\ (J/s)}{output\ tokens/s}
-$$
+```
 
 power가 낮다는 사실은 효율이 좋다는 뜻일 수도 있고 GPU에 일이 부족하다는 뜻일 수도 있다.
 

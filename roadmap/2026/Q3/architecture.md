@@ -59,7 +59,7 @@ flowchart TB
       PERF[TTFT / ITL / Queue / KV / MFU / HBM / NCCL]
     end
 
-    MOC[MOC Operations Control Plane\nObserve → Decide → Plan → Guard → Apply → Verify]
+    MOC[MOC Core Framework\nBusiness controllers: backlog]
 
     C --> GW --> VP --> LL
     LL --> CR
@@ -172,15 +172,17 @@ flowchart TB
 ### 6. GPU / Network Runtime
 
 망A:
-- H200 8GPU × 7
+- H200 중심 GPU pool
 - IB / GPUDirect RDMA 검증
 - NVIDIA Network Operator / RDMA resource
 - NVLink / NVSwitch / NCCL
 
 망B:
-- H200 8GPU × 5
+- H200 중심 GPU pool
 - IB 없음
 - Node-local P/D가 우선적인 topology
+
+실제 node/GPU 수량과 hostname/IP는 공개 저장소에 두지 않는다.
 
 ### 7. Observability / Performance Intelligence
 
@@ -199,6 +201,8 @@ flowchart TB
 
 MOC는 위 모든 기능을 대체하는 플랫폼이 아니다.
 
+현재 구현 경계는 state collection, canonical state, policy, planner, safety, adapter/executor, verify/reconcile, audit로 구성된 Core Framework다. endpoint/LiteLLM 동기화, dynamic placement/scale, GPU reclaim/repacking, Production Stack adoption 같은 business controller는 아직 backlog다.
+
 MOC가 담당할 영역:
 - actual state 수집 및 정규화
 - policy evaluation
@@ -209,6 +213,8 @@ MOC가 담당할 영역:
 - 변경 후 verify 및 audit
 
 즉 요청 처리 data path 밖에서 **플랫폼 전체를 안전하게 수렴시키는 cross-plane controller**로 둔다.
+
+상세 상태: [`moc/README.md`](../../../moc/README.md)
 
 ---
 

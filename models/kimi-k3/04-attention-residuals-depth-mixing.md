@@ -35,9 +35,9 @@ K3는:
 
 Transformer의 residual connection을 단순화하면:
 
-$$
+```math
 x_{l+1}=x_l+F_l(x_l)
-$$
+```
 
 이다.
 
@@ -46,17 +46,17 @@ $$
 
 PreNorm Transformer에서는:
 
-$$
+```math
 x_{l+1}=x_l+F_l(\operatorname{Norm}(x_l))
-$$
+```
 
 형태가 흔하다.
 
 Layer를 계속 전개하면:
 
-$$
+```math
 x_L=x_0+\sum_{i=0}^{L-1}F_i(\cdot)
-$$
+```
 
 에 가까운 **누적 합(accumulation)** 구조가 된다.
 
@@ -133,11 +133,11 @@ AttnRes는 이전 layer output들을 별도 **depth memory**로 본다.
 
 현재 layer $l$이 과거 representation $v_i$를 weight $\alpha_{i\to l}$로 선택한다.
 
-$$
+```math
 h_l=
 \sum_{i=0}^{l-1}
 \alpha_{i\to l}v_i
-$$
+```
 
 - $v_i$: 이전 depth $i$의 representation
 - $h_l$: 현재 layer가 사용할 depth-aggregated representation
@@ -164,29 +164,29 @@ flowchart LR
 
 AttnRes에서는 각 layer에 learned **Pseudo-Query(슈도 쿼리, 가상 질의 벡터)** $w_l$가 있다.
 
-$$
+```math
 w_l\in\mathbb{R}^d
-$$
+```
 
 이 vector가 이전 representation의 normalized key와 similarity를 계산한다.
 
 공식 reference pseudocode의 형태를 개념화하면:
 
-$$
+```math
 k_i=\operatorname{RMSNorm}(v_i)
-$$
+```
 
-$$
+```math
 s_{i,l}=w_l^\top k_i
-$$
+```
 
-$$
+```math
 \alpha_{i\to l}=\operatorname{softmax}_i(s_{i,l})
-$$
+```
 
-$$
+```math
 h_l=\sum_i\alpha_{i\to l}v_i
-$$
+```
 
 중요한 점:
 
@@ -203,18 +203,18 @@ $$
 
 ### Standard Residual
 
-$$
+```math
 h_l=\sum_{i<l}1\cdot v_i
-$$
+```
 
 에 가까운 fixed uniform accumulation 관점.
 
 ### AttnRes
 
-$$
+```math
 h_l=\sum_{i<l}\alpha_{i\to l}v_i,
 \qquad \sum_i\alpha_{i\to l}=1
-$$
+```
 
 ### 의미
 
@@ -234,19 +234,19 @@ AttnRes:
 
 Standard sum:
 
-$$
+```math
 h=\sum_i v_i
-$$
+```
 
 에서는 source 수가 늘면 norm도 커질 여지가 있다.
 
 AttnRes:
 
-$$
+```math
 h=\sum_i\alpha_i v_i,
 \qquad\alpha_i\ge0,
 \qquad\sum_i\alpha_i=1
-$$
+```
 
 이면 normalized weighted mixture가 된다.
 
@@ -262,23 +262,23 @@ Full AttnRes를 사용하려면 현재 layer가 모든 이전 depth representati
 
 Sequence tensor 하나가:
 
-$$
+```math
 [B,T,d]
-$$
+```
 
 라면 $L$ layer source를 유지하는 memory는 개념적으로:
 
-$$
+```math
 O(LBTd)
-$$
+```
 
 이다.
 
 논문에서 depth dimension만 강조해 표현하면 source memory가:
 
-$$
+```math
 O(Ld)
-$$
+```
 
 로 증가한다.
 
@@ -327,37 +327,37 @@ Current block partial residual ──────────┘
 
 완료된 block representation을:
 
-$$
+```math
 b_0,b_1,\ldots,b_{n-1}
-$$
+```
 
 현재 block partial sum을:
 
-$$
+```math
 b_n^{partial}
-$$
+```
 
 이라고 하자.
 
 Source set:
 
-$$
+```math
 V=[b_0,b_1,\ldots,b_{n-1},b_n^{partial}]
-$$
+```
 
 각 source를 normalize하고 pseudo-query $w_l$로 score한다.
 
-$$
+```math
 s_j=w_l^\top\operatorname{Norm}(V_j)
-$$
+```
 
-$$
+```math
 \alpha_j=\operatorname{softmax}_j(s_j)
-$$
+```
 
-$$
+```math
 h_l=\sum_j\alpha_jV_j
-$$
+```
 
 즉 Full AttnRes와 같은 depth-selective principle이지만 source 개수가 `layer 수`가 아니라 `block 수`에 가깝게 줄어든다.
 
@@ -367,15 +367,15 @@ $$
 
 Full AttnRes:
 
-$$
+```math
 O(Ld)
-$$
+```
 
 Block AttnRes:
 
-$$
+```math
 O(Nd)
-$$
+```
 
 - $L$: layer/source count
 - $N$: block count, $N\ll L$
@@ -476,9 +476,9 @@ Attention Residuals 연구는 Kimi Linear 48B / 3B active 계열에 적용해 co
 
 AttnRes는 softmax weighted sum을 사용한다.
 
-$$
+```math
 \sum_i\alpha_i v_i
-$$
+```
 
 따라서 hidden width 자체를 source 수만큼 늘리지 않는다.
 
@@ -490,9 +490,9 @@ Block AttnRes는 source 수도 block representation으로 제한한다.
 
 Residual gate는 흔히 현재 residual과 현재 transformation 사이를 조절한다.
 
-$$
+```math
 y=g\odot F(x)+(1-g)\odot x
-$$
+```
 
 AttnRes는 여러 과거 depth sources 중 하나 이상의 representation을 직접 선택한다.
 
@@ -554,9 +554,9 @@ K3 report는 Block AttnRes를 system-level kernel/parallelism과 함께 최적�
 
 AttnRes source tensor shape은:
 
-$$
+```math
 [B,T,d]
-$$
+```
 
 이므로 distributed model에서 $T$나 $d$가 shard되어 있을 수 있다.
 
@@ -614,15 +614,15 @@ K3는 두 종류 memory를 동시에 사용한다.
 
 K2:
 
-$$
+```math
 L=61
-$$
+```
 
 K3:
 
-$$
+```math
 L=93
-$$
+```
 
 으로 depth가 약 1.52배 증가한다.
 

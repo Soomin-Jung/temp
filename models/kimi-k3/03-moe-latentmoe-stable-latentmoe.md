@@ -36,12 +36,12 @@ Transformer block의 attention 뒤에는 보통 **Feed-Forward Network(피드 �
 
 SwiGLU 계열을 단순화하면:
 
-$$
+```math
 \operatorname{FFN}(x)
 =W_2\left[
 \operatorname{SiLU}(W_gx)\odot W_1x
 \right]
-$$
+```
 
 - $x\in\mathbb{R}^{d}$: model hidden vector
 - $W_1,W_g$: hidden → intermediate projection
@@ -59,11 +59,11 @@ Dense model에서는 모든 token이 같은 FFN weights를 실행한다.
 
 Sparse MoE에서는 FFN 하나를 여러 expert로 복제하고 router가 일부만 선택한다.
 
-$$
+```math
 \operatorname{MoE}(x)
 =
 \sum_{i\in\mathcal{T}_K(x)}p_i(x)E_i(x)
-$$
+```
 
 - $E_i$: expert $i$
 - $p_i$: routing weight
@@ -103,9 +103,9 @@ Decode처럼 expert별 token batch가 작으면 expert GEMM은 HBM에서 weight�
 
 Experts를 여러 GPU에 분산하면 token representation이 remote GPU로 이동한다.
 
-$$
+```math
 \text{Dispatch}\rightarrow\text{Expert GEMM}\rightarrow\text{Combine}
-$$
+```
 
 EP에서 주로 **All-to-All(올투올, 모든 rank가 서로 data를 교환하는 collective)** communication이 필요하다.
 
@@ -131,15 +131,15 @@ Standard routed expert가 model hidden dimension $d$를 입력으로 받는다�
 
 Expert FFN:
 
-$$
+```math
 E_i:\mathbb{R}^{d}\rightarrow\mathbb{R}^{m}\rightarrow\mathbb{R}^{d}
-$$
+```
 
 각 expert weight 규모는 대략:
 
-$$
+```math
 O(dm)
-$$
+```
 
 이고 EP token dispatch vector width도 $d$다.
 
@@ -158,28 +158,28 @@ K3의 hidden size는 $d=7168$이다. 896 expert를 모두 이 width에서 직접
 
 **LatentMoE(레이턴트 엠오이, 잠재공간 전문가 혼합)**는 routed expert computation 전에 token을 더 작은 latent dimension $\ell$로 projection한다.
 
-$$
+```math
 z=W_{\downarrow}x
-$$
+```
 
-$$
+```math
 z\in\mathbb{R}^{\ell},\qquad \ell<d
-$$
+```
 
 그 뒤 routed experts는 latent space에서 계산한다.
 
-$$
+```math
 E_i:\mathbb{R}^{\ell}\rightarrow\mathbb{R}^{m}\rightarrow\mathbb{R}^{\ell}
-$$
+```
 
 aggregate 후 다시 model width로 올린다.
 
-$$
+```math
 y_{route}
 =W_{\uparrow}\left(
 \sum_{i\in\mathcal{T}_K}p_iE_i(z)
 \right)
-$$
+```
 
 공식 LatentMoE formulation은 shared expert는 full dimension $d$에 남길 수 있다.
 
@@ -205,23 +205,23 @@ flowchart LR
 
 압축비를:
 
-$$
+```math
 \alpha=\frac{d}{\ell}
-$$
+```
 
 라고 하자.
 
 K3:
 
-$$
+```math
 d=7168,\qquad\ell=3584
-$$
+```
 
 이므로:
 
-$$
+```math
 \alpha=2
-$$
+```
 
 이다.
 
@@ -233,9 +233,9 @@ $$
 
 EP dispatch representation width:
 
-$$
+```math
 d\rightarrow\ell=d/2
-$$
+```
 
 ### Expert Parameter/Weight Bandwidth
 
@@ -308,23 +308,23 @@ K3는 latent width를 절반으로 줄이면서:
 
 Top-$K$ expert routing에서 expert 조합 수의 upper-bound 직관은:
 
-$$
+```math
 {N\choose K}
-$$
+```
 
 이다.
 
 K2:
 
-$$
+```math
 {384\choose8}
-$$
+```
 
 K3:
 
-$$
+```math
 {896\choose16}
-$$
+```
 
 로 combinatorial space가 매우 크게 증가한다.
 
@@ -367,27 +367,27 @@ K3의 **Stable LatentMoE**는 이 두 문제를 직접 겨냥한다.
 
 K3 routed path를 개념적으로 쓰면:
 
-$$
+```math
 z=W_{\downarrow}x
-$$
+```
 
-$$
+```math
 u=\sum_{i\in\mathcal T_K}p_iE_i(z)
-$$
+```
 
-$$
+```math
 \hat u=\operatorname{RMSNorm}(u)
-$$
+```
 
-$$
+```math
 y_{route}=W_{\uparrow}\hat u
-$$
+```
 
 shared path를 더하면:
 
-$$
+```math
 y=y_{route}+\sum_jE_j^{shared}(x)
-$$
+```
 
 핵심 추가가 **up projection 전에 RMSNorm**이라는 점이다.
 
@@ -412,11 +412,11 @@ Latent mixture $u$의 norm이 training 중 커지면 $W_{\uparrow}$가 그 큰 a
 
 RMSNorm은:
 
-$$
+```math
 \operatorname{RMSNorm}(u)
 =
 \frac{u}{\sqrt{\frac1\ell\sum_i u_i^2+\epsilon}}\odot g
-$$
+```
 
 로 scale을 제어한다.
 
@@ -438,10 +438,10 @@ SiTU 계열은 각 branch를 scaled `tanh`로 soft-cap한다.
 
 개념적으로:
 
-$$
+```math
 \operatorname{SiTU}_\beta(x)
 =\beta\tanh(x/\beta)
-$$
+```
 
 처럼 input magnitude가 커져도 output은 bounded된다.
 
@@ -479,9 +479,9 @@ Distributed system에서는 가장 많이 선택된 expert가 bottleneck이 된�
 
 따라서 목표는 대략:
 
-$$
+```math
 \text{load}_i\approx\frac{B\cdot K}{N}
-$$
+```
 
 이다.
 
@@ -495,12 +495,12 @@ $$
 
 전통적으로 router balance를 위해 auxiliary loss를 더한다.
 
-$$
+```math
 \mathcal L
 =
 \mathcal L_{LM}
 +\lambda\mathcal L_{balance}
-$$
+```
 
 하지만 $\lambda$가 너무 크면 language-model objective와 routing specialization을 방해할 수 있다.
 
@@ -549,9 +549,9 @@ Load balancing은 training optimization 문제처럼 보이지만 실제 serving
 
 Expert Parallel step time:
 
-$$
+```math
 T_{MoE}\approx\max_g T_g
-$$
+```
 
 가 되기 쉽다.
 
@@ -585,21 +585,21 @@ Token당 $\ell=3584$ elements 전달.
 
 Communication을 아주 단순화하면:
 
-$$
+```math
 \text{traffic}\propto K\cdot\text{dispatch width}
-$$
+```
 
 K2-like full-width:
 
-$$
+```math
 8\times7168
-$$
+```
 
 K3 latent:
 
-$$
+```math
 16\times3584
-$$
+```
 
 두 값이 같다.
 

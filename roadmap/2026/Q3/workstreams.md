@@ -33,6 +33,7 @@ Q3 Gate:
 2. P/D additive extension이 기존 integrated deployment를 변경하지 않는지 검증
 3. LiteLLM / Global Router / P/D Cell Router의 책임 경계 확정
 4. 0.1.12+ 이관 시 재사용할 model identity / profile / topology / metrics contract 확정
+5. base URL / auth / model discovery / chat / streaming / reasoning / tool-call golden test 계약 확정
 
 운영 자동화 포인트:
 - endpoint 등록/제외
@@ -42,6 +43,7 @@ Q3 Gate:
 
 상세:
 - [`vllm-stack/2026-08-18-진행계획.md`](../../../vllm-stack/2026-08-18-%EC%A7%84%ED%96%89%EA%B3%84%ED%9A%8D.md)
+- [`vllm-stack/model-serving-validation.md`](../../../vllm-stack/model-serving-validation.md)
 
 ---
 
@@ -90,7 +92,7 @@ Q3 Gate:
 - multi-node admission 전에 RDMA/NCCL qualification
 
 상세:
-- [`pd-disaggregation/`](../../../pd-disaggregation/)
+- [`vllm-stack/pd-disaggregation/`](../../../vllm-stack/pd-disaggregation/)
 
 ---
 
@@ -223,7 +225,7 @@ Q3 Gate:
 
 ## 6. Operations Control — MOC
 
-**상태: DESIGN / 구현 후순위**
+**상태: CORE AVAILABLE / BUSINESS LOGIC BACKLOG**
 
 MOC는 위 5개 Program을 대체하지 않는다. 각 Plane이 제공하는 primitive를 운영 정책으로 조율하는 cross-plane controller다.
 
@@ -240,6 +242,18 @@ State Collector
   → Audit
 ```
 
+현재 Core Framework와 다음 business capability를 구분한다.
+
+| Capability | 상태 |
+|---|---|
+| Production Stack discovery/adoption | BACKLOG |
+| vLLM runtime adapter | BACKLOG |
+| Kubernetes Service endpoint 동적 관리 | BACKLOG |
+| LiteLLM model-info 동기화 | BACKLOG |
+| workload-aware placement / time·event scale | BACKLOG |
+| donor/victim GPU reclaim | BACKLOG |
+| TP8 admission을 위한 eviction/repacking | BACKLOG |
+
 후속 Controller 후보:
 - EndpointDrainController
 - HealthSentinel
@@ -253,6 +267,7 @@ State Collector
 Q3 원칙:
 - 지금 당장 MOC 기능 구현을 위해 P/D / Kimi 납기를 늦추지 않는다.
 - 대신 각 과제가 MOC가 나중에 제어할 수 있도록 **identity / health / metric / lifecycle / adapter boundary**를 남긴다.
+- Core Framework를 business capability 완료로 표기하지 않는다. 상세 상태는 [`moc/README.md`](../../../moc/README.md)에서 관리한다.
 
 운영 지능의 목표:
 - 사람이 수동으로 하는 `관찰 → 판단 → drain → 이동 → 재배포 → 검증` 절차를 안전한 reconcile plan으로 코드화한다.

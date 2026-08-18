@@ -80,9 +80,9 @@ MoE에서 가장 중요한 숫자 두 개:
 
 K2에서는 약:
 
-$$
+```math
 P_{total}\approx1T
-$$
+```
 
 이다.
 
@@ -92,17 +92,17 @@ $$
 
 K2에서는 약:
 
-$$
+```math
 P_{active}\approx32B
-$$
+```
 
 이다.
 
 즉 token 하나가 384 routed expert를 모두 실행하지 않는다.
 
-$$
+```math
 8/384\approx2.08\%
-$$
+```
 
 의 routed experts만 선택한다.
 
@@ -122,9 +122,9 @@ $$
 
 Router logit:
 
-$$
+```math
 r=W_rx
-$$
+```
 
 에서 top-k expert index를 선택한다고 단순화할 수 있다.
 
@@ -152,9 +152,9 @@ Routed Experts
 
 Top-$K$ routing에서 가능한 expert subset 수는 단순 조합 관점에서:
 
-$$
+```math
 {N\choose K}
-$$
+```
 
 이다.
 
@@ -277,9 +277,9 @@ K2는 Muon에:
 
 Attention Q/K weight가 과도하게 커지면 dot-product logit:
 
-$$
+```math
 q^\top k
-$$
+```
 
 의 scale이 증가하고 softmax가 지나치게 sharp해질 수 있다.
 

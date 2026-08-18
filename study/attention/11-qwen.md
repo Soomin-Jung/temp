@@ -44,13 +44,13 @@ Qwen3의 전통적인 dense decoder 계열은 **Grouped-Query Attention(그룹�
 
 즉 기본 특성은:
 
-$$
+```math
 \text{cache}\propto T
-$$
+```
 
-$$
+```math
 \text{global prefill attention}\propto T^2
-$$
+```
 
 이다.
 
@@ -89,14 +89,14 @@ flowchart LR
 
 단순화한 state update는:
 
-$$
+```math
 S_t
 =
 \alpha_t
 (I-\beta_tk_tk_t^\top)S_{t-1}
 +
 \beta_tk_tv_t^\top
-$$
+```
 
 로 볼 수 있다.
 
@@ -108,21 +108,21 @@ $$
 
 다르게 쓰면:
 
-$$
+```math
 M_t=\alpha_tS_{t-1}
-$$
+```
 
-$$
+```math
 \hat v_t=M_t^\top k_t
-$$
+```
 
-$$
+```math
 e_t=v_t-\hat v_t
-$$
+```
 
-$$
+```math
 S_t=M_t+\beta_tk_te_t^\top
-$$
+```
 
 이다.
 
@@ -142,11 +142,11 @@ Forget → Predict → Correct → Read
 
 Kimi KDA:
 
-$$
+```math
 S_t=(I-\beta_tk_tk_t^\top)
 \operatorname{Diag}(\alpha_t)S_{t-1}
 +\beta_tk_tv_t^\top
-$$
+```
 
 Qwen GDN 계열의 핵심 아이디어는 gated delta recurrence이고, KDA는 이를 더 세밀한 channel-wise diagonal retention으로 확장한다.
 
@@ -174,13 +174,13 @@ Qwen3-Next 공식 설명은 global full-attention layer에도 몇 가지 변화�
 
 개념적으로:
 
-$$
+```math
 y_t=W_O[g_t\odot o_t]
-$$
+```
 
-$$
+```math
 g_t=f(W_gx_t)
-$$
+```
 
 이다.
 
@@ -205,9 +205,9 @@ partial_rotary_factor = 0.25
 
 이므로 conceptual RoPE dimension은:
 
-$$
+```math
 256\times0.25=64
-$$
+```
 
 이고 나머지 192 dimension은 content-only/no-RoPE component로 볼 수 있다.
 
@@ -250,11 +250,11 @@ linear, linear, linear, full,
 
 따라서:
 
-$$
+```math
 48\text{ GDN-like linear layers}
 +
 16\text{ full-attention layers}
-$$
+```
 
 이다.
 
@@ -264,23 +264,23 @@ $$
 
 Qwen3.6 full attention:
 
-$$
+```math
 H_q=24
-$$
+```
 
-$$
+```math
 H_{kv}=4
-$$
+```
 
-$$
+```math
 d_h=256
-$$
+```
 
 따라서 query group size는:
 
-$$
+```math
 g=\frac{24}{4}=6
-$$
+```
 
 이다.
 
@@ -288,19 +288,19 @@ $$
 
 BF16 K/V라고 단순 가정하면 full-attention layer의 token당 logical KV bytes는:
 
-$$
+```math
 2\times4\times256\times2
 =4096\text{ bytes}
-$$
+```
 
 즉 약 4 KiB/token/layer다.
 
 16개 full attention layer 전체면:
 
-$$
+```math
 4096\times16
 =65536\text{ bytes/token}
-$$
+```
 
 즉 약 64 KiB/token/sequence의 logical full-attention KV가 된다.
 
@@ -349,9 +349,9 @@ per request / per linear layer
 
 State 크기는 context length $T$에 비례하지 않는다.
 
-$$
+```math
 M_{linear}\approx O(H\cdot d_k\cdot d_v)
-$$
+```
 
 따라서 256K context까지 prompt가 길어져도 linear layer의 state byte는 token 수에 따라 증가하지 않는다.
 
@@ -499,9 +499,9 @@ chunk state propagation
 
 한 token마다 recurrent state를 한 step update한다.
 
-$$
+```math
 S_t=f(S_{t-1},x_t)
-$$
+```
 
 따라서 history length가 증가해도 linear layer의 state read/update 크기는 일정하다.
 
@@ -513,21 +513,21 @@ $$
 
 64 layer Qwen3.6을 개념적으로 쓰면:
 
-$$
+```math
 48\times O(T)_{\text{linear prefill}}
 +
 16\times O(T^2)_{\text{full prefill}}
-$$
+```
 
 형태다.
 
 Decode에서는:
 
-$$
+```math
 48\times O(1)_{\text{w.r.t. history}}
 +
 16\times O(T)
-$$
+```
 
 이다.
 
@@ -566,11 +566,11 @@ Full-attention layer는 기존 방식처럼 prefix KV block을 공유할 수 있
 
 하지만 GDN layer는 prefix 끝의 recurrent state가 필요하다.
 
-$$
+```math
 \text{Prefix}_{0:N}
 \rightarrow
 S_N^{(l)}, C_N^{(l)}
-$$
+```
 
 - $S_N^{(l)}$: layer $l$의 recurrent state
 - $C_N^{(l)}$: convolution state

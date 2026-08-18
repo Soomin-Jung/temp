@@ -19,18 +19,18 @@
 
 Full attention을 단순화하면:
 
-$$
+```math
 o_t = \sum_{i\le t}
 \operatorname{softmax}_i(q_t^\top k_i)v_i
-$$
+```
 
 이다.
 
 Softmax는 현재 query와 **모든 key score를 함께 정규화**한다.
 
-$$
+```math
 a_{t,i}=\frac{e^{q_t^\top k_i}}{\sum_{j\le t}e^{q_t^\top k_j}}
-$$
+```
 
 분모가 query마다 모든 과거 token에 의존하므로 단순히 과거의 $kv^\top$를 하나의 fixed state로 미리 합산하기 어렵다.
 
@@ -40,13 +40,13 @@ $$
 
 `Transformers are RNNs` 계열의 linear transformer는 softmax attention을 feature map $\phi(\cdot)$를 이용한 kernel 형태로 바꾼다.
 
-$$
+```math
 \operatorname{sim}(q,k)=\phi(q)^\top\phi(k)
-$$
+```
 
 그러면 정규화된 causal linear attention을 개념적으로:
 
-$$
+```math
 o_t=
 \frac{
 \phi(q_t)^\top
@@ -55,36 +55,36 @@ o_t=
 \phi(q_t)^\top
 \left(\sum_{i\le t}\phi(k_i)\right)
 }
-$$
+```
 
 처럼 쓸 수 있다.
 
 여기서 두 recurrent state를 정의한다.
 
-$$
+```math
 S_t=\sum_{i\le t}\phi(k_i)v_i^\top
-$$
+```
 
-$$
+```math
 z_t=\sum_{i\le t}\phi(k_i)
-$$
+```
 
 그러면:
 
-$$
+```math
 S_t=S_{t-1}+\phi(k_t)v_t^\top
-$$
+```
 
-$$
+```math
 z_t=z_{t-1}+\phi(k_t)
-$$
+```
 
 이고 query 시점에는:
 
-$$
+```math
 o_t=
 \frac{\phi(q_t)^\top S_t}{\phi(q_t)^\top z_t}
-$$
+```
 
 만 계산하면 된다.
 
@@ -109,28 +109,28 @@ flowchart LR
 
 단순 attention에서 softmax를 잠시 제외하면:
 
-$$
+```math
 o_t=\sum_{i\le t}(q_t^\top k_i)v_i
-$$
+```
 
 이다.
 
 스칼라와 행렬 곱의 결합법칙을 이용하면:
 
-$$
+```math
 o_t=
 \left(\sum_{i\le t}v_i k_i^\top\right)q_t
-$$
+```
 
 또는 state orientation을 바꾸면:
 
-$$
+```math
 S_t=\sum_{i\le t}k_iv_i^\top
-$$
+```
 
-$$
+```math
 o_t=S_t^\top q_t
-$$
+```
 
 로 쓸 수 있다.
 
@@ -144,9 +144,9 @@ $$
 
 State $S_t$를 다음 mapping을 학습하는 작은 matrix라고 생각하자.
 
-$$
+```math
 S_t^\top k \approx v
-$$
+```
 
 이것은 **Associative Memory(어소시에이티브 메모리, 연상 메모리)**다.
 
@@ -167,9 +167,9 @@ Model parameter $W$는 training 이후 inference 동안 고정되지만, $S_t$�
 
 가장 단순한 state update는:
 
-$$
+```math
 S_t=S_{t-1}+k_tv_t^\top
-$$
+```
 
 이다.
 
@@ -199,9 +199,9 @@ Fixed state의 capacity는 유한하므로 context가 길수록 여러 associati
 
 현재 memory $S_{t-1}$에 key $k_t$를 넣었을 때 예측하는 value를:
 
-$$
+```math
 \hat v_t=S_{t-1}^\top k_t
-$$
+```
 
 라고 하자.
 
@@ -211,38 +211,38 @@ $$
 
 그럼 reconstruction loss를:
 
-$$
+```math
 \mathcal{L}_t(S)
 =
 \frac{1}{2}
 \|S^\top k_t-v_t\|_2^2
-$$
+```
 
 로 둘 수 있다.
 
 이 loss에 대해 $S$를 **Gradient Descent(그래디언트 디센트, 경사하강법)** 한 step 업데이트한다.
 
-$$
+```math
 S_t=S_{t-1}-\eta_t\nabla_S\mathcal{L}_t
-$$
+```
 
 gradient는:
 
-$$
+```math
 \nabla_S\mathcal{L}_t
 =k_t(S_{t-1}^\top k_t-v_t)^\top
-$$
+```
 
 이므로:
 
-$$
+```math
 S_t
 =
 S_{t-1}
 +
 \beta_t k_t
 (v_t-S_{t-1}^\top k_t)^\top
-$$
+```
 
 를 얻는다.
 
@@ -254,17 +254,17 @@ $$
 
 ### 8.1 Predict
 
-$$
+```math
 \hat v_t=S_{t-1}^\top k_t
-$$
+```
 
 현재 key에 대해 memory가 이미 무엇을 알고 있는지 읽는다.
 
 ### 8.2 Error
 
-$$
+```math
 e_t=v_t-\hat v_t
-$$
+```
 
 - $e_t$: **이 서브 티**, error/correction vector
 
@@ -272,9 +272,9 @@ $$
 
 ### 8.3 Correct
 
-$$
+```math
 S_t=S_{t-1}+\beta_tk_te_t^\top
-$$
+```
 
 현재 key 방향에 correction만 기록한다.
 
@@ -297,17 +297,17 @@ flowchart LR
 
 식:
 
-$$
+```math
 S_t
 =
 S_{t-1}
 +
 \beta_tk_t(v_t-S_{t-1}^\top k_t)^\top
-$$
+```
 
 을 전개하면:
 
-$$
+```math
 S_t
 =
 S_{t-1}
@@ -315,17 +315,17 @@ S_{t-1}
 \beta_tk_tk_t^\top S_{t-1}
 +
 \beta_tk_tv_t^\top
-$$
+```
 
 다시 묶으면:
 
-$$
+```math
 S_t
 =
 (I-\beta_tk_tk_t^\top)S_{t-1}
 +
 \beta_tk_tv_t^\top
-$$
+```
 
 여기서:
 
@@ -344,13 +344,13 @@ $$
 
 기본 recurrent form은:
 
-$$
+```math
 S_t=(I-\beta_tk_tk_t^\top)S_{t-1}+\beta_tk_tv_t^\top
-$$
+```
 
-$$
+```math
 o_t=S_t^\top q_t
-$$
+```
 
 이다.
 
@@ -364,9 +364,9 @@ DeltaNet 연구는 additive linear attention보다 associative recall을 개선�
 
 Delta transition에:
 
-$$
+```math
 k_tk_t^\top
-$$
+```
 
 이 직접 들어간다.
 
@@ -374,15 +374,15 @@ $$
 
 그래서 DeltaNet/KDA 계열은 key를 L2-normalize하는 경우가 많다.
 
-$$
+```math
 \bar k_t=\frac{k_t}{\|k_t\|_2}
-$$
+```
 
 그러면:
 
-$$
+```math
 \bar k_t\bar k_t^\top
-$$
+```
 
 이 unit key direction을 기준으로 더 안정적인 rank-1 projection 역할을 한다.
 
@@ -408,14 +408,14 @@ Delta Rule은 현재 key와 겹치는 memory를 정교하게 수정한다.
 
 단순한 형태로:
 
-$$
+```math
 S_t
 =
 \alpha_t
 (I-\beta_tk_tk_t^\top)S_{t-1}
 +
 \beta_tk_tv_t^\top
-$$
+```
 
 로 볼 수 있다.
 
@@ -438,9 +438,9 @@ $$
 
 한 head에서 $\alpha_t$가 scalar라면:
 
-$$
+```math
 S_{t-1}\rightarrow\alpha_tS_{t-1}
-$$
+```
 
 으로 모든 state row/channel을 같은 비율로 감쇠한다.
 
@@ -467,14 +467,14 @@ old number         × 0.8
 
 **Kimi Delta Attention(키미 델타 어텐션, Kimi가 확장한 channel-wise gated delta attention; KDA)**의 핵심 state update는:
 
-$$
+```math
 S_t
 =
 (I-\beta_tk_tk_t^\top)
 \operatorname{Diag}(\alpha_t)S_{t-1}
 +
 \beta_tk_tv_t^\top
-$$
+```
 
 이다.
 
@@ -490,33 +490,33 @@ GDN의 scalar decay를 key/state channel별 vector decay로 확장한 것이 KDA
 
 먼저 memory를 channel별로 decay한다.
 
-$$
+```math
 M_t=\operatorname{Diag}(\alpha_t)S_{t-1}
-$$
+```
 
 현재 key로 memory prediction을 읽는다.
 
-$$
+```math
 \hat v_t=M_t^\top k_t
-$$
+```
 
 correction을 구한다.
 
-$$
+```math
 e_t=v_t-\hat v_t
-$$
+```
 
 state를 수정한다.
 
-$$
+```math
 S_t=M_t+\beta_tk_te_t^\top
-$$
+```
 
 현재 query로 읽는다.
 
-$$
+```math
 \tilde o_t=S_t^\top q_t
-$$
+```
 
 즉:
 
@@ -533,9 +533,9 @@ Forget by channel → Predict → Correct → Read
 
 한 channel $c$에 대해 old memory가 여러 step을 통과해 남는 scale은 대략:
 
-$$
+```math
 \prod_{j=i+1}^{t}\alpha_{j,c}
-$$
+```
 
 이다.
 
@@ -582,9 +582,9 @@ recurrent state가 전체 history를 압축하더라도 바로 인접한 token�
 
 **Swish/SiLU(스위시/실루, smooth gated activation)**는 대략:
 
-$$
+```math
 \operatorname{SiLU}(x)=x\sigma(x)
-$$
+```
 
 형태다.
 
@@ -606,27 +606,27 @@ gate_lower_bound = -5.0
 
 K3의 log-decay를 단순화하면:
 
-$$
+```math
 g_t=g_{min}\cdot\sigma(z_t),\qquad g_{min}=-5
-$$
+```
 
 그리고 retention은:
 
-$$
+```math
 \alpha_t=e^{g_t}
-$$
+```
 
 이다.
 
 따라서:
 
-$$
+```math
 g_t\in(-5,0)
-$$
+```
 
-$$
+```math
 \alpha_t\in(e^{-5},1)
-$$
+```
 
 가 된다.
 
@@ -638,9 +638,9 @@ $$
 
 Recurrent form은:
 
-$$
+```math
 S_1\rightarrow S_2\rightarrow\cdots\rightarrow S_T
-$$
+```
 
 처럼 보인다.
 
@@ -674,9 +674,9 @@ MoonshotAI의 FlashKDA deep-dive는 16을 선택한 이유를 크게 세 가지�
 
 16 token 동안 최악의 cumulative log-decay는:
 
-$$
+```math
 16\times(-5)=-80
-$$
+```
 
 이므로 inverse scale이 대략 $e^{80}$ 수준으로 제한된다.
 
@@ -688,15 +688,15 @@ KDA는 여기서 모델 수식 자체를 GPU의 numerical range와 matrix tile�
 
 KDA raw memory read:
 
-$$
+```math
 \tilde o_t=S_t^\top q_t
-$$
+```
 
 를 그대로 residual stream으로 보내지 않고 input-dependent gate를 사용한다.
 
 개념적으로:
 
-$$
+```math
 y_t
 =
 W_O\left[
@@ -704,7 +704,7 @@ W_O\left[
 \odot
 \operatorname{RMSNorm}(\tilde o_t)
 \right]
-$$
+```
 
 - $W_gx_t$: 현재 input이 만드는 output gate
 - $\odot$: element-wise multiplication
@@ -725,21 +725,21 @@ KDA/GDN에는 모든 layer에서 RoPE가 반드시 필요한 것이 아니다.
 
 State transition을:
 
-$$
+```math
 A_t=(I-\beta_tk_tk_t^\top)\operatorname{Diag}(\alpha_t)
-$$
+```
 
 라고 하면:
 
-$$
+```math
 S_t=A_tS_{t-1}+B_t
-$$
+```
 
 이고 과거 token $i$의 contribution은 현재까지:
 
-$$
+```math
 A_tA_{t-1}\cdots A_{i+1}B_i
-$$
+```
 
 같은 순서 의존적인 transition product를 거친다.
 
@@ -807,13 +807,13 @@ Linear attention의 cheap recurrence와 full attention의 exact retrieval을 lay
 
 일반적인 linear state-space form은:
 
-$$
+```math
 h_t=A_th_{t-1}+B_tx_t
-$$
+```
 
-$$
+```math
 y_t=C_th_t
-$$
+```
 
 Mamba는 input-dependent selective SSM을 사용해 어떤 정보를 propagate/forget할지 학습한다.
 
@@ -854,9 +854,9 @@ KDA/GDN decode를 `O(1)`이라고 부를 때 뜻은:
 
 State가:
 
-$$
+```math
 S\in\mathbb{R}^{H\times d_k\times d_v}
-$$
+```
 
 이면 token마다 이 matrix를 읽고 update하는 비용은 존재한다.
 

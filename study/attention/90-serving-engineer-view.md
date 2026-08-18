@@ -56,11 +56,11 @@ ITL(Inter-Token Latency)과 TPOT(Time Per Output Token)을 지배한다.
 
 GQA/MHA의 한 layer logical cache:
 
-$$
+```math
 M_{layer}
 =
 2\times T\times H_{kv}\times d_h\times b
-$$
+```
 
 - $T$: cached tokens
 - $H_{kv}$: KV heads
@@ -70,11 +70,11 @@ $$
 
 전체 $L$ layer라면:
 
-$$
+```math
 M_{KV}
 =
 2LTH_{kv}d_hb
-$$
+```
 
 ### 예시
 
@@ -86,14 +86,14 @@ $$
 
 이면:
 
-$$
+```math
 M_{KV}
 =2\times64\times200000\times8\times128\times2
-$$
+```
 
-$$
+```math
 \approx 52.4\text{ GB}
-$$
+```
 
 의 logical KV가 한 sequence에 필요하다.
 
@@ -192,9 +192,9 @@ Decode에서 full attention 한 layer의 현재 query는 cached K/V를 읽는다
 
 읽기 traffic은 대략:
 
-$$
+```math
 B_{read}\propto 2TH_{kv}d_hb
-$$
+```
 
 이다.
 
@@ -228,9 +228,9 @@ history entry count를 $T\rightarrow T/m$으로 줄인다.
 
 **Arithmetic Intensity(아리스메틱 인텐시티, 메모리에서 읽은 byte당 수행하는 연산량)**는 GPU utilization을 이해하는 핵심이다.
 
-$$
+```math
 AI=\frac{FLOPs}{Bytes\ transferred}
-$$
+```
 
 Prefill large GEMM은 AI가 높아 compute-bound가 되기 쉽다.
 
@@ -308,15 +308,15 @@ Prefix caching은 prefill compute와 KV duplication을 줄인다.
 
 Recurrent state에서는 prefix 끝의 state가 필요하다.
 
-$$
+```math
 Prefix_{0:N}ightarrow S_N
-$$
+```
 
 그리고 ShortConv가 있다면:
 
-$$
+```math
 Prefix_{0:N}ightarrow(S_N,C_N)
-$$
+```
 
 가 필요하다.
 
@@ -335,9 +335,9 @@ Full attention은 prefix 중간의 KV blocks가 모두 그 자체로 재사용 �
 
 Snapshot을 너무 자주 저장하면:
 
-$$
+```math
 O(\text{number of prefix blocks}\times\text{large recurrent state})
-$$
+```
 
 가 되어 fixed-state memory advantage를 잃는다.
 
@@ -432,9 +432,9 @@ candidate2 이후 KV block/slot을 버리면 된다.
 
 State도 candidate token마다 순차적으로 변한다.
 
-$$
+```math
 S_N\rightarrow S_{N+1}\rightarrow S_{N+2}\rightarrow S_{N+3}
-$$
+```
 
 candidate1만 accept됐다면 $S_{N+1}$로 돌아가야 한다.
 
@@ -566,9 +566,9 @@ Attention을 줄였더라도 MoE expert path가 bottleneck이면 전체 throughp
 
 KV dtype을 BF16에서 FP8로 줄이면 raw cache byte는 대략 절반이 된다.
 
-$$
+```math
 b:2\rightarrow1
-$$
+```
 
 하지만 실제 비용에는:
 

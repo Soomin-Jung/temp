@@ -36,11 +36,11 @@ https://arxiv.org/abs/1706.03762
 
 수식:
 
-$$
+```math
 \operatorname{Attention}(Q,K,V)
 =
 \operatorname{softmax}\left(\frac{QK^\top}{\sqrt{d_k}}\right)V
-$$
+```
 
 ### 2. RoFormer
 
@@ -307,9 +307,9 @@ https://arxiv.org/abs/2402.19427
 
 ## 9.1 Full Softmax Attention
 
-$$
+```math
 O=\operatorname{softmax}\left(\frac{QK^\top}{\sqrt{d_h}}+M\right)V
-$$
+```
 
 의미:
 
@@ -319,9 +319,9 @@ $$
 
 ## 9.2 Conventional KV Cache
 
-$$
+```math
 M_{KV}=2LTH_{kv}d_hb
-$$
+```
 
 - $L$: layer 수
 - $T$: token 수
@@ -333,14 +333,14 @@ $$
 
 ## 9.3 RoPE
 
-$$
+```math
 q_t'=R_tq_t,\qquad k_i'=R_ik_i
-$$
+```
 
-$$
+```math
 (q_t')^\top k_i'
 =q_t^\top R_t^\top R_i k_i
-$$
+```
 
 의미:
 
@@ -350,14 +350,14 @@ $$
 
 ## 9.4 MLA KV Compression
 
-$$
+```math
 c_t^{KV}=W_{DKV}x_t
-$$
+```
 
-$$
+```math
 k_t=W_{UK}c_t^{KV},\qquad
 v_t=W_{UV}c_t^{KV}
-$$
+```
 
 의미:
 
@@ -367,15 +367,15 @@ $$
 
 ## 9.5 MLA Matrix Absorption
 
-$$
+```math
 q^\top W_{UK}c
 =(W_{UK}^\top q)^\top c
-$$
+```
 
-$$
+```math
 \sum_i a_iW_{UV}c_i
 =W_{UV}\sum_i a_ic_i
-$$
+```
 
 의미:
 
@@ -385,13 +385,13 @@ $$
 
 ## 9.6 Additive Linear Attention State
 
-$$
+```math
 S_t=S_{t-1}+k_tv_t^\top
-$$
+```
 
-$$
+```math
 o_t=S_t^\top q_t
-$$
+```
 
 의미:
 
@@ -401,17 +401,17 @@ $$
 
 ## 9.7 Delta Rule
 
-$$
+```math
 \hat v_t=S_{t-1}^\top k_t
-$$
+```
 
-$$
+```math
 e_t=v_t-\hat v_t
-$$
+```
 
-$$
+```math
 S_t=S_{t-1}+\beta_tk_te_t^\top
-$$
+```
 
 의미:
 
@@ -421,11 +421,11 @@ $$
 
 ## 9.8 Delta Rule — Erase + Write
 
-$$
+```math
 S_t
 =(I-\beta_tk_tk_t^\top)S_{t-1}
 +\beta_tk_tv_t^\top
-$$
+```
 
 의미:
 
@@ -437,11 +437,11 @@ $$
 
 단순화:
 
-$$
+```math
 S_t
 =\alpha_t(I-\beta_tk_tk_t^\top)S_{t-1}
 +\beta_tk_tv_t^\top
-$$
+```
 
 의미:
 
@@ -451,12 +451,12 @@ $$
 
 ## 9.10 KDA
 
-$$
+```math
 S_t
 =(I-\beta_tk_tk_t^\top)
 \operatorname{Diag}(\alpha_t)S_{t-1}
 +\beta_tk_tv_t^\top
-$$
+```
 
 의미:
 
@@ -466,13 +466,13 @@ $$
 
 ## 9.11 Sliding Window
 
-$$
+```math
 \mathcal{N}(t)=\{i:t-W+1\le i\le t\}
-$$
+```
 
-$$
+```math
 o_t=\operatorname{Attention}(q_t,K_{\mathcal N(t)},V_{\mathcal N(t)})
-$$
+```
 
 의미:
 
@@ -482,9 +482,9 @@ $$
 
 ## 9.12 Sequence Compression
 
-$$
+```math
 T_c\approx\frac{T}{m}
-$$
+```
 
 의미:
 

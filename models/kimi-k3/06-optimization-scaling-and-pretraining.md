@@ -41,9 +41,9 @@ Kimi K3 Per-Head Muon
 
 Gradient descent의 기본:
 
-$$
+```math
 W_{t+1}=W_t-\eta G_t
-$$
+```
 
 - $W_t$: 현재 parameter
 - $G_t=\nabla_W\mathcal L$: gradient
@@ -68,19 +68,19 @@ Optimizer는:
 
 단순화하면:
 
-$$
+```math
 m_t=\beta_1m_{t-1}+(1-\beta_1)g_t
-$$
+```
 
-$$
+```math
 v_t=\beta_2v_{t-1}+(1-\beta_2)g_t^2
-$$
+```
 
-$$
+```math
 \Delta w_t
 \propto
 \frac{m_t}{\sqrt{v_t}+\epsilon}
-$$
+```
 
 각 scalar parameter마다 adaptive scale이 있다.
 
@@ -121,18 +121,18 @@ directions become more uniformly scaled
 
 Matrix $M$의 singular value decomposition:
 
-$$
+```math
 M=U\Sigma V^\top
-$$
+```
 
 - $U,V$: orthogonal directions
 - $\Sigma$: singular values
 
 이상적인 matrix sign/orthogonalized update를 개념적으로:
 
-$$
+```math
 UV^\top
-$$
+```
 
 같이 볼 수 있다.
 
@@ -208,9 +208,9 @@ K2 report는 15.5T-token pretraining 동안 loss spike 없이 1T model을 학습
 
 Attention score는:
 
-$$
+```math
 s=q^\top k
-$$
+```
 
 이다.
 
@@ -218,9 +218,9 @@ Q/K projection weight scale이 커지면 q/k norm도 커지고 score magnitude�
 
 Softmax:
 
-$$
+```math
 \operatorname{softmax}(s)
-$$
+```
 
 는 큰 logit difference에서 매우 sharp해진다.
 
@@ -242,9 +242,9 @@ K3는 Q/K/V projection에서 Muon orthogonalization을 **head별**로 수행한�
 
 일반 projection matrix를:
 
-$$
+```math
 W_Q\in\mathbb{R}^{H\cdot d_h\times d}
-$$
+```
 
 라고 하자.
 
@@ -252,7 +252,7 @@ Vanilla matrix-level Muon은 전체 $W_Q$ update를 하나의 matrix로 orthogon
 
 Per-Head Muon은 이를:
 
-$$
+```math
 W_Q=
 \begin{bmatrix}
 W_Q^{(1)}\\
@@ -260,7 +260,7 @@ W_Q^{(2)}\\
 \vdots\\
 W_Q^{(H)}
 \end{bmatrix}
-$$
+```
 
 로 보고 head-specific matrix마다 update orthogonalization을 수행한다.
 
@@ -309,9 +309,9 @@ KDA는 head별 recurrent state를 가진다.
 
 특히 key는 Delta Rule transition:
 
-$$
+```math
 (I-\beta kk^\top)
-$$
+```
 
 에 들어간다.
 
@@ -327,10 +327,10 @@ K3는 text-only model을 완성한 뒤 vision을 붙이는 것이 아니라 text
 
 Objective는 기본적으로 autoregressive next-token loss다.
 
-$$
+```math
 \mathcal L_{NTP}
 =-\sum_t\log p(x_t\mid x_{<t},V)
-$$
+```
 
 Vision encoder도 이 gradient를 함께 받는다.
 
@@ -344,13 +344,13 @@ K3 report는 **Cosine Learning Rate Schedule(코사인 러닝레이트 스케줄
 
 전형적인 cosine decay:
 
-$$
+```math
 \eta(t)
 =
 \eta_{min}
 +\frac12(\eta_{max}-\eta_{min})
 \left(1+\cos\frac{\pi t}{T}\right)
-$$
+```
 
 이다.
 

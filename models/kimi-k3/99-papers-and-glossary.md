@@ -183,13 +183,13 @@ https://arxiv.org/abs/2601.18089
 
 핵심 식:
 
-$$
+```math
 z=W_{\downarrow}x
-$$
+```
 
-$$
+```math
 y_{route}=W_{\uparrow}\sum_{i\in\mathcal T_K}p_iE_i(z)
-$$
+```
 
 K3의 Stable LatentMoE가 왜 `latent`인지 이해한 다음 K3 report의 stability modification을 읽는다.
 
@@ -227,11 +227,11 @@ https://arxiv.org/abs/2607.24653
 
 ## 11.1 Sparse MoE
 
-$$
+```math
 \operatorname{MoE}(x)
 =
 \sum_{i\in\mathcal T_K(x)}p_iE_i(x)
-$$
+```
 
 의미:
 
@@ -241,17 +241,17 @@ $$
 
 ## 11.2 LatentMoE
 
-$$
+```math
 z=W_{\downarrow}x,
 \qquad z\in\mathbb{R}^{\ell}
-$$
+```
 
-$$
+```math
 y_{route}
 =W_{\uparrow}\left(
 \sum_{i\in\mathcal T_K}p_iE_i(z)
 \right)
-$$
+```
 
 의미:
 
@@ -261,15 +261,15 @@ $$
 
 ## 11.3 Compression Ratio
 
-$$
+```math
 \alpha=\frac{d}{\ell}
-$$
+```
 
 K3:
 
-$$
+```math
 7168/3584=2
-$$
+```
 
 ---
 
@@ -277,33 +277,33 @@ $$
 
 GLU expert의 large matrices를 단순화하면:
 
-$$
+```math
 P_{expert}\approx3\ell m
-$$
+```
 
 K3:
 
-$$
+```math
 3\times3584\times3072
 \approx33.0M
-$$
+```
 
 ---
 
 ## 11.5 AttnRes
 
-$$
+```math
 h_l
 =
 \sum_{i<l}\alpha_{i\to l}v_i
-$$
+```
 
-$$
+```math
 \alpha_{i\to l}
 =
 \operatorname{softmax}_i
 \left(w_l^\top\operatorname{Norm}(v_i)\right)
-$$
+```
 
 의미:
 
@@ -313,9 +313,9 @@ $$
 
 ## 11.6 Standard Residual
 
-$$
+```math
 x_{l+1}=x_l+F_l(x_l)
-$$
+```
 
 반복 전개하면 과거 layer contribution의 additive accumulation으로 볼 수 있다.
 
@@ -323,10 +323,10 @@ $$
 
 ## 11.7 Next-Token Prediction
 
-$$
+```math
 \mathcal L_{NTP}
 =-\sum_t\log p(x_t\mid x_{<t})
-$$
+```
 
 K3는 multimodal input에서도 foundation objective의 중심을 next-token prediction에 둔다.
 
@@ -334,11 +334,11 @@ K3는 multimodal input에서도 foundation objective의 중심을 next-token pre
 
 ## 11.8 Adam-style Update
 
-$$
+```math
 \Delta w
 \propto
 \frac{m}{\sqrt v+\epsilon}
-$$
+```
 
 Element-wise adaptive scale.
 
@@ -348,19 +348,19 @@ Element-wise adaptive scale.
 
 Momentum matrix:
 
-$$
+```math
 M
-$$
+```
 
 을 Newton–Schulz polynomial iteration으로 orthogonalized/matrix-sign-like update에 가깝게 변환한다.
 
 개념 목표:
 
-$$
+```math
 M=U\Sigma V^\top
 \quad\rightarrow\quad
 UV^\top
-$$
+```
 
 정확한 implementation 식은 Muon paper/code를 참조한다.
 

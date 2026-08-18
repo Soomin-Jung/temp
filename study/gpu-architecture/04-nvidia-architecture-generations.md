@@ -196,10 +196,10 @@ Blackwell Ultra는 Blackwell의 programming model을 유지하면서 reasoning�
 
 ### 6.1 모델이 올라가는가
 
-$$
+```math
 M_{required}
 =M_{weights}+M_{KV}+M_{workspace}+M_{runtime}
-$$
+```
 
 첫 판단은 HBM/GDDR capacity다. MoE의 active parameter가 작아도 전체 expert weight를 보유해야 하므로 storage 요구량은 total parameter와 sharding에 좌우된다.
 

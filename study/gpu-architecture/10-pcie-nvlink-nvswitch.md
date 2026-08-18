@@ -60,9 +60,9 @@ Gen6는 PAM4와 FLIT mode 등 이전 세대와 다른 encoding/forward-error-cor
 
 endpoint가 각각 x16이어도 switch uplink가 endpoint 합보다 좁으면 동시에 통신할 때 경합한다.
 
-$$
+```math
 Oversubscription = \frac{\sum endpoint\ downlink\ capacity}{uplink\ capacity}
-$$
+```
 
 P2P가 switch 내부에서 끝나는 traffic과 host memory로 올라가는 traffic은 병목 위치가 다르다. block diagram과 실제 traffic matrix를 함께 봐야 한다.
 

@@ -105,32 +105,32 @@ EP performance는:
 
 K3 dispatch width:
 
-$$
+```math
 7168\rightarrow3584
-$$
+```
 
 로 절반이다.
 
 하지만 active experts:
 
-$$
+```math
 8\rightarrow16
-$$
+```
 
 으로 K2 대비 두 배다.
 
 단순 traffic proxy:
 
-$$
+```math
 K\cdot d_{dispatch}
-$$
+```
 
 를 보면:
 
-$$
+```math
 8\times7168
 =16\times3584
-$$
+```
 
 이다.
 
@@ -174,9 +174,9 @@ KDA가 linear/recurrent여도 1M token의 모든 layer projection/MoE compute는
 
 KDA prefill은 sequence-length quadratic softmax를 줄이지만:
 
-$$
+```math
 T\times\text{QKV/conv/state update}
-$$
+```
 
 와 93-layer MoE compute가 있다.
 
@@ -199,9 +199,9 @@ Full attention CP에서는 query/KV partition을 어떻게 exchange하는지가 
 
 KDA는 recurrent state dependency가 있다.
 
-$$
+```math
 S_t=f(S_{t-1},x_t)
-$$
+```
 
 Sequence를 GPU0/GPU1로 단순 잘라:
 
@@ -222,27 +222,27 @@ KDA CP는 recurrent transition을 associative/chunkwise form으로 바꿔 각 sh
 
 각 context shard/chunk가 state transform을:
 
-$$
+```math
 S_{out}=A_{chunk}S_{in}+B_{chunk}
-$$
+```
 
 형태로 요약할 수 있다고 생각하자.
 
 여러 chunk:
 
-$$
+```math
 S_1=A_1S_0+B_1
-$$
+```
 
-$$
+```math
 S_2=A_2S_1+B_2
-$$
+```
 
 이므로 composition:
 
-$$
+```math
 S_2=A_2A_1S_0+A_2B_1+B_2
-$$
+```
 
 가 된다.
 
@@ -395,9 +395,9 @@ Full attention prefix cache:
 
 KDA에서는 prefix boundary $N$의 recurrent state:
 
-$$
+```math
 S_N
-$$
+```
 
 가 있어야 이후 suffix를 이어 계산할 수 있다.
 
@@ -424,9 +424,9 @@ Hash granularity    : 512 tokens
 
 이라면 한 physical page 안에:
 
-$$
+```math
 6144/512=12
-$$
+```
 
 개의 hash boundary가 있다.
 
@@ -533,9 +533,9 @@ Candidate 7개를 target K3로 verify한다고 하자.
 
 KDA state:
 
-$$
+```math
 S_t\rightarrow S_{t+1}\rightarrow\cdots\rightarrow S_{t+7}
-$$
+```
 
 로 in-place update된다.
 
@@ -700,7 +700,7 @@ expert weight bandwidth + inter-node routing + periodic MLA cache read.
 
 한 K3 iteration을 개념적으로:
 
-$$
+```math
 T_{layer}
 =
 T_{AttnRes}
@@ -711,7 +711,7 @@ T_{AttnRes}
 +T_{combine}
 +T_{shared}
 +T_{collective}
-$$
+```
 
 로 분해한다.
 

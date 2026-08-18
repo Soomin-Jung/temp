@@ -208,9 +208,9 @@ GPU cluster의 고속 link는 다음 물리 부품에 의존한다.
 
 leaf switch가 host를 수용하고 spine이 leaf 사이 bandwidth를 제공한다. non-blocking에 가깝게 만들려면 leaf downlink 합과 uplink 합을 맞추지만 비용과 cable 수가 증가한다.
 
-$$
+```math
 Blocking\ ratio = \frac{leaf\ host-facing\ bandwidth}{leaf\ spine-facing\ bandwidth}
-$$
+```
 
 1:1이면 해당 stage에서 nominal non-blocking이며 2:1이면 모든 host가 동시에 외부로 보낼 때 최대 절반 수준의 uplink share가 될 수 있다.
 

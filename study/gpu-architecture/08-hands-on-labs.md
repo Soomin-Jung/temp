@@ -174,9 +174,9 @@ CUDA Samples가 제공되면 다음 도구를 사용한다.
 
 ### 측정 기록
 
-$$
+```math
 B_{effective} = \frac{bytes\ transferred}{elapsed\ time}
-$$
+```
 
 양방향 결과는 도구가 두 방향의 합을 표시하는지 방향별 수치를 표시하는지 확인한 후 기록한다.
 

@@ -35,9 +35,9 @@ DeepSeek-V2가 공개한 **Multi-head Latent Attention(멀티 헤드 레이턴�
 
 ### 2.1 KV Compression
 
-$$
+```math
 c_t^{KV}=W_{DKV}x_t
-$$
+```
 
 - $c_t^{KV}$: **씨 서브 티 케이브이**, compressed KV latent
 - $W_{DKV}$: KV down-projection
@@ -45,23 +45,23 @@ $$
 
 Content K/V는:
 
-$$
+```math
 k_t^C=W_{UK}c_t^{KV}
-$$
+```
 
-$$
+```math
 v_t=W_{UV}c_t^{KV}
-$$
+```
 
 처럼 생성된다.
 
 Token별 cache representation을:
 
-$$
+```math
 H_{kv}d_h
 \rightarrow
 r_{KV}+d_{rope}
-$$
+```
 
 수준으로 줄이는 것이 핵심이다.
 
@@ -75,31 +75,31 @@ Low-rank latent를 효율적으로 cache하려면 positional encoding이 문제�
 
 만약:
 
-$$
+```math
 k_i'=R_iW_{UK}c_i^{KV}
-$$
+```
 
 처럼 up-projected key 전체에 position-dependent RoPE를 적용하면, $W_{UK}$를 runtime attention에 흡수하기가 어렵다.
 
 DeepSeek MLA는 Q/K를 다음 두 부분으로 나눈다.
 
-$$
+```math
 q_t=[q_t^C;q_t^R]
-$$
+```
 
-$$
+```math
 k_i=[k_i^C;k_i^R]
-$$
+```
 
 - $C$: content/no-position part
 - $R$: RoPE position part
 
 Score는:
 
-$$
+```math
 q_t^\top k_i
 =(q_t^C)^\top k_i^C+(q_t^R)^\top k_i^R
-$$
+```
 
 이다.
 
@@ -111,17 +111,17 @@ $$
 
 Key content path:
 
-$$
+```math
 q_t^\top W_{UK}c_i^{KV}
 =(W_{UK}^\top q_t)^\top c_i^{KV}
-$$
+```
 
 Value path:
 
-$$
+```math
 \sum_i a_iW_{UV}c_i^{KV}
 =W_{UV}\left(\sum_i a_ic_i^{KV}\right)
-$$
+```
 
 따라서 decode마다 cached latent 전체를 full K/V로 materialize할 필요 없이 latent space에서 attention의 주요 부분을 계산할 수 있다.
 
@@ -167,9 +167,9 @@ Token T → latent cT
 
 Global MLA query는 여전히:
 
-$$
+```math
 q_t\leftrightarrow c_1,c_2,\ldots,c_T
-$$
+```
 
 를 수행한다.
 
@@ -209,9 +209,9 @@ flowchart TB
 
 즉:
 
-$$
+```math
 T\rightarrow K,\qquad K\ll T
-$$
+```
 
 이다.
 
@@ -258,14 +258,14 @@ Sparse attention은 selected $K$개만 attention한다고 해서 전체 비용�
 
 실제 decode path에는:
 
-$$
+```math
 T_{total}
 =
 T_{index}
 +T_{topk}
 +T_{gather}
 +T_{sparse-attn}
-$$
+```
 
 가 있다.
 
@@ -350,9 +350,9 @@ shared KV stream
 
 DeepSeek-V4 CSA의 기본 compression ratio는 4다.
 
-$$
+```math
 T\rightarrow T_c\approx\frac{T}{4}
-$$
+```
 
 Compression은 단순 token drop이 아니라 learned compressor를 통해 overlapping group의 history를 compressed KV entry로 만든다.
 
@@ -417,9 +417,9 @@ selected compressed blocks
 
 **Heavily Compressed Attention(헤빌리 컴프레스트 어텐션; HCA)**은 기본 compression ratio가 약 128이다.
 
-$$
+```math
 T\rightarrow T_h\approx\frac{T}{128}
-$$
+```
 
 이 정도로 sequence가 짧아지면 indexer로 top-k를 골라야 할 필요가 줄어든다.
 
@@ -450,9 +450,9 @@ flowchart TB
 
 HCA에서는 compressed entry 수가 매우 작아졌기 때문에:
 
-$$
+```math
 \text{query}\leftrightarrow\text{all compressed entries}
-$$
+```
 
 를 수행한다.
 
@@ -506,11 +506,11 @@ V4 attention에는 head별 learned sink 성격의 parameter가 있다.
 
 Softmax denominator에 learned sink logit을 포함한다고 생각하면:
 
-$$
+```math
 a_i=
 \frac{e^{s_i}}
 {e^{s_{sink}}+\sum_j e^{s_j}}
-$$
+```
 
 처럼 ordinary token들의 weight 총합이 반드시 1이 되지 않고 일부 mass가 sink로 갈 수 있다.
 
@@ -524,9 +524,9 @@ DeepSeek-V4는 attention output projection에도 low-rank/grouped 구조를 사�
 
 일반 full projection:
 
-$$
+```math
 y=W_Oo
-$$
+```
 
 대신 group별 low-rank path를 사용하여 large head output projection의 FLOPs/parameter traffic을 줄인다.
 
@@ -612,9 +612,9 @@ Historical tokens
 
 따라서 단순한:
 
-$$
+```math
 2TH_{kv}d_hb
-$$
+```
 
 식만으로 V4 cache를 계산하면 틀린다.
 
@@ -643,35 +643,35 @@ Hugging Face가 기술보고서를 정리한 공개 article 기준 V4-Pro/Flash�
 
 ### DeepSeek-V2 MLA
 
-$$
+```math
 \text{feature width compression}
-$$
+```
 
 각 token의 KV를 더 작은 latent로 저장한다.
 
 ### DeepSeek-V3.2 DSA
 
-$$
+```math
 \text{query lookup sparsification}
-$$
+```
 
 과거 token 중 top-k만 정밀 attention한다.
 
 ### DeepSeek-V4 CSA
 
-$$
+```math
 \text{sequence compression}
 +
 \text{sparse lookup}
-$$
+```
 
 ### DeepSeek-V4 HCA
 
-$$
+```math
 \text{heavy sequence compression}
 +
 \text{dense lookup}
-$$
+```
 
 즉 DeepSeek의 발전을 `MLA → sparse → compression`이라는 세 축으로 보면 구조가 선명해진다.
 

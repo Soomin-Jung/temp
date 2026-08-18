@@ -42,10 +42,10 @@ K3를 이해할 때 `모델 구조`와 `학습된 behavior`를 분리해 설명�
 
 기본 next-token objective:
 
-$$
+```math
 \mathcal L_{NTP}
 =-\sum_t\log p(x_t\mid x_{<t})
-$$
+```
 
 주로:
 
@@ -103,9 +103,9 @@ K3의 reasoning-effort control과 long-horizon agentic RL을 이해하려면 이
 
 Reasoning trajectory가 길어지면 한 rollout의 token 수가 커진다.
 
-$$
+```math
 C_{rollout}\propto T_{prompt}+T_{reason}+T_{answer}
-$$
+```
 
 RL에서는 같은 prompt에 여러 rollout을 만들 수 있으므로 비용이 더 커진다.
 
@@ -454,9 +454,9 @@ K2/K3에는 **Multi-Token Prediction(멀티 토큰 프레딕션; MTP)** layer가
 
 Next-token prediction:
 
-$$
+```math
 p(x_{t+1}\mid x_{\le t})
-$$
+```
 
 만 학습하는 대신 MTP는 더 미래 token을 예측하는 auxiliary objective를 둔다.
 
@@ -543,9 +543,9 @@ Draft distribution $q$가 target $p$와 가깝다고 해서 실제 accepted leng
 
 Speculative decoding의 deployment 목표는:
 
-$$
+```math
 \mathbb E[\text{accepted tokens per verification}]
-$$
+```
 
 를 높이는 것이다.
 
@@ -563,9 +563,9 @@ K3는 recurrent KDA state를 사용한다.
 
 Draft candidate를 target으로 여러 token advance하면:
 
-$$
+```math
 S_t\rightarrow S_{t+1}\rightarrow\cdots\rightarrow S_{t+k}
-$$
+```
 
 state도 변한다.
 
@@ -670,7 +670,7 @@ flowchart TB
 
 Agent task result는:
 
-$$
+```math
 \text{Model Quality}
 \times
 \text{Tool Interface}
@@ -680,7 +680,7 @@ $$
 \text{Context Management}
 \times
 \text{Runtime Orchestration}
-$$
+```
 
 의 함수에 가깝다.
 

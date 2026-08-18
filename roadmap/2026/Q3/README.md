@@ -1,6 +1,7 @@
 # 2026 Q3 — LLM E2E Platform 확장
 
-기준일: 2026-08-18
+기준일: 2026-08-18  
+최근 검토: 2026-08-19 KST
 
 ## 분기 목표
 
@@ -12,21 +13,20 @@ MOC는 전체 과제의 중심이 아니라 여러 플랫폼 capability를 운�
 
 ### 망A
 
-- H200 8GPU 노드 × 7 — 총 56 GPU
-  - NVLink/NVSwitch
-  - InfiniBand 구성
-  - vLLM NCCL 로그에서 GPUDirect RDMA / IB channel 확인
-  - NVIDIA Network Operator 기반 RDMA device resource 사용
-- H100 4GPU 노드 × 6 — 총 24 GPU
-  - NVBridge 미장착
-- L40S 8GPU 노드 × 2 — 총 16 GPU
+- H200 중심 GPU pool
+- 노드 내부 NVLink/NVSwitch topology
+- InfiniBand 구성
+- vLLM NCCL 로그에서 GPUDirect RDMA / IB channel 확인
+- NVIDIA Network Operator 기반 RDMA device resource 사용
+- H100/L40S를 포함한 heterogeneous GPU pool은 topology capability를 별도 profile로 관리
 
 ### 망B
 
-- H200 8GPU 노드 × 5 — 총 40 GPU
+- H200 중심 GPU pool
 - InfiniBand 없음
+- 우선 검증 topology는 Node-local P/D
 
-총 20 GPU 노드 / 136 GPU
+실제 node/GPU 수량과 hostname/IP는 공개 저장소에 기록하지 않는다.
 
 ---
 
@@ -38,7 +38,7 @@ MOC는 전체 과제의 중심이 아니라 여러 플랫폼 capability를 운�
    - custom vLLM Production Stack 0.1.8 운영 기준선을 보존하면서 Node-local P/D Cell을 우선 구현
    - 하나의 modelSpec 안에서 Prefill / Decode topology 정의
    - orchestrated LMRouter + KV transfer + Cell replica + Prometheus + failure recovery 통합
-   - 상세: [`pd-disaggregation/`](../../../pd-disaggregation/)
+   - 상세: [`vllm-stack/pd-disaggregation/`](../../../vllm-stack/pd-disaggregation/)
 
 2. **Kimi-K3 망A Multi-node 운영 배포**
    - H200 + IB/GDRDMA 환경에서 멀티노드 배포를 운영 수준으로 정립
@@ -65,6 +65,7 @@ MOC는 전체 과제의 중심이 아니라 여러 플랫폼 capability를 운�
    - streaming / reasoning / tool-call regression test
    - Global Router와 P/D Cell Router의 책임 분리
    - engine-level metrics와 canonical health model 정립
+   - base URL / API key / model identity부터 streaming / reasoning / tool call까지 동일한 golden test로 검증
 
 ### P2 — 다음 단계 플랫폼 확장
 
@@ -80,8 +81,10 @@ MOC는 전체 과제의 중심이 아니라 여러 플랫폼 capability를 운�
 
 8. **MOC Operations Control Plane**
    - 다른 과제보다 구현 우선순위는 뒤지만 전체 운영 구조의 장기 제어 계층으로 유지
-   - Core Framework는 state collection / policy / planner / safety / adapter / reconcile 구조를 기준으로 함
+   - Core Framework는 구현되어 있으나 운영 business capability가 완성된 것은 아님
+   - Production Stack adoption, vLLM adapter, endpoint/LiteLLM sync, dynamic placement/scale, GPU reclaim/repacking을 명시적 backlog로 관리
    - 각 serving capability가 안정된 뒤 scale, drain, node reclaim, topology lifecycle, cache policy 등을 controller로 흡수
+   - 상세: [`moc/README.md`](../../../moc/README.md)
 
 ---
 
@@ -96,7 +99,7 @@ MOC는 전체 과제의 중심이 아니라 여러 플랫폼 capability를 운�
 | Model Enablement & Performance | 신규 모델, topology, SD, tuning, metric 분석 | 상시 진행 |
 | Cache Plane | KV offload, P/D transfer, shared KV, cache-aware routing | 설계/검증 트랙 |
 | Stateful Serving | Responses state, conversation store, session routing | 아키텍처 과제 |
-| Operations Control | MOC Core + 운영 비즈니스 로직 | 설계 유지 / 구현 후순위 |
+| Operations Control | MOC Core + 운영 비즈니스 로직 | Core 가용 / Business logic backlog |
 
 자세한 상태와 Gate는 [`workstreams.md`](workstreams.md), 전체 구조는 [`architecture.md`](architecture.md)를 참고한다.
 
@@ -115,7 +118,10 @@ MOC는 전체 과제의 중심이 아니라 여러 플랫폼 capability를 운�
 ## 상세 문서 연결
 
 - [vLLM Stack 진행 계획](../../../vllm-stack/2026-08-18-%EC%A7%84%ED%96%89%EA%B3%84%ED%9A%8D.md)
-- [P/D Disaggregation Master Plan](../../../pd-disaggregation/2026-08-18-vllm-stack-pd-disaggregation-master-plan.md)
-- [Node-local P/D Cell 상세 계획](../../../pd-disaggregation/2026-08-18-node-local-pd-cell-0.1.8-plan.md)
+- [P/D Disaggregation Master Plan](../../../vllm-stack/pd-disaggregation/2026-08-18-vllm-stack-pd-disaggregation-master-plan.md)
+- [Node-local P/D Cell 상세 계획](../../../vllm-stack/pd-disaggregation/2026-08-18-node-local-pd-cell-0.1.8-plan.md)
+- [Model Serving Validation Contract](../../../vllm-stack/model-serving-validation.md)
+- [MOC Capability Backlog](../../../moc/README.md)
 - [DeepSeek-V4 모델/장애 조사](../../../models/deepseek-v4/)
+- [Kimi-K3 모델 중심 학습 경로](../../../models/kimi-k3/)
 - [Study Notes](../../../study/)
