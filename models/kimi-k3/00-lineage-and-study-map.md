@@ -182,9 +182,9 @@ K3를 이해할 때 sparsity라는 말을 하나로 묶지 않는다.
 
 896 routed experts 중 16개만 실행한다.
 
-$$
+```math
 \text{expert activation ratio}=\frac{16}{896}\approx1.79\%
-$$
+```
 
 즉 routed expert bank는 매우 sparse하다.
 
@@ -211,15 +211,15 @@ K2와 K3 모두 hidden size가 7168이다.
 
 그런데 total parameter는 약:
 
-$$
+```math
 1.04T\rightarrow2.78T
-$$
+```
 
 active parameter는:
 
-$$
+```math
 32.6B\rightarrow104.2B
-$$
+```
 
 로 커졌다.
 
@@ -227,33 +227,33 @@ $$
 
 ### Depth
 
-$$
+```math
 61\rightarrow93\text{ layers}
-$$
+```
 
 ### Expert Count
 
-$$
+```math
 384\rightarrow896
-$$
+```
 
 ### Active Experts
 
-$$
+```math
 8\rightarrow16
-$$
+```
 
 ### Expert Width
 
-$$
+```math
 2048\rightarrow3072
-$$
+```
 
 ### Shared Experts
 
-$$
+```math
 1\rightarrow2
-$$
+```
 
 ### Vision
 

@@ -56,9 +56,9 @@ attention_heads = 96
 
 Token representation 하나는:
 
-$$
+```math
 x_t\in\mathbb{R}^{7168}
-$$
+```
 
 이다.
 
@@ -79,9 +79,9 @@ K3 model summary:
 
 합:
 
-$$
+```math
 69+24=93
-$$
+```
 
 이다.
 
@@ -89,21 +89,21 @@ $$
 
 이를 architecture pattern으로 쓰면:
 
-$$
+```math
 23\times(3\mathrm{KDA}+1\mathrm{MLA})+1\mathrm{MLA}
-$$
+```
 
 이다.
 
 검산:
 
-$$
+```math
 23\times3=69\text{ KDA}
-$$
+```
 
-$$
+```math
 23+1=24\text{ MLA}
-$$
+```
 
 ```text
 Layer group 1 : K K K M
@@ -183,7 +183,7 @@ shared experts S = 2
 
 Routed path:
 
-$$
+```math
 7168
 \xrightarrow{W_{down}}
 3584
@@ -191,7 +191,7 @@ $$
 3584
 \xrightarrow{W_{up}}
 7168
-$$
+```
 
 한 routed expert의 SiTU-GLU FFN은 개념적으로 3개 large matrix를 가진다.
 
@@ -201,14 +201,14 @@ $$
 
 따라서 expert 하나의 주 weight element 수는 대략:
 
-$$
+```math
 P_{expert}
 \approx3\times3584\times3072
-$$
+```
 
-$$
+```math
 =33,030,144
-$$
+```
 
 즉 약 **33.0M parameters/expert**다.
 
@@ -218,19 +218,19 @@ Bias/scale/세부 implementation은 제외한 근사치다.
 
 # 8. 896 Routed Experts가 Layer당 몇 Parameter인가
 
-$$
+```math
 33.03M\times896
 \approx29.6B
-$$
+```
 
 즉 **MoE layer 하나의 routed expert bank만 약 29.6B parameter**다.
 
 이를 약 92 MoE layers에 곱하면:
 
-$$
+```math
 29.6B\times92
 \approx2.72T
-$$
+```
 
 가 된다.
 
@@ -242,9 +242,9 @@ K3 total 약 2.78T와 매우 가깝다.
 
 근사 비율:
 
-$$
+```math
 \frac{2.72T}{2.78T}\approx97.8\%
-$$
+```
 
 이는 정확한 checkpoint parameter accounting이 아니라 공개 shape에서 유도한 근사치지만, `expert weights가 모델 parameter의 압도적 majority`라는 구조를 매우 잘 보여준다.
 
@@ -256,10 +256,10 @@ Token 하나는 896 experts 전부가 아니라 16개 routed experts만 실행�
 
 Routed expert active parameter per MoE layer를 단순 계산하면:
 
-$$
+```math
 33.03M\times16
 \approx528.5M
-$$
+```
 
 이다.
 
@@ -278,9 +278,9 @@ $$
 
 핵심은:
 
-$$
+```math
 P_{active}\ll P_{total}
-$$
+```
 
 이 expert routing 때문에 가능하다는 것이다.
 
@@ -292,16 +292,16 @@ Shared expert는 latent routed path와 달리 full-width에서 동작한다.
 
 단순 GLU shape를 같은 $m=3072$로 가정하면 expert 하나의 주요 weights:
 
-$$
+```math
 3\times7168\times3072
 \approx66.1M
-$$
+```
 
 2 shared experts면 layer당 약:
 
-$$
+```math
 132M
-$$
+```
 
 수준의 full-width shared compute가 추가될 수 있다.
 
@@ -315,27 +315,27 @@ $$
 
 공유 projection parameter:
 
-$$
+```math
 W_{down}\in\mathbb{R}^{3584\times7168}
-$$
+```
 
-$$
+```math
 W_{up}\in\mathbb{R}^{7168\times3584}
-$$
+```
 
 각각 약:
 
-$$
+```math
 7168\times3584\approx25.69M
-$$
+```
 
 parameters.
 
 둘 합:
 
-$$
+```math
 \approx51.4M/layer
-$$
+```
 
 이다.
 
@@ -349,16 +349,16 @@ Router는 current token full hidden representation에서 expert scores를 만든
 
 개념적으로:
 
-$$
+```math
 r=W_rx,\qquad
 W_r\in\mathbb{R}^{896\times7168}
-$$
+```
 
 Router parameter 자체는:
 
-$$
+```math
 896\times7168\approx6.42M
-$$
+```
 
 수준이다.
 
@@ -380,18 +380,18 @@ ShortConv kernel = 4
 
 Logical recurrent state를 단순화하면:
 
-$$
+```math
 S\in\mathbb{R}^{96\times128\times128}
-$$
+```
 
 이다.
 
 Element 수:
 
-$$
+```math
 96\times128\times128
 =1,572,864
-$$
+```
 
 즉 한 KDA layer의 full logical state가 약 1.57M elements다.
 
@@ -399,9 +399,9 @@ BF16 raw bytes라면 약 3 MiB 수준이지만 실제 TP sharding/layout/dtype�
 
 중요:
 
-$$
+```math
 \text{KDA state size}\not\propto T
-$$
+```
 
 이다.
 
@@ -426,11 +426,11 @@ mla_use_output_gate = true
 
 K3 전체 sequence memory:
 
-$$
+```math
 69\times\text{fixed KDA state}
 +
 24\times\text{tokenwise MLA cache}(T)
-$$
+```
 
 이다.
 
@@ -454,9 +454,9 @@ attn_res_block_size = 12
 
 각 source representation은:
 
-$$
+```math
 [B,T,7168]
-$$
+```
 
 shape다.
 
@@ -586,10 +586,10 @@ Total parameter가 2.8T이면 low-precision이어도 raw weight storage가 매�
 
 예를 들어 이상적인 4-bit만 단순 적용해도:
 
-$$
+```math
 2.8T\times0.5\text{ byte}
 \approx1.4\text{ TB}
-$$
+```
 
 이다.
 
@@ -606,9 +606,9 @@ $$
 
 H200 141GB × 16:
 
-$$
+```math
 2256\text{ GB raw VRAM}
-$$
+```
 
 이므로 theoretical capacity는 있어 보여도 실제 shard/EP/TP/layout/graph/cache까지 넣으면 margin이 매우 작다.
 
@@ -622,9 +622,9 @@ $$
 
 앞의 근사 계산:
 
-$$
+```math
 P_{routed}\approx2.72T
-$$
+```
 
 이다.
 

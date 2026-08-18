@@ -13,6 +13,7 @@
   - [Linear/Recurrent Attention — DeltaNet, GDN, KDA](attention/03-linear-recurrent-attention.md)
   - [Local, Sparse, Compressed, Hybrid Attention](attention/04-local-sparse-compressed-hybrid.md)
   - [Kimi-K3 — KDA, Gated MLA, Attention Residuals](attention/10-kimi-k3.md)
+  - [모델 중심 계보 — Kimi Linear에서 Kimi-K3까지](../models/kimi-k3/README.md)
   - [Qwen — GQA에서 Gated DeltaNet Hybrid까지](attention/11-qwen.md)
   - [DeepSeek — MLA에서 DSA, CSA/HCA까지](attention/12-deepseek.md)
   - [다른 주요 LLM의 Attention 설계 비교](attention/13-other-major-models.md)
@@ -52,3 +53,4 @@ GPU 자체는 0→8, multi-GPU와 cluster 통신은 9→13 순서로 읽는다. 
 4. 공식 원문과 확인일을 남기고, 공개되지 않은 구조는 추측하지 않는다.
 5. 실험은 가설, 고정 조건, 변경 변수, 반증 조건을 함께 기록한다.
 6. 외부에 공개할 수 없는 호스트명, 주소, 수량, 조직·프로젝트명은 기록하지 않는다.
+7. display math는 `$$` 대신 fenced `math` 문법을 사용하고 [Markdown 렌더링 규칙](../docs/markdown-rendering.md)에 따라 전체 검증한다.

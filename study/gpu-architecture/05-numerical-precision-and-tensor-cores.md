@@ -22,9 +22,9 @@
 
 일반적인 binary floating-point는 sign, exponent, fraction/mantissa로 구성된다.
 
-$$
+```math
 x=(-1)^s \times 2^{e-bias} \times (1.f)
-$$
+```
 
 - sign bit: 양수/음수
 - exponent: 표현 가능한 값의 범위
@@ -103,9 +103,9 @@ FP4를 `소수점 4자리`로 이해하면 안 된다. 총 4 bits의 매우 제�
 
 Tensor Core는 matrix multiply-accumulate를 tile 단위로 처리한다.
 
-$$
+```math
 D=A\times B+C
-$$
+```
 
 일반적인 mixed-precision pattern은 다음과 같다.
 
@@ -171,9 +171,9 @@ FP4 sparse peak와 BF16 dense peak를 나란히 놓고 `몇 배 빠르다`고 �
 
 단순화하면 다음과 같다.
 
-$$
+```math
 M_{weights}\approx N_{parameters}\times bytes_{per\ weight}
-$$
+```
 
 예를 들어 70B parameter의 raw weight만 보면:
 
@@ -192,10 +192,10 @@ MoE에서는 `active parameters`가 token당 compute를 설명하지만 전체 c
 
 표준 MHA/GQA 계열의 근사식은 다음과 같다.
 
-$$
+```math
 M_{KV}\approx
 B\times S\times L\times 2\times H_{KV}\times D\times bytes
-$$
+```
 
 - $B$: sequence 수
 - $S$: 저장 token 수

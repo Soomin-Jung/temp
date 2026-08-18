@@ -20,15 +20,15 @@ MLA를 GQA와 같은 축에서 이해하면 혼란이 생긴다.
 
 일반 MHA/GQA에서는 hidden vector $x_t$에서 K/V를 직접 만든다.
 
-$$
+```math
 k_t=W_Kx_t,\qquad v_t=W_Vx_t
-$$
+```
 
 여러 KV head를 포함하면 logical K/V width는 대략:
 
-$$
+```math
 d_{KV}=H_{kv}d_h
-$$
+```
 
 이고 token마다 이 representation을 cache한다.
 
@@ -49,22 +49,22 @@ GQA: x_t → K0 K1 ... Kg,       V0 V1 ... Vg
 
 예를 들어 큰 projection $W$를:
 
-$$
+```math
 W\approx W_UW_D
-$$
+```
 
 로 분해한다고 하자.
 
-$$
+```math
 W_D\in\mathbb{R}^{r\times d_{model}},\qquad
 W_U\in\mathbb{R}^{d_{out}\times r}
-$$
+```
 
 여기서:
 
-$$
+```math
 r\ll d_{out}
-$$
+```
 
 이면 입력을 먼저 작은 $r$차원 latent로 압축하고 다시 큰 공간으로 확장할 수 있다.
 
@@ -82,9 +82,9 @@ flowchart LR
 
 DeepSeek-V2 MLA를 단순화하면 token $t$의 hidden state를 작은 KV latent로 압축한다.
 
-$$
+```math
 c_t^{KV}=W_{DKV}x_t
-$$
+```
 
 - $c_t^{KV}$: **씨 서브 티 케이브이**, KV용 compressed latent vector
 - $W_{DKV}$: **KV Down-Projection(케이브이 다운 프로젝션, KV 잠재공간으로 축소하는 projection)**
@@ -92,13 +92,13 @@ $$
 
 그 뒤 content key와 value를 복원한다.
 
-$$
+```math
 k_t^{C}=W_{UK}c_t^{KV}
-$$
+```
 
-$$
+```math
 v_t=W_{UV}c_t^{KV}
-$$
+```
 
 - $W_{UK}$: key up-projection
 - $W_{UV}$: value up-projection
@@ -124,13 +124,13 @@ DeepSeek MLA는 query에도 low-rank projection을 사용한다.
 
 단순화하면:
 
-$$
+```math
 c_t^Q=W_{DQ}x_t
-$$
+```
 
-$$
+```math
 q_t=W_{UQ}c_t^Q
-$$
+```
 
 여기서 `q_lora_rank`, `kv_lora_rank` 같은 config 이름이 나온다.
 
@@ -144,9 +144,9 @@ MLA에서 가장 중요한 세부 설계 중 하나는 positional encoding이다
 
 만약 full key에 RoPE를 적용한 뒤 token마다 cache해야 한다면:
 
-$$
+```math
 k_i'=R_iW_{UK}c_i^{KV}
-$$
+```
 
 position-dependent 회전 $R_i$ 때문에 단순히 $c_i^{KV}$만 cache하고 모든 projection을 query 쪽에 absorb하기가 어려워진다.
 
@@ -157,23 +157,23 @@ position-dependent 회전 $R_i$ 때문에 단순히 $c_i^{KV}$만 cache하고 �
 
 개념적으로:
 
-$$
+```math
 q_t=[q_t^C;q_t^R]
-$$
+```
 
-$$
+```math
 k_i=[k_i^C;k_i^R]
-$$
+```
 
 attention logit은:
 
-$$
+```math
 q_t^\top k_i
 =
 (q_t^C)^\top k_i^C
 +
 (q_t^R)^\top k_i^R
-$$
+```
 
 이다.
 
@@ -196,30 +196,30 @@ MLA를 naïve하게 구현하면 cache는 작아져도 decode할 때 모든 cach
 
 ### 7.1 Key 쪽 absorption
 
-$$
+```math
 q_t^\top k_i^C
 =q_t^\top W_{UK}c_i^{KV}
-$$
+```
 
 곱 순서를 바꾸면:
 
-$$
+```math
 q_t^\top W_{UK}c_i^{KV}
 =
 (W_{UK}^\top q_t)^\top c_i^{KV}
-$$
+```
 
 즉 모든 $c_i$를 큰 key로 복원하는 대신 query를 latent space로 변환할 수 있다.
 
-$$
+```math
 q_t^{latent}=W_{UK}^\top q_t
-$$
+```
 
 그 뒤:
 
-$$
+```math
 (q_t^{latent})^\top c_i^{KV}
-$$
+```
 
 를 계산한다.
 
@@ -227,17 +227,17 @@ $$
 
 attention weight를 $a_i$라 하면:
 
-$$
+```math
 \sum_i a_i v_i
 =
 \sum_i a_i W_{UV}c_i^{KV}
-$$
+```
 
 선형성을 이용하면:
 
-$$
+```math
 =W_{UV}\left(\sum_i a_i c_i^{KV}\right)
-$$
+```
 
 이므로 latent를 weighted sum한 뒤 한 번 up-project할 수 있다.
 
@@ -249,27 +249,27 @@ $$
 
 이상적인 MLA cache는 대략:
 
-$$
+```math
 \text{Cache per token}
 \approx
 c_t^{KV} + k_t^R
-$$
+```
 
 형태다.
 
 즉:
 
-$$
+```math
 O(r_{KV}+d_{rope})
-$$
+```
 
 의 token당 representation을 저장한다.
 
 일반 MHA/GQA의:
 
-$$
+```math
 O(H_{kv}d_h)
-$$
+```
 
 보다 훨씬 작게 설계할 수 있다.
 
@@ -387,11 +387,11 @@ MLA와 FP8 KV cache는 서로 다른 최적화 축이다.
 
 개념적으로:
 
-$$
+```math
 M_{cache}
 \propto
 T\times d_{cached}\times b
-$$
+```
 
 에서 MLA는 $d_{cached}$를 줄이고, quantization은 $b$를 줄인다.
 
@@ -427,17 +427,17 @@ MLA에서 TP를 볼 때는 다음 projection들이 어디에 shard되는지 확�
 
 이상적인 cache representation이 `512 + 64` element/token이라고 단순화하면:
 
-$$
+```math
 576\times2=1152\ \text{bytes/token/layer}
-$$
+```
 
 이다.
 
 반면 8 KV heads, head dim 128 GQA라면:
 
-$$
+```math
 2\times8\times128\times2=4096\ \text{bytes/token/layer}
-$$
+```
 
 이다.
 

@@ -3,14 +3,14 @@
 ## 디렉터리 기준
 
 - `roadmap/` : 연도/분기별 주요 과제, 목표 아키텍처, Workstream 현황을 보는 상위 인덱스
-- `vllm-stack/` : vLLM Production Stack 커스텀, 버전 이관, 배포 구조
-- `pd-disaggregation/` : Prefill/Decode 분리 배포, Cell/Fabric 구조, 장애 복구
+- `vllm-stack/` : vLLM Production Stack 커스텀, 버전 이관, P/D Disaggregation, 배포·검증 구조
 - `multi-node/` : 멀티노드 vLLM, Ray 대체, native multiprocess
 - `kv-cache/` : KV Cache, connector, offloading, cache-aware routing
 - `moc/` : MOC 설계/구현 관련 중요 결정
 - `study/` : 공부하면서 남길 가치가 있는 핵심 정리
 - `models/` : 모델별 architecture, checkpoint, 배포 호환성, 장애 조사
 - `weekly-report/` : vLLM 생태계, 오픈웨이트 모델, LLM serving·최적화·논문 주간 보고서
+- `docs/` : 저장소 작성·렌더링·검증 규칙
 - `misc/` : 임시 메모
 
 ## Roadmap
@@ -36,26 +36,18 @@
   - [Serving Engineer 관점 — Cache, State, Kernel, Prefix Cache, 분산 추론](study/attention/90-serving-engineer-view.md)
   - [논문 읽기 순서, 수식 Cheat Sheet, 용어집](study/attention/99-papers-and-glossary.md)
 
-### Kimi K3 / Kimi Architecture Lineage
-
-- [Kimi K3 — Model Architecture & Lineage Study Guide](models/kimi-k3/README.md)
-  - [Kimi 계보와 K3 학습 지도](models/kimi-k3/00-lineage-and-study-map.md)
-  - [Kimi K2 — K3의 Large-Scale Foundation](models/kimi-k3/01-kimi-k2-foundation.md)
-  - [Kimi Linear — KDA Hybrid에서 K3로 가는 다리](models/kimi-k3/02-kimi-linear-bridge.md)
-  - [Sparse MoE → LatentMoE → Stable LatentMoE](models/kimi-k3/03-moe-latentmoe-stable-latentmoe.md)
-  - [Attention Residuals — Depth Mixing](models/kimi-k3/04-attention-residuals-depth-mixing.md)
-  - [Native Multimodal — Kimi-VL, K2.5, MoonViT-V2](models/kimi-k3/05-native-multimodal-lineage.md)
-  - [Optimization / Scaling / Pretraining — Muon 계보](models/kimi-k3/06-optimization-scaling-and-pretraining.md)
-  - [Post-Training / Agentic RL / MTP / Speculative Decoding](models/kimi-k3/07-posttraining-agentic-rl-and-speculative.md)
-  - [K3 Architecture Reconstruction — 2.8T 구조 직접 계산](models/kimi-k3/08-k3-architecture-reconstruction.md)
-  - [K3 Systems & Serving — EP, CP, Hybrid Cache, P/D](models/kimi-k3/09-k3-systems-and-serving.md)
-  - [논문 읽기 순서, 핵심 수식, 용어집](models/kimi-k3/99-papers-and-glossary.md)
-
 ### vLLM Production Stack / P-D Disaggregation
 
-- [vLLM Stack 진행 계획](vllm-stack/2026-08-18-%EC%A7%84%ED%96%89%EA%B3%84%ED%9A%8D.md)
-- [P/D Disaggregation Master Plan](pd-disaggregation/2026-08-18-vllm-stack-pd-disaggregation-master-plan.md)
-- [Node-local P/D Cell 0.1.8 계획](pd-disaggregation/2026-08-18-node-local-pd-cell-0.1.8-plan.md)
+- [vLLM Stack 문서 인덱스](vllm-stack/README.md)
+- [vLLM Stack 진행 계획](vllm-stack/2026-08-18-진행계획.md)
+- [P/D Disaggregation 인덱스](vllm-stack/pd-disaggregation/README.md)
+  - [P/D Disaggregation Master Plan](vllm-stack/pd-disaggregation/2026-08-18-vllm-stack-pd-disaggregation-master-plan.md)
+  - [Node-local P/D Cell 0.1.8 계획](vllm-stack/pd-disaggregation/2026-08-18-node-local-pd-cell-0.1.8-plan.md)
+- [Model Serving Validation Contract](vllm-stack/model-serving-validation.md)
+
+### MOC Operations Control Plane
+
+- [MOC 현재 구현 경계와 Business Capability Backlog](moc/README.md)
 
 ### GPU Architecture / CUDA
 
@@ -71,10 +63,29 @@
 - [개선판의 DSpark checkpoint와 vLLM 구현 차이](models/deepseek-v4/2026-08-18-dspark-checkpoint-and-vllm-implementation.md)
 - [vLLM 0.27.x DeepGEMM SM90 CUDA IMA 분석](models/deepseek-v4/2026-08-18-vllm-0.27-deepgemm-sm90-cuda-ima.md)
 
+### Kimi K3 / Kimi Architecture Lineage
+
+- [Kimi K3 — Model Architecture & Lineage Study Guide](models/kimi-k3/README.md)
+  - [Kimi 계보와 K3 학습 지도](models/kimi-k3/00-lineage-and-study-map.md)
+  - [Kimi K2 — K3의 Large-Scale Foundation](models/kimi-k3/01-kimi-k2-foundation.md)
+  - [Kimi Linear — KDA Hybrid에서 K3로 가는 다리](models/kimi-k3/02-kimi-linear-bridge.md)
+  - [Sparse MoE → LatentMoE → Stable LatentMoE](models/kimi-k3/03-moe-latentmoe-stable-latentmoe.md)
+  - [Attention Residuals — Depth Mixing](models/kimi-k3/04-attention-residuals-depth-mixing.md)
+  - [Native Multimodal — Kimi-VL, K2.5, MoonViT-V2](models/kimi-k3/05-native-multimodal-lineage.md)
+  - [Optimization / Scaling / Pretraining — Muon 계보](models/kimi-k3/06-optimization-scaling-and-pretraining.md)
+  - [Post-Training / Agentic RL / MTP / Speculative Decoding](models/kimi-k3/07-posttraining-agentic-rl-and-speculative.md)
+  - [K3 Architecture Reconstruction — 2.8T 구조 직접 계산](models/kimi-k3/08-k3-architecture-reconstruction.md)
+  - [K3 Systems & Serving — EP, CP, Hybrid Cache, P/D](models/kimi-k3/09-k3-systems-and-serving.md)
+  - [논문 읽기 순서, 핵심 수식, 용어집](models/kimi-k3/99-papers-and-glossary.md)
+
 ### LLM Serving Weekly Report
 
 - [주간 보고서 인덱스와 검증 정책](weekly-report/README.md)
 - [주간 보고서 템플릿](weekly-report/_TEMPLATE.md)
+
+### 문서 품질
+
+- [Markdown 수식·링크·렌더링 규칙](docs/markdown-rendering.md)
 
 ## 운영 원칙
 
@@ -84,3 +95,4 @@
 4. 실제 구현 저장소와 연결되는 경우 관련 저장소, PR, 커밋 번호를 적습니다.
 5. 완료된 계획도 삭제하지 않고 결과를 덧붙여 이력으로 남깁니다.
 6. 공개 저장소인 동안에는 민감한 내부정보를 기록하지 않습니다.
+7. display math는 `$$` 대신 GitHub 공식 fenced `math` 문법을 사용하고, 변경 후 `node tools/validate_markdown.mjs .`로 전체 문서를 검사합니다.

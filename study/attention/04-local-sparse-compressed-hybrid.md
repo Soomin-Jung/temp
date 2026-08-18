@@ -26,9 +26,9 @@ Full attention의 비용을 줄이는 방법은 recurrent linear attention만이
 
 Global softmax attention의 score matrix는:
 
-$$
+```math
 A=QK^\top\in\mathbb{R}^{T\times T}
-$$
+```
 
 이다.
 
@@ -36,9 +36,9 @@ $$
 
 ### 2.1 Query가 보는 key 수를 줄인다
 
-$$
+```math
 T\rightarrow K,\qquad K\ll T
-$$
+```
 
 - Sliding Window
 - Sparse block/token selection
@@ -46,9 +46,9 @@ $$
 
 ### 2.2 Key/value sequence 자체를 압축한다
 
-$$
+```math
 T\rightarrow T/m
-$$
+```
 
 여러 token을 한 compressed entry로 pooling한다.
 
@@ -74,25 +74,25 @@ Linear → Linear → Linear → Full
 
 **Sliding Window Attention(슬라이딩 윈도우 어텐션, 최근 고정 구간만 조회하는 local softmax attention; SWA)**은 query $t$가 최근 $W$개 key만 본다.
 
-$$
+```math
 \mathcal{N}(t)=\{i\mid t-W+1\le i\le t\}
-$$
+```
 
 attention은:
 
-$$
+```math
 o_t=
 \sum_{i\in\mathcal{N}(t)}
 \operatorname{softmax}_i(q_t^\top k_i)v_i
-$$
+```
 
 이다.
 
 Global $T$ 대신 window $W$만 보므로 전체 sequence 비용은 대략:
 
-$$
+```math
 O(TW)
-$$
+```
 
 이다.
 
@@ -102,9 +102,9 @@ $W$를 고정하면 sequence length에 대해 선형이다.
 
 순수 SWA라면 오래된 KV를 계속 보관할 필요가 없으므로 rotating/ring buffer 형태로:
 
-$$
+```math
 O(W)
-$$
+```
 
 cache만 유지할 수 있다.
 
@@ -201,11 +201,11 @@ MLA는 token당 cache representation을 줄였지만 global attention이면 quer
 
 DSA는 다음 축을 추가로 줄인다.
 
-$$
+```math
 \text{token candidates } T
 \rightarrow
 \text{selected tokens } K
-$$
+```
 
 따라서:
 
@@ -244,9 +244,9 @@ Serving 관점에서 확인할 항목:
 
 압축률을 $m$이라 하면:
 
-$$
+```math
 T\rightarrow T_c\approx\frac{T}{m}
-$$
+```
 
 이다.
 
@@ -307,17 +307,17 @@ Compression은 여러 token을 하나로 합치므로 최근 세밀한 local dep
 
 기본 compression rate는:
 
-$$
+```math
 m'=128
-$$
+```
 
 수준이다.
 
 즉:
 
-$$
+```math
 T\rightarrow T/128
-$$
+```
 
 로 history가 충분히 짧아지므로 compressed entries 전체에 dense attention을 수행한다.
 
@@ -517,9 +517,9 @@ K1,V1 K2,V2 ... KT,VT
 
 각 token의 feature representation을 압축한다.
 
-$$
+```math
 \text{token }i:\quad d_{KV}\rightarrow r_{KV}
-$$
+```
 
 Token count는 $T$ 그대로다.
 
@@ -527,9 +527,9 @@ Token count는 $T$ 그대로다.
 
 sequence axis에서 여러 token을 더 적은 memory entry로 압축한다.
 
-$$
+```math
 T\rightarrow T/m
-$$
+```
 
 DeepSeek-V4는 여기에 MQA/K=V sharing까지 결합한다.
 

@@ -104,9 +104,9 @@ flowchart TB
 
 예를 들어
 
-$$
+```math
 S_t = S_{t-1} + k_t v_t^\top
-$$
+```
 
 에서:
 

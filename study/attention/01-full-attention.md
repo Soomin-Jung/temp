@@ -19,12 +19,12 @@
 
 한 head에서 현재 token $t$의 출력은:
 
-$$
+```math
 o_t = \sum_{i\le t}
 \operatorname{softmax}_i\left(
 \frac{q_t^\top k_i}{\sqrt{d_h}}
 \right)v_i
-$$
+```
 
 - $o_t$: **오 서브 티**, 현재 token의 attention output
 - $q_t$: 현재 query
@@ -56,17 +56,17 @@ flowchart LR
 
 **Multi-Head Attention(멀티 헤드 어텐션, 다중 머리 주의집중; MHA)**은 hidden dimension을 여러 attention head로 나눠 서로 다른 subspace에서 attention을 계산한다.
 
-$$
+```math
 \operatorname{MHA}(X)=
 \operatorname{Concat}(head_1,\ldots,head_H)W_O
-$$
+```
 
 각 head는:
 
-$$
+```math
 head_h=
 \operatorname{Attention}(XW_Q^{(h)},XW_K^{(h)},XW_V^{(h)})
-$$
+```
 
 를 계산한다.
 
@@ -86,15 +86,15 @@ $$
 
 Query head 수와 KV head 수가 같다고 하자.
 
-$$
+```math
 H_q=H_{kv}=H
-$$
+```
 
 각 token의 K/V logical element 수는:
 
-$$
+```math
 2H d_h
-$$
+```
 
 이다. `2`는 key와 value 두 tensor를 뜻한다.
 
@@ -108,15 +108,15 @@ Autoregressive decode에서 이미 계산한 과거 token의 K/V를 매 step 다
 
 한 layer, 한 sequence의 logical KV element 수:
 
-$$
+```math
 N_{KV}=2T H_{kv} d_h
-$$
+```
 
 byte 크기는:
 
-$$
+```math
 M_{KV}=2T H_{kv}d_h\cdot b
-$$
+```
 
 - $T$: cached token 수
 - $H_{kv}$: KV head 수
@@ -125,9 +125,9 @@ $$
 
 전체 model에서는 layer 수 $L$을 곱한다.
 
-$$
+```math
 M_{total}\approx 2LT H_{kv}d_h b
-$$
+```
 
 실제 serving engine에서는 block padding, alignment, metadata, mixed cache representation 등의 overhead가 추가될 수 있다.
 
@@ -137,18 +137,18 @@ $$
 
 한 token/layer당:
 
-$$
+```math
 2\times96\times128\times2
 =49152\ \text{bytes}
-$$
+```
 
 즉 약 48 KiB다.
 
 93 layer라면 token 하나의 전체 layer logical KV만 약:
 
-$$
+```math
 48\text{KiB}\times93\approx4.36\text{MiB}
-$$
+```
 
 가 된다. 100K token context에서 이 구조를 그대로 유지하는 것이 얼마나 비싼지 바로 알 수 있다.
 
@@ -158,9 +158,9 @@ $$
 
 새 output token 하나를 만들 때 current query 하나는 기존 KV cache를 읽는다.
 
-$$
+```math
 q_t K_{1:t}^\top
-$$
+```
 
 계산량도 중요하지만, decode에서는 작은 batch/sequence shape 때문에 Tensor Core를 prefill만큼 효율적으로 채우기 어렵고 과거 KV를 HBM에서 반복적으로 읽는 비용이 커진다.
 
@@ -199,9 +199,9 @@ Q3 ─┘
 
 즉:
 
-$$
+```math
 H_{kv}=1
-$$
+```
 
 이다.
 
@@ -209,23 +209,23 @@ $$
 
 KV bytes/token/layer가:
 
-$$
+```math
 2H_qd_hb
-$$
+```
 
 에서:
 
-$$
+```math
 2d_hb
-$$
+```
 
 로 줄어든다.
 
 96 query heads, $d_h=128$, BF16이면:
 
-$$
+```math
 2\times128\times2=512\ \text{bytes/token/layer}
-$$
+```
 
 앞의 48 KiB MHA 예시와 비교하면 96배 작다.
 
@@ -241,9 +241,9 @@ MQA 논문의 목표 자체가 incremental decoding의 memory-bandwidth cost를 
 
 **Grouped-Query Attention(그룹드 쿼리 어텐션, 그룹화 질의 attention; GQA)**은 MHA와 MQA 사이를 일반화한다.
 
-$$
+```math
 1<H_{kv}<H_q
-$$
+```
 
 예를 들어 query head 8개, KV head 2개라면:
 
@@ -254,9 +254,9 @@ Q4 Q5 Q6 Q7 ── K1,V1
 
 한 KV head를 공유하는 query head 수는:
 
-$$
+```math
 g=\frac{H_q}{H_{kv}}
-$$
+```
 
 이다. 이를 group size라고 생각할 수 있다.
 
@@ -264,10 +264,10 @@ $$
 
 $H_q=96$, $H_{kv}=8$, $d_h=128$, BF16이면:
 
-$$
+```math
 2\times8\times128\times2
 =4096\ \text{bytes/token/layer}
-$$
+```
 
 즉 4 KiB다.
 
@@ -299,9 +299,9 @@ GQA를 `linear attention`으로 오해하면 안 된다.
 
 현재 query는 여전히 과거 모든 position의 key와 비교한다.
 
-$$
+```math
 q_tK_{1:t}^\top
-$$
+```
 
 따라서 global GQA에서는:
 
@@ -328,15 +328,15 @@ flowchart TB
 
 Sequence 전체 Q/K score matrix는:
 
-$$
+```math
 QK^\top\in\mathbb{R}^{T\times T}
-$$
+```
 
 한 head 기준 주요 dot-product 연산량은 대략:
 
-$$
+```math
 O(T^2d_h)
-$$
+```
 
 이다.
 
@@ -409,17 +409,17 @@ Logical request tokens
 
 현재 token $t$가 window $W$만 본다면:
 
-$$
+```math
 i\in[t-W+1,t]
-$$
+```
 
 에 대해서만 attention을 계산한다.
 
 전체 sequence 연산은 대략:
 
-$$
+```math
 O(TW)
-$$
+```
 
 이 되고 $W$를 고정하면 $T$에 대해 선형이다.
 

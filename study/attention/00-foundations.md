@@ -19,9 +19,9 @@ Attention을 이해할 때 가장 큰 장애물은 수식 자체보다 **수식�
 
 **Scalar(스칼라, 하나의 수)**는 단일 값이다.
 
-$$
+```math
 \beta_t = 0.7
-$$
+```
 
 - $\beta$: **베타**
 - $t$: token 위치 또는 시간 step
@@ -33,9 +33,9 @@ Attention gate, learning rate, probability, scaling factor 등이 scalar가 될 
 
 **Vector(벡터, 여러 수를 한 축으로 배열한 객체)**는 다음처럼 쓴다.
 
-$$
+```math
 x_t \in \mathbb{R}^{d}
-$$
+```
 
 읽기: **엑스 서브 티는 알 디 차원 실수 벡터에 속한다.**
 
@@ -49,15 +49,15 @@ $$
 
 **Matrix(매트릭스, 행렬)**는 두 축을 가진 수 배열이다.
 
-$$
+```math
 W \in \mathbb{R}^{m\times n}
-$$
+```
 
 신경망의 linear layer는 보통 다음과 같이 생각할 수 있다.
 
-$$
+```math
 y = Wx + b
-$$
+```
 
 - $W$: weight matrix
 - $b$: bias vector
@@ -72,9 +72,9 @@ $$
 
 Decoder LLM의 hidden state는 흔히:
 
-$$
+```math
 X \in \mathbb{R}^{B\times T\times d_{model}}
-$$
+```
 
 - $B$: **Batch Size(배치 사이즈)**
 - $T$: **Sequence Length(시퀀스 렝스, token 길이)**
@@ -82,9 +82,9 @@ $$
 
 Attention head로 reshape한 query는 흔히:
 
-$$
+```math
 Q \in \mathbb{R}^{B\times H_q\times T\times d_h}
-$$
+```
 
 - $H_q$: query head 수
 - $d_h$: head dimension
@@ -97,25 +97,25 @@ $$
 
 ### 3.1 Transpose
 
-$$
+```math
 x^\top
-$$
+```
 
 **Transpose(트랜스포즈, 전치)**는 행과 열을 바꾼다.
 
-$$
+```math
 \begin{bmatrix}x_1\\x_2\\x_3\end{bmatrix}^{\top}
 =
 \begin{bmatrix}x_1 & x_2 & x_3\end{bmatrix}
-$$
+```
 
 ### 3.2 Dot Product
 
 **Dot Product(닷 프로덕트, 내적)**는 같은 차원의 두 vector에서 scalar 하나를 만든다.
 
-$$
+```math
 q^\top k = \sum_{j=1}^{d} q_j k_j
-$$
+```
 
 Attention에서는 query와 key의 content similarity를 나타내는 score로 사용한다.
 
@@ -123,9 +123,9 @@ Attention에서는 query와 key의 content similarity를 나타내는 score로 �
 
 **Outer Product(아우터 프로덕트, 외적)**는 두 vector에서 matrix를 만든다.
 
-$$
+```math
 k v^\top \in \mathbb{R}^{d_k\times d_v}
-$$
+```
 
 이 연산은 linear/recurrent attention에서 매우 중요하다. $k$라는 방향에 $v$라는 내용을 대응시키는 rank-1 memory update로 해석할 수 있다.
 
@@ -133,9 +133,9 @@ $$
 
 **Rank(랭크, 행렬이 표현하는 독립 방향의 수)**는 행렬 표현력의 중요한 개념이다.
 
-$$
+```math
 k v^\top
-$$
+```
 
 처럼 vector 두 개의 외적으로 만든 matrix는 일반적으로 rank 1이다. 따라서 이를 기존 matrix에 더하는 것을 **Rank-1 Update(랭크 원 업데이트, 랭크 1 갱신)**라고 부른다.
 
@@ -149,15 +149,15 @@ Low-rank attention이나 LoRA의 `rank`도 결국 큰 matrix의 변화/표현을
 
 **L2 Norm(엘투 놈, 유클리드 길이)**는 vector 크기를 다음처럼 정의한다.
 
-$$
+```math
 \|x\|_2 = \sqrt{\sum_i x_i^2}
-$$
+```
 
 L2 normalization은:
 
-$$
+```math
 \hat{x}=\frac{x}{\|x\|_2}
-$$
+```
 
 로 vector의 길이를 1로 만든다.
 
@@ -169,11 +169,11 @@ DeltaNet/KDA에서 key를 L2-normalize하면 $kk^\top$이 key 방향 projector�
 
 단순화하면:
 
-$$
+```math
 \operatorname{RMSNorm}(x)
 =
 \frac{x}{\sqrt{\frac{1}{d}\sum_{i=1}^{d}x_i^2+\epsilon}}\odot g
-$$
+```
 
 - $\epsilon$: 수치 안정성을 위한 작은 값
 - $g$: 학습 가능한 scale vector
@@ -191,19 +191,19 @@ $$
 
 **Softmax(소프트맥스, 여러 score를 합이 1인 양수 가중치로 변환하는 함수)**는:
 
-$$
+```math
 \operatorname{softmax}(z_i)
 =
 \frac{e^{z_i}}{\sum_j e^{z_j}}
-$$
+```
 
 이다.
 
 예를 들어 attention score가:
 
-$$
+```math
 z=[2,1,0]
-$$
+```
 
 이면 softmax는 첫 번째 위치에 가장 큰 weight를 주지만 나머지도 완전히 0으로 만들지는 않는다.
 
@@ -254,13 +254,13 @@ Attention에서 중요한 성질은 다음과 같다.
 
 Pre-Norm 형태를 단순화하면:
 
-$$
+```math
 u_l = x_l + \operatorname{Attention}(\operatorname{Norm}(x_l))
-$$
+```
 
-$$
+```math
 x_{l+1} = u_l + \operatorname{FFN}(\operatorname{Norm}(u_l))
-$$
+```
 
 - $l$: layer index
 - $x_l$: layer $l$의 residual stream
@@ -288,9 +288,9 @@ Attention은 **다른 token에서 정보를 가져오고**, FFN/MoE는 **그 정
 
 문자열은 tokenizer를 거쳐 integer token ID가 되고, embedding table에서 vector를 찾는다.
 
-$$
+```math
 x_t^{(0)} = E[\operatorname{token\_id}_t]
-$$
+```
 
 - $E$: embedding matrix
 - $x_t^{(0)}$: layer 0에 들어가는 token representation
@@ -303,11 +303,11 @@ $$
 
 한 token representation $x_t$에서 다음 projection을 만든다.
 
-$$
+```math
 q_t=W_Qx_t,\qquad
 k_t=W_Kx_t,\qquad
 v_t=W_Vx_t
-$$
+```
 
 - **Query(쿼리, 질의)**: 현재 token이 어떤 정보를 찾는가
 - **Key(키, 검색 주소/특징)**: 이 token이 어떤 질의에 선택될 수 있는가
@@ -329,11 +329,11 @@ $$
 
 Transformer의 기본 attention은:
 
-$$
+```math
 \operatorname{Attention}(Q,K,V)
 =
 \operatorname{softmax}\left(\frac{QK^\top}{\sqrt{d_k}}+M\right)V
-$$
+```
 
 이다.
 
@@ -345,9 +345,9 @@ $$
 
 모든 query와 모든 key의 pairwise score를 만든다.
 
-$$
+```math
 QK^\top\in\mathbb{R}^{T\times T}
-$$
+```
 
 sequence length가 $T$이면 token pair 수가 대략 $T^2$로 증가한다.
 
@@ -361,13 +361,13 @@ head dimension이 커지면 random-like Q/K의 dot product variance도 커진다
 
 개념적으로:
 
-$$
+```math
 M_{t,i}=
 \begin{cases}
 0 & i\le t\\
 -\infty & i>t
 \end{cases}
-$$
+```
 
 softmax에서 $-\infty$ 위치는 weight 0이 된다.
 
@@ -387,9 +387,9 @@ Decoder LLM의 text backbone attention은 일반적으로 causal self-attention�
 
 예:
 
-$$
+```math
 Q=W_QX_{text},\qquad K,V=W_{K/V}X_{image}
-$$
+```
 
 이는 text decoder가 vision encoder representation을 조회하는 전통적인 multimodal 구조에서 쓰일 수 있다. 반면 최근 native multimodal LLM 중에는 image token을 text token과 같은 sequence에 넣는 early-fusion 구조도 많아, 반드시 cross-attention block이 존재하는 것은 아니다.
 
@@ -403,17 +403,17 @@ Attention score $q_t^\top k_i$만으로는 `token $i$가 token $t$보다 몇 칸
 
 **Rotary Position Embedding(로터리 포지션 임베딩, 회전형 위치 임베딩; RoPE)**은 position에 따라 Q/K vector의 2차원 subspace들을 회전시킨다.
 
-$$
+```math
 q_t'=R_tq_t,\qquad k_i'=R_ik_i
-$$
+```
 
 그러면:
 
-$$
+```math
 (q_t')^\top k_i'
 =
 q_t^\top R_t^\top R_i k_i
-$$
+```
 
 이고 $R_t^\top R_i$가 상대 위치 차이를 반영한다.
 

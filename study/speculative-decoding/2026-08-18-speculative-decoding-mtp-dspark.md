@@ -28,12 +28,12 @@ Autoregressive decoding은 target model을 한 번 실행할 때 확정 token을
 
 평균 token latency는 다음과 같이 볼 수 있다.
 
-$$
+```math
 L_{token}
 \approx
 \frac{T_{draft}+T_{verify}}
 {\mathbb{E}[\text{한 cycle에서 commit되는 token 수}]}
-$$
+```
 
 따라서 모든 SD 최적화는 결국 다음 세 축에 속한다.
 
@@ -69,9 +69,9 @@ target model의 분포를 $p$, draft model의 분포를 $q$라고 하자.
 2. target은 이 K개 후보 위치를 한 번의 forward pass로 점수화한다.
 3. 위치 $k$의 draft token은 다음 확률로 accept된다.
 
-$$
+```math
 P(accept\;x_k)=\min\left(1,\frac{p_k(x_k)}{q_k(x_k)}\right)
-$$
+```
 
 4. 첫 rejection이 발생하면 뒤쪽 suffix는 모두 버린다.
 5. residual distribution에서 correction token을 생성하고 다음 cycle로 넘어간다.
@@ -108,7 +108,7 @@ DeepSeek-V3 방식은 미래 offset별 독립 head를 한 번에 실행하는 �
 
 $k$번째 module은 main 또는 이전 MTP depth의 hidden state와 다음 입력 token embedding을 결합한다.
 
-$$
+```math
 h_i^k=
 \mathrm{TRM}_k\left(
 M_k[
@@ -116,7 +116,7 @@ M_k[
 \mathrm{Norm}(\mathrm{Emb}(t_{i+k}))
 ]
 \right)
-$$
+```
 
 embedding과 output head는 main model과 공유한다.
 
@@ -183,15 +183,15 @@ DSpark는 다음 두 문제를 각각 해결한다.
 
 병렬 backbone이 위치 $k$의 base logits $U_k$를 만든 뒤, 직전 draft token으로부터 transition bias를 계산한다.
 
-$$
+```math
 p_k(v)=\mathrm{softmax}\left(U_k(v)+B(x_{k-1},v)\right)
-$$
+```
 
 전체 vocabulary-to-vocabulary 전이행렬을 저장하면 $V^2$가 필요하므로 low-rank factorization을 사용한다.
 
-$$
+```math
 B(x_{k-1},\cdot)=W_1[x_{k-1}]W_2
-$$
+```
 
 - $W_1$: 직전 token의 Markov embedding lookup
 - $W_2$: low-rank embedding을 vocabulary logit bias로 projection
@@ -215,15 +215,15 @@ RNN 변형은 block 내부의 전체 prefix를 recurrent state에 누적한다.
 
 confidence head는 각 위치의 conditional acceptance probability를 예측한다.
 
-$$
+```math
 c_k=P(x_k\text{가 accept}\mid x_1,\ldots,x_{k-1}\text{가 모두 accept})
-$$
+```
 
 prefix $1\ldots j$가 모두 살아남을 확률은 다음 누적곱이다.
 
-$$
+```math
 a_j=\prod_{i=1}^{j}c_i
-$$
+```
 
 scheduler는 request별 prefix extension을 $a_j$ 기준으로 평가하고, profiling한 target step-per-second 또는 cost curve와 결합해 기대 throughput이 증가하는 범위까지만 verification slot을 배정한다.
 

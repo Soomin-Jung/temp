@@ -123,11 +123,11 @@ GPU가 memory latency를 숨기려면 일부 warp가 기다릴 때 다른 eligib
 
 Occupancy는 일반적으로 SM이 허용하는 최대 resident warp 수에 대한 실제 resident warp 수의 비율이다.
 
-$$
+```math
 Occupancy=
 \frac{\text{active resident warps per SM}}
 {\text{maximum warps per SM}}
-$$
+```
 
 resident block 수는 다음 자원 중 가장 먼저 한계에 닿는 항목으로 결정된다.
 
@@ -210,9 +210,9 @@ thread별 scalar/vector FP32, FP64, INT 연산을 처리한다. elementwise, ind
 
 warp 또는 warpgroup이 matrix tile에 대한 MMA를 수행한다.
 
-$$
+```math
 D=A\times B+C
-$$
+```
 
 Tensor Core를 쓰려면 일반적으로 다음이 필요하다.
 

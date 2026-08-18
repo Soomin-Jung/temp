@@ -51,9 +51,9 @@ MoonshotAI의 공식 model card와 `config.json` 기준:
 
 따라서 정확한 layer pattern은:
 
-$$
+```math
 23\times(3\text{ KDA}+1\text{ MLA})+1\text{ final MLA}
-$$
+```
 
 이다.
 
@@ -130,14 +130,14 @@ Kimi Delta Attention
 
 KDA의 핵심 recurrence는:
 
-$$
+```math
 S_t
 =
 (I-\beta_tk_tk_t^\top)
 \operatorname{Diag}(\alpha_t)S_{t-1}
 +
 \beta_tk_tv_t^\top
-$$
+```
 
 이다.
 
@@ -155,9 +155,9 @@ $$
 
 출력은:
 
-$$
+```math
 \tilde o_t=S_t^\top q_t
-$$
+```
 
 이다.
 
@@ -169,41 +169,41 @@ $$
 
 ### 6.1 Forget
 
-$$
+```math
 M_t=\operatorname{Diag}(\alpha_t)S_{t-1}
-$$
+```
 
 과거 state의 각 key/channel direction을 서로 다른 비율로 감쇠한다.
 
 ### 6.2 Predict
 
-$$
+```math
 \hat v_t=M_t^\top k_t
-$$
+```
 
 현재 key에 대해 기존 memory가 어떤 value를 예측하는지 읽는다.
 
 ### 6.3 Error
 
-$$
+```math
 e_t=v_t-\hat v_t
-$$
+```
 
 새 value와 기존 prediction의 차이만 계산한다.
 
 ### 6.4 Correct
 
-$$
+```math
 S_t=M_t+\beta_tk_te_t^\top
-$$
+```
 
 현재 key 방향에 correction을 rank-1 write한다.
 
 ### 6.5 Read
 
-$$
+```math
 \tilde o_t=S_t^\top q_t
-$$
+```
 
 현재 query가 갱신된 memory를 읽는다.
 
@@ -233,17 +233,17 @@ KDA를 한 문장으로 요약하면:
 
 Gated DeltaNet의 retention gate를 한 head당 scalar라고 단순화하면:
 
-$$
+```math
 S_t=\alpha_t\cdot \text{DeltaUpdate}(S_{t-1},k_t,v_t)
-$$
+```
 
 이다.
 
 KDA에서는:
 
-$$
+```math
 \alpha_t\in\mathbb{R}^{d_k}
-$$
+```
 
 가 되어 state row/channel마다 서로 다른 retention을 가진다.
 
@@ -264,18 +264,18 @@ KDA 논문이 `finer-grained gating`이라고 부르는 핵심이다.
 
 식:
 
-$$
+```math
 S_t=M_t+\beta_tk_t(v_t-M_t^\top k_t)^\top
-$$
+```
 
 을 전개하면:
 
-$$
+```math
 S_t
 =M_t
 -\beta_tk_tk_t^\top M_t
 +\beta_tk_tv_t^\top
-$$
+```
 
 이다.
 
@@ -336,20 +336,20 @@ gate_lower_bound = -5.0
 
 K3의 log-decay는 범위를 제한한다.
 
-$$
+```math
 g_t=g_{min}\sigma(z_t),\qquad g_{min}=-5
-$$
+```
 
-$$
+```math
 \alpha_t=e^{g_t}
-$$
+```
 
 따라서:
 
-$$
+```math
 g_t\in(-5,0),\qquad
 \alpha_t\in(e^{-5},1)
-$$
+```
 
 이다.
 
@@ -363,9 +363,9 @@ FlashKDA는 chunk size 16을 사용한다.
 
 16개 token에서 log-decay 누적 최솟값은:
 
-$$
+```math
 16\times(-5)=-80
-$$
+```
 
 이다.
 
@@ -387,9 +387,9 @@ MoonshotAI FlashKDA 문서는 이 선택이:
 
 수식만 보면:
 
-$$
+```math
 S_0\rightarrow S_1\rightarrow\cdots\rightarrow S_T
-$$
+```
 
 이므로 완전 순차적이다.
 
@@ -403,9 +403,9 @@ $$
 
 출력을 개념적으로:
 
-$$
+```math
 O_{chunk}=O_{inter}+O_{intra}
-$$
+```
 
 로 나눌 수 있다.
 
@@ -424,19 +424,19 @@ $$
 
 KDA raw readout:
 
-$$
+```math
 \tilde o_t=S_t^\top q_t
-$$
+```
 
 에 RMSNorm과 input-dependent full-rank gate를 적용한다.
 
 개념식:
 
-$$
+```math
 y_t=W_O[
 \sigma(W_gx_t)\odot\operatorname{RMSNorm}(\tilde o_t)
 ]
-$$
+```
 
 이 gate는 memory write/forget과 별개다.
 
@@ -452,15 +452,15 @@ KDA는 recurrence의 순서 자체가 position-sensitive하다.
 
 Transition을:
 
-$$
+```math
 A_j=(I-\beta_jk_jk_j^\top)\operatorname{Diag}(\alpha_j)
-$$
+```
 
 라 하면 token $i$의 contribution은 token $t$까지:
 
-$$
+```math
 A_tA_{t-1}\cdots A_{i+1}B_i
-$$
+```
 
 를 통과한다.
 
@@ -474,9 +474,9 @@ $$
 
 KDA의 state는 context length에 무관한 fixed size다.
 
-$$
+```math
 S_t\in\mathbb{R}^{d_k\times d_v}
-$$
+```
 
 이는 1M token을 처리해도 state가 커지지 않는다는 강점이지만 동시에 **1M개의 token-level memory를 개별적으로 보존하지 않는다**는 뜻이다.
 
@@ -561,16 +561,16 @@ Architecture-level inference로 보면 output head 직전에 global token memory
 
 개념 shape:
 
-$$
+```math
 S\in\mathbb{R}^{H\times d_k\times d_v}
-$$
+```
 
 K3 공개 KDA shape를 전체 logical head 기준으로 단순 계산하면:
 
-$$
+```math
 96\times128\times128
 =1,572,864\text{ elements}
-$$
+```
 
 이다.
 
@@ -578,9 +578,9 @@ BF16이면 단순 raw element만 약 3 MiB, FP32면 약 6 MiB다. 실제 serving
 
 중요한 것은:
 
-$$
+```math
 \text{KDA state size}\not\propto T
-$$
+```
 
 라는 점이다.
 
@@ -590,11 +590,11 @@ $$
 
 K3 전체 cache는 개념적으로:
 
-$$
+```math
 69\times\text{fixed KDA state}
 +
 24\times\text{MLA token cache}(T)
-$$
+```
 
 이다.
 
@@ -614,9 +614,9 @@ $$
 
 KDA에서 prefix $0..N$을 재사용하려면 최소한:
 
-$$
+```math
 S_N+\text{ConvState}_N
-$$
+```
 
 가 필요하다.
 
@@ -679,9 +679,9 @@ Full KV cache는 rejected token block을 버리면 되지만 recurrent KDA는 ac
 
 일반 residual:
 
-$$
+```math
 x_l=x_{l-1}+F_l(x_{l-1})
-$$
+```
 
 에서는 과거 정보가 하나의 stream에 계속 누적된다.
 
@@ -689,13 +689,13 @@ AttnRes는 layer/block별 representation을 source로 두고 현재 layer가 학
 
 개념적으로:
 
-$$
+```math
 h_l=\sum_{i<l}a_{l,i}v_i
-$$
+```
 
-$$
+```math
 a_{l,i}=\operatorname{softmax}_i(q_l^\top k_i)
-$$
+```
 
 이다.
 

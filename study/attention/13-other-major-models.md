@@ -124,9 +124,9 @@ Global
 
 Local layer는 대략 1024-token sliding window를 사용한다.
 
-$$
+```math
 \text{cost}\approx O(TW),\qquad W=1024
-$$
+```
 
 오래된 KV를 local layer에서 계속 조회하지 않아도 되므로 cache cost를 크게 줄일 수 있다.
 
@@ -268,15 +268,15 @@ OpenAI의 공개 가중치 모델 **gpt-oss-120b / gpt-oss-20b**는 conventional
 
 ### 7.1 GQA
 
-$$
+```math
 H_q=64,\qquad H_{kv}=8
-$$
+```
 
 따라서:
 
-$$
+```math
 g=64/8=8
-$$
+```
 
 이다.
 
@@ -300,11 +300,11 @@ Full attention
 
 개념적으로:
 
-$$
+```math
 a_i=
 \frac{e^{s_i}}
 {e^{b_{sink}}+\sum_j e^{s_j}}
-$$
+```
 
 처럼 생각할 수 있다.
 

@@ -107,9 +107,9 @@ preview의 MTP는 main pretraining과 함께 MTP loss로 학습된다. 반면 DS
 
 DSpark의 parallel backbone은 K개 위치의 base logits를 한 번에 만든다. Markov head는 뒤쪽 위치를 생성할 때 직전 draft token의 low-rank transition bias를 더한다.
 
-$$
+```math
 p_k(v)=\mathrm{softmax}\left(U_k(v)+W_1[x_{k-1}]W_2[:,v]\right)
-$$
+```
 
 - `U_k`: target feature와 parallel backbone이 만든 context-rich logits
 - `W_1[x_{k-1}]W_2`: 직전 draft token이 다음 token에 주는 값싼 bias

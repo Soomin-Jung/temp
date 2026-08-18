@@ -86,14 +86,14 @@ GPU가 FP8, NVLink, MIG를 지원해도 다음 조건이 맞지 않으면 효과
 
 한 kernel의 성능 상한은 단순화하면 다음 둘 중 작은 쪽이다.
 
-$$
+```math
 P_{attainable}
 =
 \min\left(
 P_{compute\ peak},
 I \times B_{memory}
 \right)
-$$
+```
 
 - $P_{compute\ peak}$: 해당 정밀도 연산기의 peak throughput
 - $I$: arithmetic intensity, 이동한 byte당 수행한 연산 수

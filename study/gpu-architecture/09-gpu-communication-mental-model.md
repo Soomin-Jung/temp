@@ -120,13 +120,13 @@ flowchart TD
 
 network port는 보통 decimal bit/s, application은 GB/s 또는 GiB/s를 사용한다.
 
-$$
+```math
 400\ \text{Gb/s} \div 8 = 50\ \text{GB/s}
-$$
+```
 
-$$
+```math
 800\ \text{Gb/s} \div 8 = 100\ \text{GB/s}
-$$
+```
 
 이는 encoding, packet header, link management, flow control, software overhead를 빼기 전 line-rate 환산이다. `400 Gb/s NIC이므로 GPU buffer에서 50 GB/s가 나와야 한다`는 결론은 성립하지 않는다.
 
@@ -153,9 +153,9 @@ NVLink의 GPU당 `bidirectional aggregate`, switch의 `aggregate switching capac
 
 단순 모델은 다음과 같다.
 
-$$
+```math
 T(S) \approx T_{fixed} + \frac{S}{B_{effective}}
-$$
+```
 
 - 작은 message: setup, kernel launch, doorbell, synchronization 같은 $T_{fixed}$가 지배
 - 큰 message: $B_{effective}$가 지배
@@ -166,9 +166,9 @@ $$
 
 AllReduce는 rank별 input $S$ byte를 한 번 보내는 작업이 아니다. ring 방식의 이상적인 rank당 이동량은 대략 다음과 같다.
 
-$$
+```math
 V_{rank} = 2S\frac{n-1}{n}
-$$
+```
 
 따라서 NCCL tests는 다음 두 값을 구분한다.
 

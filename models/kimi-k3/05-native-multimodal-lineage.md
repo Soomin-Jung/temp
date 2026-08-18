@@ -64,9 +64,9 @@ flowchart LR
 
 Image 크기 $H\times W$, patch size $P$라면 patch count는 대략:
 
-$$
+```math
 N=\frac{H}{P}\times\frac{W}{P}
-$$
+```
 
 이다.
 
@@ -74,9 +74,9 @@ $$
 
 고해상도 image에서는 token 수가 급격히 증가한다.
 
-$$
+```math
 N\propto HW
-$$
+```
 
 따라서 native-resolution VLM에서는:
 
@@ -287,10 +287,10 @@ Visual encoder가 image/video를 representation tokens로 만들고 language bac
 
 Loss는 여전히 autoregressive language-model objective 계열이다.
 
-$$
+```math
 \mathcal L
 =-\sum_t\log p(x_t\mid x_{<t},V)
-$$
+```
 
 - $V$: image/video visual representation
 - $x_t$: output/text token
@@ -334,9 +334,9 @@ K3 report는 **2×2 Pixel Shuffle(픽셀 셔플, 인접 spatial token을 channel
 
 2×2 group을 하나의 output 위치로 합치면 spatial token count는 대략 1/4이 된다.
 
-$$
+```math
 N_{visual}\rightarrow N_{visual}/4
-$$
+```
 
 왜 필요한가?
 

@@ -47,15 +47,15 @@ operation 이름이 같아도 message layout, datatype, rank 수, in-place 여�
 
 AllReduce는 논리적으로 다음과 같이 분해할 수 있다.
 
-$$
+```math
 AllReduce = ReduceScatter + AllGather
-$$
+```
 
 ring AllReduce에서는 $n$개 rank가 tensor shard를 돌리며 reduce-scatter를 수행하고, 완성된 shard를 다시 돌려 all-gather한다. 각 rank의 이상적 전송량은 다음과 같다.
 
-$$
+```math
 V_{rank} = 2S\frac{n-1}{n}
-$$
+```
 
 여기서 $S$는 rank 하나의 input tensor 크기다. 그래서 rank 수가 커질수록 사용자 tensor $S$보다 network에서 처리해야 할 byte가 많아진다.
 
@@ -151,9 +151,9 @@ NCCL은 message size와 topology에 따라 Simple, LL, LL128 같은 protocol과 
 
 ### 10.1 Algorithm bandwidth
 
-$$
+```math
 algbw = \frac{S}{t}
-$$
+```
 
 - $S$: test가 정의한 operation size
 - $t$: 평균 operation time
@@ -177,9 +177,9 @@ collective별 data movement를 반영하도록 `algbw`에 보정 계수를 곱�
 
 ### 10.3 latency를 볼 message와 bandwidth를 볼 message
 
-$$
+```math
 t(S) \approx t_{fixed} + S/B
-$$
+```
 
 - 수 byte–수 KiB: launch, synchronization, network round trip 같은 fixed cost 관측
 - 큰 MiB–GiB: link·memory bandwidth plateau 관측
@@ -193,15 +193,15 @@ $$
 
 예를 들어 node당 400 Gb/s port 두 개가 독립 rail로 동작한다면 단순 line-rate 합은 다음과 같다.
 
-$$
+```math
 2 \times 400\ \text{Gb/s} / 8 = 100\ \text{GB/s}
-$$
+```
 
 그 다음에 protocol payload, PCIe limit, GPU↔NIC topology, collective traffic pattern을 반영한다.
 
-$$
+```math
 Efficiency = \frac{measured\ comparable\ bandwidth}{estimated\ payload\ ceiling}
-$$
+```
 
 분모에 switch 전체 aggregate나 NVLink bidirectional marketing 수치를 넣지 않는다. multi-node hierarchical collective의 `busbw`는 NVLink와 network를 모두 포함하므로 어느 한 port 상한과만 비교하면 잘못된 결론이 날 수 있다.
 
@@ -375,9 +375,9 @@ NCCL_IB_HCA='=mlx5_0:1,mlx5_1:1' <APPLICATION>
 
 test 전후에 `perfquery` 또는 관리 telemetry를 읽어 delta를 계산한다.
 
-$$
+```math
 Rate = \frac{Counter_{after} - Counter_{before}}{t_{after}-t_{before}}
-$$
+```
 
 traffic counter의 hardware unit가 byte인지 word 단위인지 도구 문서에서 확인한다. `PortXmitWait`, error, link recovery가 test 중 증가하는지도 본다.
 
