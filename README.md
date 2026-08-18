@@ -20,6 +20,21 @@
 
 ## 주요 문서
 
+### Attention Architecture / LLM Sequence Modeling
+
+- [Attention Architecture Study Guide](study/attention/README.md)
+  - [수학적 기반과 Transformer Block](study/attention/00-foundations.md)
+  - [Full Softmax Attention — MHA, MQA, GQA와 KV Cache](study/attention/01-full-attention.md)
+  - [MLA와 Low-Rank Attention](study/attention/02-mla-low-rank-attention.md)
+  - [Linear/Recurrent Attention — DeltaNet, GDN, KDA](study/attention/03-linear-recurrent-attention.md)
+  - [Local, Sparse, Compressed, Hybrid Attention](study/attention/04-local-sparse-compressed-hybrid.md)
+  - [Kimi-K3 — KDA, Gated MLA, Attention Residuals](study/attention/10-kimi-k3.md)
+  - [Qwen — GQA에서 Gated DeltaNet Hybrid까지](study/attention/11-qwen.md)
+  - [DeepSeek — MLA에서 DSA, CSA/HCA까지](study/attention/12-deepseek.md)
+  - [다른 주요 LLM의 Attention 설계 비교](study/attention/13-other-major-models.md)
+  - [Serving Engineer 관점 — Cache, State, Kernel, Prefix Cache, 분산 추론](study/attention/90-serving-engineer-view.md)
+  - [논문 읽기 순서, 수식 Cheat Sheet, 용어집](study/attention/99-papers-and-glossary.md)
+
 ### vLLM Production Stack / P-D Disaggregation
 
 - [vLLM Stack 진행 계획](vllm-stack/2026-08-18-%EC%A7%84%ED%96%89%EA%B3%84%ED%9A%8D.md)
