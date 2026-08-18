@@ -21,7 +21,7 @@
 
 ```math
 o_t = \sum_{i\le t}
-\operatorname{softmax}_i\left(
+\mathrm{softmax}_i\left(
 \frac{q_t^\top k_i}{\sqrt{d_h}}
 \right)v_i
 ```
@@ -57,15 +57,15 @@ flowchart LR
 **Multi-Head Attention(멀티 헤드 어텐션, 다중 머리 주의집중; MHA)**은 hidden dimension을 여러 attention head로 나눠 서로 다른 subspace에서 attention을 계산한다.
 
 ```math
-\operatorname{MHA}(X)=
-\operatorname{Concat}(head_1,\ldots,head_H)W_O
+\mathrm{MHA}(X)=
+\mathrm{Concat}(head_1,\ldots,head_H)W_O
 ```
 
 각 head는:
 
 ```math
 head_h=
-\operatorname{Attention}(XW_Q^{(h)},XW_K^{(h)},XW_V^{(h)})
+\mathrm{Attention}(XW_Q^{(h)},XW_K^{(h)},XW_V^{(h)})
 ```
 
 를 계산한다.

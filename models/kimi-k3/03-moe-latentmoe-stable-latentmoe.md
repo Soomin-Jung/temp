@@ -37,9 +37,9 @@ Transformer block의 attention 뒤에는 보통 **Feed-Forward Network(피드 �
 SwiGLU 계열을 단순화하면:
 
 ```math
-\operatorname{FFN}(x)
+\mathrm{FFN}(x)
 =W_2\left[
-\operatorname{SiLU}(W_gx)\odot W_1x
+\mathrm{SiLU}(W_gx)\odot W_1x
 \right]
 ```
 
@@ -60,7 +60,7 @@ Dense model에서는 모든 token이 같은 FFN weights를 실행한다.
 Sparse MoE에서는 FFN 하나를 여러 expert로 복제하고 router가 일부만 선택한다.
 
 ```math
-\operatorname{MoE}(x)
+\mathrm{MoE}(x)
 =
 \sum_{i\in\mathcal{T}_K(x)}p_i(x)E_i(x)
 ```
@@ -376,7 +376,7 @@ u=\sum_{i\in\mathcal T_K}p_iE_i(z)
 ```
 
 ```math
-\hat u=\operatorname{RMSNorm}(u)
+\hat u=\mathrm{RMSNorm}(u)
 ```
 
 ```math
@@ -413,7 +413,7 @@ Latent mixture $u$의 norm이 training 중 커지면 $W_{\uparrow}$가 그 큰 a
 RMSNorm은:
 
 ```math
-\operatorname{RMSNorm}(u)
+\mathrm{RMSNorm}(u)
 =
 \frac{u}{\sqrt{\frac1\ell\sum_i u_i^2+\epsilon}}\odot g
 ```
@@ -439,7 +439,7 @@ SiTU 계열은 각 branch를 scaled `tanh`로 soft-cap한다.
 개념적으로:
 
 ```math
-\operatorname{SiTU}_\beta(x)
+\mathrm{SiTU}_\beta(x)
 =\beta\tanh(x/\beta)
 ```
 

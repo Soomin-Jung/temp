@@ -219,7 +219,7 @@ Q/K projection weight scale이 커지면 q/k norm도 커지고 score magnitude�
 Softmax:
 
 ```math
-\operatorname{softmax}(s)
+\mathrm{softmax}(s)
 ```
 
 는 큰 logit difference에서 매우 sharp해진다.

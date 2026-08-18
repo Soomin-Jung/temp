@@ -47,7 +47,7 @@ x_{l+1}=x_l+F_l(x_l)
 PreNorm Transformer에서는:
 
 ```math
-x_{l+1}=x_l+F_l(\operatorname{Norm}(x_l))
+x_{l+1}=x_l+F_l(\mathrm{Norm}(x_l))
 ```
 
 형태가 흔하다.
@@ -173,7 +173,7 @@ w_l\in\mathbb{R}^d
 공식 reference pseudocode의 형태를 개념화하면:
 
 ```math
-k_i=\operatorname{RMSNorm}(v_i)
+k_i=\mathrm{RMSNorm}(v_i)
 ```
 
 ```math
@@ -181,7 +181,7 @@ s_{i,l}=w_l^\top k_i
 ```
 
 ```math
-\alpha_{i\to l}=\operatorname{softmax}_i(s_{i,l})
+\alpha_{i\to l}=\mathrm{softmax}_i(s_{i,l})
 ```
 
 ```math
@@ -348,11 +348,11 @@ V=[b_0,b_1,\ldots,b_{n-1},b_n^{partial}]
 각 source를 normalize하고 pseudo-query $w_l$로 score한다.
 
 ```math
-s_j=w_l^\top\operatorname{Norm}(V_j)
+s_j=w_l^\top\mathrm{Norm}(V_j)
 ```
 
 ```math
-\alpha_j=\operatorname{softmax}_j(s_j)
+\alpha_j=\mathrm{softmax}_j(s_j)
 ```
 
 ```math

@@ -144,7 +144,7 @@ Kimi KDA:
 
 ```math
 S_t=(I-\beta_tk_tk_t^\top)
-\operatorname{Diag}(\alpha_t)S_{t-1}
+\mathrm{Diag}(\alpha_t)S_{t-1}
 +\beta_tk_tv_t^\top
 ```
 

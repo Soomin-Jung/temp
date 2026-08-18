@@ -21,7 +21,7 @@ Full attention을 단순화하면:
 
 ```math
 o_t = \sum_{i\le t}
-\operatorname{softmax}_i(q_t^\top k_i)v_i
+\mathrm{softmax}_i(q_t^\top k_i)v_i
 ```
 
 이다.
@@ -41,7 +41,7 @@ a_{t,i}=\frac{e^{q_t^\top k_i}}{\sum_{j\le t}e^{q_t^\top k_j}}
 `Transformers are RNNs` 계열의 linear transformer는 softmax attention을 feature map $\phi(\cdot)$를 이용한 kernel 형태로 바꾼다.
 
 ```math
-\operatorname{sim}(q,k)=\phi(q)^\top\phi(k)
+\mathrm{sim}(q,k)=\phi(q)^\top\phi(k)
 ```
 
 그러면 정규화된 causal linear attention을 개념적으로:
@@ -471,7 +471,7 @@ old number         × 0.8
 S_t
 =
 (I-\beta_tk_tk_t^\top)
-\operatorname{Diag}(\alpha_t)S_{t-1}
+\mathrm{Diag}(\alpha_t)S_{t-1}
 +
 \beta_tk_tv_t^\top
 ```
@@ -479,7 +479,7 @@ S_t
 이다.
 
 - $\alpha_t\in(0,1)^{d_k}$: channel-wise retention vector
-- $\operatorname{Diag}(\alpha_t)$: alpha vector를 diagonal에 놓은 matrix
+- $\mathrm{Diag}(\alpha_t)$: alpha vector를 diagonal에 놓은 matrix
 - $\beta_t$: delta update strength
 
 GDN의 scalar decay를 key/state channel별 vector decay로 확장한 것이 KDA의 가장 중요한 개념적 변화다.
@@ -491,7 +491,7 @@ GDN의 scalar decay를 key/state channel별 vector decay로 확장한 것이 KDA
 먼저 memory를 channel별로 decay한다.
 
 ```math
-M_t=\operatorname{Diag}(\alpha_t)S_{t-1}
+M_t=\mathrm{Diag}(\alpha_t)S_{t-1}
 ```
 
 현재 key로 memory prediction을 읽는다.
@@ -583,7 +583,7 @@ recurrent state가 전체 history를 압축하더라도 바로 인접한 token�
 **Swish/SiLU(스위시/실루, smooth gated activation)**는 대략:
 
 ```math
-\operatorname{SiLU}(x)=x\sigma(x)
+\mathrm{SiLU}(x)=x\sigma(x)
 ```
 
 형태다.
@@ -702,7 +702,7 @@ y_t
 W_O\left[
 \sigma(W_gx_t)
 \odot
-\operatorname{RMSNorm}(\tilde o_t)
+\mathrm{RMSNorm}(\tilde o_t)
 \right]
 ```
 
@@ -726,7 +726,7 @@ KDA/GDN에는 모든 layer에서 RoPE가 반드시 필요한 것이 아니다.
 State transition을:
 
 ```math
-A_t=(I-\beta_tk_tk_t^\top)\operatorname{Diag}(\alpha_t)
+A_t=(I-\beta_tk_tk_t^\top)\mathrm{Diag}(\alpha_t)
 ```
 
 라고 하면:

@@ -15,6 +15,12 @@ const stats = {
   mermaidBlocks: 0,
 };
 
+// GitHub's math renderer rejects these commands even when the surrounding
+// fenced `math` block is otherwise valid. Keep the list intentionally small:
+// every entry is a repository-level compatibility rule, not a full MathJax
+// parser or a claim about all TeX implementations.
+const unsupportedMathCommandPattern = /\\(operatorname|DeclareMathOperator|newcommand|renewcommand)\b/g;
+
 function walk(dir) {
   return fs.readdirSync(dir, { withFileTypes: true })
     .filter((entry) => !['.git', 'node_modules'].includes(entry.name))
@@ -48,6 +54,15 @@ function unescapedDollarCount(line) {
   return count;
 }
 
+function validateMathCommands(file, line, source) {
+  const commands = new Set(
+    [...source.matchAll(unsupportedMathCommandPattern)].map((match) => `\\${match[1]}`),
+  );
+  for (const command of commands) {
+    report(errors, file, line, `${command} is not allowed by this repository's GitHub-compatible math profile`);
+  }
+}
+
 function validateMathBlock(file, startLine, source) {
   if (!source.trim()) {
     report(errors, file, startLine, 'empty math block');
@@ -57,6 +72,8 @@ function validateMathBlock(file, startLine, source) {
   if (source.includes('$$')) {
     report(errors, file, startLine, 'fenced math block must not contain $$ delimiters');
   }
+
+  validateMathCommands(file, startLine, source);
 
   let braces = 0;
   for (let i = 0; i < source.length; i += 1) {
@@ -174,6 +191,8 @@ for (const file of walk(root).sort()) {
     const prose = stripInlineCode(line);
     if (prose.includes('$$')) report(errors, file, lineNumber, 'raw $$ delimiter remains outside a code fence');
 
+    validateMathCommands(file, lineNumber, prose);
+
     const dollars = unescapedDollarCount(prose);
     if (dollars % 2 !== 0) report(errors, file, lineNumber, `unmatched inline math delimiter ($ count: ${dollars})`);
     if (dollars >= 2) stats.inlineMathLines += 1;
@@ -204,5 +223,5 @@ if (errors.length) {
   for (const error of errors) console.error(`- ${error}`);
   process.exitCode = 1;
 } else {
-  console.log('\nOK: Markdown structure, math delimiters, math-block balance, and relative links passed.');
+  console.log('\nOK: Markdown structure, GitHub-compatible math, and relative links passed.');
 }

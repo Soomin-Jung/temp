@@ -18,7 +18,7 @@ GitHub 공식 문서가 명시적으로 보장하는 범위는 GitHub 웹의 Iss
 
 ````markdown
 ```math
-\operatorname{TTFT} \approx T_{queue} + T_{prefill} + T_{route}
+\mathrm{TTFT} \approx T_{queue} + T_{prefill} + T_{route}
 ```
 ````
 
@@ -26,6 +26,15 @@ GitHub 공식 문서가 명시적으로 보장하는 범위는 GitHub 웹의 Iss
 - fence 안에는 `$$`를 다시 넣지 않는다.
 - 여러 줄 정렬은 `\begin{aligned} ... \end{aligned}`처럼 수식 환경 안에서 처리한다.
 - 표 셀 안에는 display math를 넣지 않는다. 짧은 inline math 또는 표 아래 별도 블록을 쓴다.
+
+### GitHub 호환 macro
+
+GitHub 웹의 수식 렌더러는 일반 MathJax 문법 전체를 허용하지 않는다. 특히 `\operatorname`은 올바른 TeX 식 안에서도 `The following macros are not allowed: operatorname` 오류를 내며 수식 블록 전체를 원문 형태로 되돌릴 수 있다.
+
+- 함수·연산자 이름은 `\operatorname{softmax}` 대신 `\mathrm{softmax}`처럼 쓴다.
+- `\DeclareMathOperator`, `\newcommand`, `\renewcommand`으로 문서 안에서 macro를 정의하지 않는다.
+- 오류 화면에 `$ ... $`가 보이더라도 실제 소스 delimiter가 `$`라고 단정하지 않는다. GitHub가 실패한 fenced `math` 블록의 원문을 그 형태로 표시할 수 있다.
+- 검증기는 위 호환성 규칙을 display math와 inline math 모두에 적용한다. 설명용 명령은 이 문단처럼 inline code 안에 둔다.
 
 ### Inline math
 
@@ -50,6 +59,7 @@ node tools/validate_markdown.mjs .
 - raw `$$` 잔존 여부
 - inline `$` delimiter 짝
 - display-math block의 brace와 environment 균형
+- GitHub 호환성 문제를 일으키는 수식 macro
 - 상대 링크의 실제 대상
 - 빈 Mermaid block
 

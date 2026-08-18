@@ -228,7 +228,7 @@ https://arxiv.org/abs/2607.24653
 ## 11.1 Sparse MoE
 
 ```math
-\operatorname{MoE}(x)
+\mathrm{MoE}(x)
 =
 \sum_{i\in\mathcal T_K(x)}p_iE_i(x)
 ```
@@ -301,8 +301,8 @@ h_l
 ```math
 \alpha_{i\to l}
 =
-\operatorname{softmax}_i
-\left(w_l^\top\operatorname{Norm}(v_i)\right)
+\mathrm{softmax}_i
+\left(w_l^\top\mathrm{Norm}(v_i)\right)
 ```
 
 의미:

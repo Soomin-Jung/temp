@@ -170,7 +170,7 @@ DeltaNet/KDA에서 key를 L2-normalize하면 $kk^\top$이 key 방향 projector�
 단순화하면:
 
 ```math
-\operatorname{RMSNorm}(x)
+\mathrm{RMSNorm}(x)
 =
 \frac{x}{\sqrt{\frac{1}{d}\sum_{i=1}^{d}x_i^2+\epsilon}}\odot g
 ```
@@ -192,7 +192,7 @@ DeltaNet/KDA에서 key를 L2-normalize하면 $kk^\top$이 key 방향 projector�
 **Softmax(소프트맥스, 여러 score를 합이 1인 양수 가중치로 변환하는 함수)**는:
 
 ```math
-\operatorname{softmax}(z_i)
+\mathrm{softmax}(z_i)
 =
 \frac{e^{z_i}}{\sum_j e^{z_j}}
 ```
@@ -255,11 +255,11 @@ Attention에서 중요한 성질은 다음과 같다.
 Pre-Norm 형태를 단순화하면:
 
 ```math
-u_l = x_l + \operatorname{Attention}(\operatorname{Norm}(x_l))
+u_l = x_l + \mathrm{Attention}(\mathrm{Norm}(x_l))
 ```
 
 ```math
-x_{l+1} = u_l + \operatorname{FFN}(\operatorname{Norm}(u_l))
+x_{l+1} = u_l + \mathrm{FFN}(\mathrm{Norm}(u_l))
 ```
 
 - $l$: layer index
@@ -289,7 +289,7 @@ Attention은 **다른 token에서 정보를 가져오고**, FFN/MoE는 **그 정
 문자열은 tokenizer를 거쳐 integer token ID가 되고, embedding table에서 vector를 찾는다.
 
 ```math
-x_t^{(0)} = E[\operatorname{token\_id}_t]
+x_t^{(0)} = E[\mathrm{token\_id}_t]
 ```
 
 - $E$: embedding matrix
@@ -330,9 +330,9 @@ v_t=W_Vx_t
 Transformer의 기본 attention은:
 
 ```math
-\operatorname{Attention}(Q,K,V)
+\mathrm{Attention}(Q,K,V)
 =
-\operatorname{softmax}\left(\frac{QK^\top}{\sqrt{d_k}}+M\right)V
+\mathrm{softmax}\left(\frac{QK^\top}{\sqrt{d_k}}+M\right)V
 ```
 
 이다.

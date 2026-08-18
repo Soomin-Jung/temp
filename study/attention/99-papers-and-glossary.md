@@ -37,9 +37,9 @@ https://arxiv.org/abs/1706.03762
 수식:
 
 ```math
-\operatorname{Attention}(Q,K,V)
+\mathrm{Attention}(Q,K,V)
 =
-\operatorname{softmax}\left(\frac{QK^\top}{\sqrt{d_k}}\right)V
+\mathrm{softmax}\left(\frac{QK^\top}{\sqrt{d_k}}\right)V
 ```
 
 ### 2. RoFormer
@@ -308,7 +308,7 @@ https://arxiv.org/abs/2402.19427
 ## 9.1 Full Softmax Attention
 
 ```math
-O=\operatorname{softmax}\left(\frac{QK^\top}{\sqrt{d_h}}+M\right)V
+O=\mathrm{softmax}\left(\frac{QK^\top}{\sqrt{d_h}}+M\right)V
 ```
 
 의미:
@@ -454,7 +454,7 @@ S_t
 ```math
 S_t
 =(I-\beta_tk_tk_t^\top)
-\operatorname{Diag}(\alpha_t)S_{t-1}
+\mathrm{Diag}(\alpha_t)S_{t-1}
 +\beta_tk_tv_t^\top
 ```
 
@@ -471,7 +471,7 @@ S_t
 ```
 
 ```math
-o_t=\operatorname{Attention}(q_t,K_{\mathcal N(t)},V_{\mathcal N(t)})
+o_t=\mathrm{Attention}(q_t,K_{\mathcal N(t)},V_{\mathcal N(t)})
 ```
 
 의미:

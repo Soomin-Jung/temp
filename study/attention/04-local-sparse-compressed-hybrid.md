@@ -83,7 +83,7 @@ attention은:
 ```math
 o_t=
 \sum_{i\in\mathcal{N}(t)}
-\operatorname{softmax}_i(q_t^\top k_i)v_i
+\mathrm{softmax}_i(q_t^\top k_i)v_i
 ```
 
 이다.

@@ -134,7 +134,7 @@ KDA의 핵심 recurrence는:
 S_t
 =
 (I-\beta_tk_tk_t^\top)
-\operatorname{Diag}(\alpha_t)S_{t-1}
+\mathrm{Diag}(\alpha_t)S_{t-1}
 +
 \beta_tk_tv_t^\top
 ```
@@ -149,7 +149,7 @@ S_t
 - $v_t$: **브이 서브 티**, current value
 - $\beta_t$: **베타 서브 티**, delta update strength
 - $\alpha_t$: **알파 서브 티**, channel-wise retention vector
-- $\operatorname{Diag}(\alpha_t)$: **다이애그 오브 알파 티**, alpha를 diagonal에 둔 matrix
+- $\mathrm{Diag}(\alpha_t)$: **다이애그 오브 알파 티**, alpha를 diagonal에 둔 matrix
 - $k_tk_t^\top$: key 방향 rank-1 projector
 - $k_tv_t^\top$: key-value outer product
 
@@ -170,7 +170,7 @@ S_t
 ### 6.1 Forget
 
 ```math
-M_t=\operatorname{Diag}(\alpha_t)S_{t-1}
+M_t=\mathrm{Diag}(\alpha_t)S_{t-1}
 ```
 
 과거 state의 각 key/channel direction을 서로 다른 비율로 감쇠한다.
@@ -434,7 +434,7 @@ KDA raw readout:
 
 ```math
 y_t=W_O[
-\sigma(W_gx_t)\odot\operatorname{RMSNorm}(\tilde o_t)
+\sigma(W_gx_t)\odot\mathrm{RMSNorm}(\tilde o_t)
 ]
 ```
 
@@ -453,7 +453,7 @@ KDA는 recurrence의 순서 자체가 position-sensitive하다.
 Transition을:
 
 ```math
-A_j=(I-\beta_jk_jk_j^\top)\operatorname{Diag}(\alpha_j)
+A_j=(I-\beta_jk_jk_j^\top)\mathrm{Diag}(\alpha_j)
 ```
 
 라 하면 token $i$의 contribution은 token $t$까지:
@@ -694,7 +694,7 @@ h_l=\sum_{i<l}a_{l,i}v_i
 ```
 
 ```math
-a_{l,i}=\operatorname{softmax}_i(q_l^\top k_i)
+a_{l,i}=\mathrm{softmax}_i(q_l^\top k_i)
 ```
 
 이다.
