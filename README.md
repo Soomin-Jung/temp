@@ -10,6 +10,7 @@
 - `moc/` : MOC 설계/구현 관련 중요 결정
 - `study/` : 공부하면서 남길 가치가 있는 핵심 정리
 - `models/` : 모델별 architecture, checkpoint, 배포 호환성, 장애 조사
+- `weekly-report/` : vLLM 생태계, 오픈웨이트 모델, LLM serving·최적화·논문 주간 보고서
 - `misc/` : 임시 메모
 
 ## Roadmap
@@ -69,6 +70,11 @@
 
 - [개선판의 DSpark checkpoint와 vLLM 구현 차이](models/deepseek-v4/2026-08-18-dspark-checkpoint-and-vllm-implementation.md)
 - [vLLM 0.27.x DeepGEMM SM90 CUDA IMA 분석](models/deepseek-v4/2026-08-18-vllm-0.27-deepgemm-sm90-cuda-ima.md)
+
+### LLM Serving Weekly Report
+
+- [주간 보고서 인덱스와 검증 정책](weekly-report/README.md)
+- [주간 보고서 템플릿](weekly-report/_TEMPLATE.md)
 
 ## 운영 원칙
 
