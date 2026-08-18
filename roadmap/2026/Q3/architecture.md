@@ -136,7 +136,7 @@ flowchart TB
 실행 형태:
 - Single-node integrated vLLM
 - Node-local P/D Cell
-- HPC Multi-node vLLM
+- 망A Multi-node vLLM
 - 향후 Multi-node P/D Serving Group
 
 ### 4. KV Cache Plane
@@ -171,13 +171,13 @@ flowchart TB
 
 ### 6. GPU / Network Runtime
 
-HPC망:
+망A:
 - H200 8GPU × 7
 - IB / GPUDirect RDMA 검증
 - NVIDIA Network Operator / RDMA resource
 - NVLink / NVSwitch / NCCL
 
-DSCloud망:
+망B:
 - H200 8GPU × 5
 - IB 없음
 - Node-local P/D가 우선적인 topology
