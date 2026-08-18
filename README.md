@@ -35,6 +35,21 @@
   - [Serving Engineer 관점 — Cache, State, Kernel, Prefix Cache, 분산 추론](study/attention/90-serving-engineer-view.md)
   - [논문 읽기 순서, 수식 Cheat Sheet, 용어집](study/attention/99-papers-and-glossary.md)
 
+### Kimi K3 / Kimi Architecture Lineage
+
+- [Kimi K3 — Model Architecture & Lineage Study Guide](models/kimi-k3/README.md)
+  - [Kimi 계보와 K3 학습 지도](models/kimi-k3/00-lineage-and-study-map.md)
+  - [Kimi K2 — K3의 Large-Scale Foundation](models/kimi-k3/01-kimi-k2-foundation.md)
+  - [Kimi Linear — KDA Hybrid에서 K3로 가는 다리](models/kimi-k3/02-kimi-linear-bridge.md)
+  - [Sparse MoE → LatentMoE → Stable LatentMoE](models/kimi-k3/03-moe-latentmoe-stable-latentmoe.md)
+  - [Attention Residuals — Depth Mixing](models/kimi-k3/04-attention-residuals-depth-mixing.md)
+  - [Native Multimodal — Kimi-VL, K2.5, MoonViT-V2](models/kimi-k3/05-native-multimodal-lineage.md)
+  - [Optimization / Scaling / Pretraining — Muon 계보](models/kimi-k3/06-optimization-scaling-and-pretraining.md)
+  - [Post-Training / Agentic RL / MTP / Speculative Decoding](models/kimi-k3/07-posttraining-agentic-rl-and-speculative.md)
+  - [K3 Architecture Reconstruction — 2.8T 구조 직접 계산](models/kimi-k3/08-k3-architecture-reconstruction.md)
+  - [K3 Systems & Serving — EP, CP, Hybrid Cache, P/D](models/kimi-k3/09-k3-systems-and-serving.md)
+  - [논문 읽기 순서, 핵심 수식, 용어집](models/kimi-k3/99-papers-and-glossary.md)
+
 ### vLLM Production Stack / P-D Disaggregation
 
 - [vLLM Stack 진행 계획](vllm-stack/2026-08-18-%EC%A7%84%ED%96%89%EA%B3%84%ED%9A%8D.md)
