@@ -31,9 +31,14 @@
   - [GPU 메트릭과 관측 도구](gpu-architecture/06-metrics-and-observability.md)
   - [LLM Serving 병목 진단](gpu-architecture/07-llm-serving-bottleneck-diagnosis.md)
   - [실습과 검증 절차](gpu-architecture/08-hands-on-labs.md)
+  - [GPU 통신을 보는 지도](gpu-architecture/09-gpu-communication-mental-model.md)
+  - [PCIe·NVLink·NVSwitch](gpu-architecture/10-pcie-nvlink-nvswitch.md)
+  - [RDMA와 GPUDirect RDMA](gpu-architecture/11-rdma-and-gpudirect-rdma.md)
+  - [InfiniBand·RoCE와 GPU network 하드웨어](gpu-architecture/12-infiniband-roce-and-hardware.md)
+  - [NCCL·집단통신·관측 실습](gpu-architecture/13-nccl-collectives-observability-labs.md)
   - [GPU Architecture 용어집](gpu-architecture/glossary.md)
 
-권장 순서는 0→8이다. 운영 이슈를 진단할 때는 메트릭(6) → 병목 진단(7) → 데이터 경로(3) → 세대·SKU 차이(4) 순서로 역추적한다.
+GPU 자체는 0→8, multi-GPU와 cluster 통신은 9→13 순서로 읽는다. 운영 이슈를 진단할 때는 메트릭(6) → 병목 진단(7) → NCCL 관측(13) → IB/RoCE(12) → RDMA/GDRDMA(11) → local topology(10) 순서로 역추적한다.
 
 ### Speculative Decoding
 

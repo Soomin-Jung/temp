@@ -221,6 +221,16 @@ lsmod | grep -E 'nvidia_peermem|nvidia'
 
 로그에서 `GDRDMA`, HCA, channel 생성이 보인다는 사실은 control path 초기화 증거다. 실제 payload가 정상 전송되고 기대 bandwidth가 나오는지는 `nccl-tests`, interface counter, GPU/NIC telemetry로 검증해야 한다.
 
+### 10.1 통신 심화 학습 경로
+
+이 문서는 data movement의 전체 지도를 다룬다. multi-GPU·multi-node 통신은 다음 순서로 이어서 읽는다.
+
+1. [GPU 통신을 보는 지도](09-gpu-communication-mental-model.md): 계층과 bandwidth 단위
+2. [PCIe·NVLink·NVSwitch](10-pcie-nvlink-nvswitch.md): node 내부 hardware path
+3. [RDMA와 GPUDirect RDMA](11-rdma-and-gpudirect-rdma.md): verbs, MR·QP·CQ와 GPU memory 등록
+4. [InfiniBand·RoCE와 GPU network 하드웨어](12-infiniband-roce-and-hardware.md): HCA, switch, fabric control과 제품군
+5. [NCCL·집단통신·관측 실습](13-nccl-collectives-observability-labs.md): collective algorithm, 측정식과 장애 격리
+
 ## 11. 경로별 비교
 
 | 경로 | Data plane | CPU DRAM bounce | 대표 용도 | 주요 확인점 |
@@ -251,4 +261,3 @@ lsmod | grep -E 'nvidia_peermem|nvidia'
 - NVIDIA, [Blackwell Tuning Guide — NVLink](https://docs.nvidia.com/cuda/blackwell-tuning-guide/)
 
 > 본질: GPU 통신을 이해한다는 것은 `NVLink가 있다`고 말하는 것이 아니라, **어느 device가 DMA를 일으키고 어떤 주소 창과 switch를 거쳐 어느 memory에 도착하는지 그릴 수 있는 것**이다.
-

@@ -16,6 +16,11 @@
 5. H100, H200, L40S처럼 제품명이 다른 GPU의 차이를 어떤 기준으로 읽어야 하는가?
 6. `GPU Util 100%`, `HBM 95% 사용`, `SM Active 60%`가 각각 무엇을 뜻하는가?
 7. vLLM의 prefill, decode, TP, EP, KV cache 병목이 하드웨어 메트릭에 어떻게 나타나는가?
+8. PCIe, NVLink, NVSwitch, RDMA, GDRDMA, InfiniBand, RoCE, NCCL은 어느 계층의 기술인가?
+9. RDMA의 MR, QP, CQ, key와 one-sided operation은 실제로 어떻게 동작하는가?
+10. ConnectX, BlueField, Quantum, Spectrum-X는 각각 어떤 하드웨어 역할을 맡는가?
+11. GPU HBM에서 원격 GPU HBM까지 byte가 어떤 device와 switch를 거치는가?
+12. `nccl-tests`의 latency, `algbw`, `busbw`와 HCA counter를 어떻게 함께 읽는가?
 
 ```mermaid
 flowchart TD
@@ -39,9 +44,14 @@ flowchart TD
 | 6 | [GPU 메트릭과 관측 도구](06-metrics-and-observability.md) | GPU Util, SM Active, Occupancy, DRAM Active를 어떻게 함께 읽는가? |
 | 7 | [LLM Serving 병목 진단](07-llm-serving-bottleneck-diagnosis.md) | prefill·decode·TP·EP·KV cache 병목을 어떻게 구분하는가? |
 | 8 | [실습과 검증 절차](08-hands-on-labs.md) | 실제 노드에서 구조를 확인하고 가설을 검증하는 최소 절차는 무엇인가? |
+| 9 | [GPU 통신을 보는 지도](09-gpu-communication-mental-model.md) | DMA·RDMA·GDRDMA·fabric·collective의 계층을 어떻게 분리하는가? |
+| 10 | [PCIe·NVLink·NVSwitch](10-pcie-nvlink-nvswitch.md) | GPU와 NIC가 노드 안에서 어떤 link·switch·root를 거치는가? |
+| 11 | [RDMA와 GPUDirect RDMA](11-rdma-and-gpudirect-rdma.md) | verbs 객체와 NIC DMA가 GPU memory transfer를 어떻게 완성하는가? |
+| 12 | [InfiniBand·RoCE와 GPU network 하드웨어](12-infiniband-roce-and-hardware.md) | IB/RoCE fabric과 ConnectX·BlueField·Quantum·Spectrum-X의 역할은 무엇인가? |
+| 13 | [NCCL·집단통신·관측 실습](13-nccl-collectives-observability-labs.md) | collective의 실제 byte 수와 slow rank·link counter를 어떻게 연결하는가? |
 | 부록 | [용어집](glossary.md) | 주요 원문 용어, 한국어 의미, 발음을 빠르게 찾을 수 있는가? |
 
-처음 읽을 때는 0→8 순서가 좋다. 이후 운영 이슈를 조사할 때는 6→7→3→4 순서로 역추적하면 된다.
+GPU 자체 구조를 먼저 익힐 때는 0→8 순서로 읽는다. multi-GPU와 cluster 통신까지 이해하려면 이어서 9→13을 읽는다. 통신 장애를 조사할 때는 13의 현상에서 시작해 12→11→10 순서로 아래 계층을 격리한다.
 
 ## 3. 이 문서 전체를 관통하는 네 가지 구분
 
@@ -107,6 +117,8 @@ $$
 4. 제품 페이지와 datasheet: SKU·form factor별 실제 스펙
 5. [DCGM Documentation](https://docs.nvidia.com/datacenter/dcgm/latest/): 운영 관측과 진단
 6. [Nsight Systems](https://docs.nvidia.com/nsight-systems/UserGuide/)와 [Nsight Compute](https://docs.nvidia.com/nsight-compute/ProfilingGuide/): timeline과 kernel 내부 분석
+7. [GPUDirect RDMA Documentation](https://docs.nvidia.com/cuda/gpudirect-rdma/): GPU memory peer DMA와 pinning·BAR 기준
+8. [NCCL User Guide](https://docs.nvidia.com/deeplearning/nccl/user-guide/docs/): collective, topology, transport와 진단 기준
+9. NVIDIA Networking의 [InfiniBand Software Documentation](https://networking-docs.nvidia.com/): HCA, SM, QoS, fabric와 hardware 기준
 
 > 이 모듈의 본질: GPU를 이해한다는 것은 코어 개수를 외우는 일이 아니라, **일이 어떻게 쪼개지고 데이터가 어디에 머물며 무엇을 기다리는지 설명할 수 있게 되는 것**이다.
-

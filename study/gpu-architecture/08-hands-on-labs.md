@@ -210,6 +210,8 @@ systemctl status nvidia-fabricmanager
 
 `nccl-tests`를 격리된 노드에서만 실행한다. buffer가 커질수록 GPU memory와 fabric을 많이 사용한다.
 
+RDMA/InfiniBand baseline, `algbw`·`busbw` 식, single-node→multi-node 격리 절차는 [NCCL·집단통신·관측 실습](13-nccl-collectives-observability-labs.md)에서 단계별로 다룬다.
+
 ```bash
 ./build/all_reduce_perf -b 8M -e 1G -f 2 -g 8
 ```

@@ -77,7 +77,62 @@
 | InfiniBand | 인피니밴드 | RDMA를 기본으로 제공하는 HPC/AI cluster interconnect 기술. |
 | NUMA | 누마 | CPU socket별로 memory 접근 latency/bandwidth가 달라지는 non-uniform memory architecture. |
 
-## D. 정밀도와 연산
+## D. RDMA, fabric과 집단통신
+
+| 용어 | 읽기 | 의미 |
+|---|---|---|
+| RDMA | 알디엠에이 | Remote Direct Memory Access. NIC가 등록된 local·remote memory 사이 전송과 memory operation을 수행하는 기술군. |
+| Endpoint | 엔드포인트 | PCIe 또는 network communication의 종단 장치. GPU, HCA, NIC 등이 될 수 있다. |
+| Root Complex | 루트 컴플렉스 | CPU/SoC memory system과 PCIe hierarchy를 연결하는 root. P2P 가능 거리와 NUMA를 결정한다. |
+| ACS | 에이시에스 | PCI Access Control Services. PCIe peer traffic을 제어·redirect해 isolation과 P2P 경로에 영향을 준다. |
+| IOMMU | 아이오엠엠유 | device DMA 주소 변환과 isolation을 제공하는 memory management unit. |
+| HCA | 에이치시에이 | Host Channel Adapter. host에 verbs queue, DMA와 InfiniBand/RoCE port를 제공하는 adapter. |
+| NIC | 닉 | Network Interface Controller. network packet 송수신과 DMA를 수행하는 장치의 일반명. |
+| SuperNIC | 슈퍼닉 | AI Ethernet/RoCE용 acceleration, telemetry, isolation을 강조한 NVIDIA adapter 제품 범주. |
+| DPU | 디피유 | NIC 기능에 Arm cores, memory, infrastructure accelerator를 더해 network/security/storage를 offload하는 장치. |
+| Verbs | 벌브스 | RDMA device, memory, queue와 operation을 다루는 low-level programming interface. |
+| PD | 피디 | Protection Domain. MR과 QP를 같은 접근 보호 범위에 묶는 verbs 객체. |
+| MR | 엠알 | Memory Region. NIC가 DMA하도록 등록한 address range와 permission·key의 집합. |
+| `lkey` / `rkey` | 엘키/알키 | local SGE 검증용 key와 remote MR 접근 권한을 확인하는 key. |
+| QP | 큐피 | Queue Pair. Send Queue와 Receive Queue의 쌍으로 RDMA work를 실행한다. |
+| SQ / RQ | 에스큐/알큐 | QP의 Send Queue와 Receive Queue. |
+| CQ / CQE | 시큐/시큐이 | Completion Queue와 Completion Queue Entry. 게시한 work의 완료 상태를 전달한다. |
+| WR / WQE | 더블유알/더블유큐이 | Work Request와 NIC queue에 놓이는 Work Queue Element. |
+| SGE | 에스지이 | Scatter/Gather Element. buffer 주소, 길이, local key를 기술한다. |
+| Doorbell | 도어벨 | 새 WQE가 준비됐음을 NIC에 알리는 write/notification. |
+| RC | 알시 | Reliable Connected QP transport. ordered delivery와 retry, 폭넓은 RDMA operation을 제공한다. |
+| UC | 유시 | Unreliable Connected QP transport. 연결 상태는 있지만 reliability와 operation 지원이 제한된다. |
+| UD | 유디 | Unreliable Datagram QP transport. 가벼운 datagram 방식이며 one-sided RDMA Read/Write와 다르다. |
+| One-sided | 원사이디드 | remote CPU가 operation마다 참여하지 않고 remote MR을 Read/Write/Atomic하는 방식. |
+| Two-sided | 투사이디드 | sender의 Send와 receiver의 Receive 준비가 모두 필요한 message operation. |
+| Kernel bypass | 커널 바이패스 | steady-state data path에서 userspace가 NIC queue를 직접 사용해 syscall을 줄이는 방식. |
+| Registration cache | 레지스트레이션 캐시 | page pinning과 MR mapping 비용을 줄이기 위해 등록 결과를 재사용하는 cache. |
+| DMA-BUF | 디엠에이버프 | Linux device 사이 buffer sharing과 DMA mapping을 위한 표준 framework. 현대 GDRDMA 경로에 쓰일 수 있다. |
+| `nvidia-peermem` | 엔비디아 피어멤 | NVIDIA GPU memory를 지원 RDMA HCA가 peer access하도록 연결하는 kernel module 경로. |
+| SM / SA / SMA | 에스엠/에스에이/에스엠에이 | IB Subnet Manager, Subnet Administrator, Subnet Management Agent. subnet 구성과 질의를 담당한다. |
+| LID | 리드 | InfiniBand subnet 안에서 switch forwarding에 쓰는 local identifier. |
+| GID | 지드 | global identifier. subnet 간 식별과 RoCE의 IP/VLAN address mapping에 사용된다. |
+| P_Key | 피키 | InfiniBand partition membership과 접근 범위를 나타내는 key. |
+| SL / VL | 에스엘/브이엘 | Service Level QoS 표식과 실제 link flow-control queue인 Virtual Lane. |
+| MTU | 엠티유 | 한 packet/frame이 담을 수 있는 최대 전송 단위. path 전체 설정을 맞춰야 한다. |
+| PFC | 피에프시 | Priority Flow Control. Ethernet priority별 pause로 loss를 줄이지만 pause propagation을 만들 수 있다. |
+| ECN | 이씨엔 | Explicit Congestion Notification. switch가 packet을 drop하기 전에 congestion을 mark하는 방식. |
+| CNP | 시엔피 | Congestion Notification Packet. RoCE receiver/NIC가 sender의 rate 감소를 유도하는 packet. |
+| DCQCN | 디시큐시에이엔 | RoCEv2에서 ECN/CNP를 이용하는 datacenter congestion-control 계열. |
+| VPI | 브이피아이 | Virtual Protocol Interconnect. 제품에 따라 한 adapter가 InfiniBand와 Ethernet mode를 지원하는 NVIDIA 기술. |
+| Rail | 레일 | node의 NIC들을 서로 다른 switch plane에 정렬한 독립 network path. |
+| Bisection bandwidth | 바이섹션 밴드위스 | fabric을 둘로 나눴을 때 절단면을 동시에 통과할 수 있는 aggregate bandwidth. |
+| Oversubscription | 오버서브스크립션 | endpoint/downlink capacity 합이 상위 uplink capacity보다 큰 비율. |
+| SHARP | 샤프 | switch 안에서 collective reduction을 부분 수행하는 Scalable Hierarchical Aggregation and Reduction Protocol. |
+| NVLS | 엔브이엘에스 | NVLink SHARP. NVSwitch domain에서 reduction·multicast를 가속하는 NCCL 경로. |
+| AllReduce | 올리듀스 | 모든 rank의 값을 reduce하고 결과를 모든 rank에 배포하는 collective. |
+| AllGather | 올개더 | rank별 shard를 모아 모든 rank가 전체 결과를 갖게 하는 collective. |
+| ReduceScatter | 리듀스스캐터 | 값을 reduce한 뒤 결과 shard를 rank별로 나누는 collective. |
+| AllToAll | 올투올 | 모든 rank가 모든 다른 rank에 서로 다른 shard를 보내는 collective. |
+| `algbw` | 알고리즘 밴드위스 | NCCL tests의 사용자 관점 bandwidth로, 기본식은 operation size를 시간으로 나눈 값. |
+| `busbw` | 버스 밴드위스 | collective별 실제 data movement 계수를 `algbw`에 적용한 정규화 bandwidth. |
+
+## E. 정밀도와 연산
 
 | 용어 | 읽기 | 의미 |
 |---|---|---|
@@ -98,7 +153,7 @@
 | Arithmetic intensity | 어리스메틱 인텐시티 | memory에서 이동한 byte당 수행한 연산 수. Roofline에서 compute/memory bound를 가르는 축. |
 | Roofline model | 루프라인 모델 | peak compute와 memory bandwidth로 attainable performance 상한을 해석하는 모델. |
 
-## E. 관측과 운영
+## F. 관측과 운영
 
 | 용어 | 읽기 | 의미 |
 |---|---|---|
@@ -125,7 +180,7 @@
 | Nsight Compute | 엔사이트 컴퓨트 | 선택한 CUDA kernel의 instruction, warp stall, cache, memory, pipe를 분석하는 profiler. |
 | Counter multiplexing | 카운터 멀티플렉싱 | 동시에 셀 수 없는 hardware counter를 시간 분할 또는 여러 pass로 수집하는 방식. |
 
-## F. LLM Serving
+## G. LLM Serving
 
 | 용어 | 읽기 | 의미 |
 |---|---|---|
@@ -146,7 +201,7 @@
 | E2E latency | 엔드투엔드 레이턴시 | 요청 도착부터 전체 응답 완료까지의 시간. |
 | Speculative decoding | 스페큘러티브 디코딩 | draft가 여러 후보 token을 제안하고 target model이 검증해 target 호출당 완료 token 수를 늘리는 방식. |
 
-## G. 자주 혼동하는 짝
+## H. 자주 혼동하는 짝
 
 | A | B | 핵심 차이 |
 |---|---|---|
@@ -158,16 +213,23 @@
 | Occupancy | Utilization | 상주 가능한 warp 채움 정도와 시간상 실행 활동 정도다. |
 | FP8 support | FP8 speedup | 기능 존재와 workload가 최적 kernel로 실제 이득을 얻는 것은 별개다. |
 | NVLink present | NCCL uses NVLink | 물리 기능 존재와 collective runtime의 실제 경로 선택은 별개다. |
+| DMA | RDMA | 전자는 device가 memory transfer를 수행하는 일반 메커니즘, 후자는 network를 통한 remote memory operation이다. |
+| RDMA | GPUDirect RDMA | 전자는 remote memory 기술군, 후자는 RDMA NIC가 GPU memory를 직접 DMA하는 NVIDIA 경로다. |
+| InfiniBand | RoCE | 전자는 전용 fabric architecture, 후자는 Ethernet 위의 RDMA transport다. |
+| Link rate | Payload bandwidth | 전자는 wire nominal bit/s, 후자는 header·flow control·software overhead를 뺀 application byte/s다. |
+| Local CQE | Remote application complete | local work 완료와 remote consumer가 data를 처리한 시점은 다를 수 있다. |
+| HCA port Active | Fabric performance healthy | link와 SM 구성이 됐다는 상태와 congestion/error 없는 성능은 별개다. |
 | TTFT | Prefill duration | TTFT에는 queue, scheduling, transfer 등 prefill 외 시간이 포함된다. |
 | ITL | kernel duration | ITL에는 scheduling, collective, queue, CPU overhead도 포함될 수 있다. |
 
-## H. 공식 기준 문서
+## I. 공식 기준 문서
 
 - NVIDIA, [CUDA Programming Guide](https://docs.nvidia.com/cuda/cuda-programming-guide/)
 - NVIDIA, [CUDA Best Practices Guide](https://docs.nvidia.com/cuda/cuda-c-best-practices-guide/)
 - NVIDIA, [NVML API Reference](https://docs.nvidia.com/deploy/nvml-api/)
 - NVIDIA, [DCGM Documentation](https://docs.nvidia.com/datacenter/dcgm/latest/)
 - NVIDIA, [NCCL User Guide](https://docs.nvidia.com/deeplearning/nccl/user-guide/docs/)
+- NVIDIA, [GPUDirect RDMA Documentation](https://docs.nvidia.com/cuda/gpudirect-rdma/)
+- NVIDIA, [InfiniBand Software Documentation](https://networking-docs.nvidia.com/)
 
 > 본질: 용어를 정확히 구분하면 관측값이 물리 구조, 실행 상태, 서비스 결과 중 어디에 속하는지가 보인다.
-
