@@ -10,7 +10,7 @@ MOC는 전체 과제의 중심이 아니라 여러 플랫폼 capability를 운�
 
 ## 현재 인프라 기준
 
-### HPC망
+### 망A
 
 - H200 8GPU 노드 × 7 — 총 56 GPU
   - NVLink/NVSwitch
@@ -21,7 +21,7 @@ MOC는 전체 과제의 중심이 아니라 여러 플랫폼 capability를 운�
   - NVBridge 미장착
 - L40S 8GPU 노드 × 2 — 총 16 GPU
 
-### DSCloud망
+### 망B
 
 - H200 8GPU 노드 × 5 — 총 40 GPU
 - InfiniBand 없음
@@ -40,7 +40,7 @@ MOC는 전체 과제의 중심이 아니라 여러 플랫폼 capability를 운�
    - orchestrated LMRouter + KV transfer + Cell replica + Prometheus + failure recovery 통합
    - 상세: [`pd-disaggregation/`](../../../pd-disaggregation/)
 
-2. **Kimi-K3 HPC Multi-node 운영 배포**
+2. **Kimi-K3 망A Multi-node 운영 배포**
    - H200 + IB/GDRDMA 환경에서 멀티노드 배포를 운영 수준으로 정립
    - 단순 기동 성공이 아니라 topology, lifecycle, health, failure recovery, benchmark까지 포함
    - Ray는 현재/검증 경로로 활용하되 장기적으로 vLLM native multiprocess + LWS 계열을 검토
@@ -106,7 +106,7 @@ MOC는 전체 과제의 중심이 아니라 여러 플랫폼 capability를 운�
 
 - [ ] Node-local P/D Cell이 기존 integrated deployment를 깨지 않고 운영 Chart에 통합된다.
 - [ ] P/D Cell의 LiteLLM / Global Router / metrics / failure recovery 경로가 E2E로 검증된다.
-- [ ] Kimi-K3가 HPC H200 멀티노드 환경에서 재현 가능한 운영 profile로 정립된다.
+- [ ] Kimi-K3가 망A H200 멀티노드 환경에서 재현 가능한 운영 profile로 정립된다.
 - [ ] Multi-node 장애와 engine process failure를 Pod Ready 이상의 health 기준으로 탐지/복구할 수 있다.
 - [ ] vLLM Production Stack 0.1.8 custom baseline과 0.1.12+ 이관 경계가 명확해진다.
 - [ ] 신규 모델 배포 결과가 일회성 명령이 아니라 Model/Runtime Profile로 축적된다.
