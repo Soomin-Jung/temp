@@ -1,0 +1,8 @@
+# 학습용 예제. 실제 사용 시 repository의 .github/CODEOWNERS 등에 배치한다.
+
+*                         @platform-team
+/charts/                  @serving-team
+/deploy/                  @platform-team @sre-team
+/.github/workflows/       @devex-team @platform-security
+/security/                @platform-security
+/docs/                    @platform-team
