@@ -21,6 +21,20 @@
 
 ## 주요 문서
 
+### Git / GitHub Collaboration & Automation
+
+- [Git & GitHub: 현업 협업과 자동화 학습 지도](study/git-github/README.md)
+  - [Git object와 commit DAG](study/git-github/01-git-object-model-and-dag.md)
+  - [Branch, merge, rebase](study/git-github/03-branches-merge-and-rebase.md)
+  - [Pull Request, review, merge](study/git-github/05-pull-requests-review-and-merge.md)
+  - [동기화, conflict, stacked PR](study/git-github/06-sync-conflicts-and-stacked-prs.md)
+  - [되돌리기, 복구, 디버깅](study/git-github/07-undo-recovery-and-debugging.md)
+  - [GitHub Actions와 CI](study/git-github/09-github-actions-and-ci.md)
+  - [Delivery, release, 공급망 보안](study/git-github/10-delivery-release-and-security.md)
+  - [Platform Engineering 실전](study/git-github/11-platform-engineering-playbook.md)
+  - [Hands-on lab](study/git-github/12-hands-on-labs.md)
+  - [명령·사고 대응 runbook](study/git-github/90-command-and-incident-runbook.md)
+
 ### Attention Architecture / LLM Sequence Modeling
 
 - [Attention Architecture Study Guide](study/attention/README.md)

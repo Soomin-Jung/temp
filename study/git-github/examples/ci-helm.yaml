@@ -1,0 +1,50 @@
+# 학습용 예제이며 이 위치에서는 실행되지 않는다.
+# 실제 repository의 runner image, chart path, values matrix와 policy tool에 맞게 수정한다.
+name: helm-ci-example
+
+on:
+  pull_request:
+  merge_group:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: helm-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: helm-contract
+    runs-on: [self-hosted, linux, platform-ci]
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        values:
+          - tests/values/minimal.yaml
+          - tests/values/production-like.yaml
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Tool versions
+        run: |
+          helm version
+          kubeconform -v
+
+      - name: Lint
+        run: helm lint charts/model-serving
+
+      - name: Render
+        run: |
+          mkdir -p rendered
+          helm template test charts/model-serving \
+            --values "${{ matrix.values }}" \
+            > "rendered/$(basename "${{ matrix.values }}" .yaml).yaml"
+
+      - name: Validate Kubernetes schemas
+        run: kubeconform -strict -summary rendered/*.yaml
+
+      - name: Repository policy checks
+        run: ./tools/validate_manifests.sh rendered

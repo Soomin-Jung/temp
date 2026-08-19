@@ -4,6 +4,25 @@
 
 ## 학습 모듈
 
+### Git & GitHub
+
+- [Git & GitHub: 현업 협업과 자동화 학습 지도](git-github/README.md)
+  - [Git·GitHub 전체 구조](git-github/00-big-picture-and-mental-model.md)
+  - [Git object와 commit DAG](git-github/01-git-object-model-and-dag.md)
+  - [로컬 작업과 index](git-github/02-local-workflow-and-index.md)
+  - [Branch, merge, rebase](git-github/03-branches-merge-and-rebase.md)
+  - [Remote, fork, 분산 협업](git-github/04-remotes-forks-and-collaboration.md)
+  - [Pull Request, review, merge](git-github/05-pull-requests-review-and-merge.md)
+  - [동기화, conflict, stacked PR](git-github/06-sync-conflicts-and-stacked-prs.md)
+  - [되돌리기, 복구, 디버깅](git-github/07-undo-recovery-and-debugging.md)
+  - [팀 workflow와 repository governance](git-github/08-team-workflow-and-governance.md)
+  - [GitHub Actions와 CI](git-github/09-github-actions-and-ci.md)
+  - [Delivery, release, 공급망 보안](git-github/10-delivery-release-and-security.md)
+  - [Platform Engineering 실전](git-github/11-platform-engineering-playbook.md)
+  - [Hands-on lab](git-github/12-hands-on-labs.md)
+  - [명령·사고 대응 runbook](git-github/90-command-and-incident-runbook.md)
+  - [용어집과 공식 자료](git-github/99-glossary-and-references.md)
+
 ### Attention Architecture
 
 - [Attention Architecture Study Guide](attention/README.md)
