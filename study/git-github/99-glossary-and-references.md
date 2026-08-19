@@ -34,6 +34,8 @@
 | Conflict | Git이 양쪽 변경 의도를 자동 결합할 수 없는 상태 |
 | Rerere | 이전 conflict resolution을 기록하고 같은 conflict에 재사용하는 기능 |
 | Worktree | 한 repository object database에 연결된 추가 working directory |
+| `range-diff` | 두 commit range의 patch series가 rebase 전후 어떻게 대응·변경되었는지 비교하는 기능 |
+| `--force-with-lease` | 예상한 remote ref가 그대로일 때만 non-fast-forward push를 허용하는 보호 조건 |
 
 ## 2. GitHub 용어
 
@@ -60,6 +62,8 @@
 | OIDC | 외부 provider가 workflow identity를 검증해 short-lived credential을 발급하는 federation 방식 |
 | Release | tag에 release note와 asset을 연결한 GitHub 객체 |
 | Attestation | artifact에 관한 provenance 등 statement를 검증 가능하게 연결한 증명 |
+| DCO | contributor가 commit sign-off로 contribution 권리와 조건을 확인하는 Developer Certificate of Origin |
+| PR head SHA | PR이 현재 제안하는 head branch의 정확한 commit ID; check 결과의 revision 기준 |
 
 ## 3. Git 공식 학습 순서
 
@@ -88,12 +92,17 @@
 - [git-rerere](https://git-scm.com/docs/git-rerere)
 - [git-bisect](https://git-scm.com/docs/git-bisect)
 - [git-worktree](https://git-scm.com/docs/git-worktree)
+- [git-range-diff](https://git-scm.com/docs/git-range-diff)
+- [git-push: force-with-lease](https://git-scm.com/docs/git-push)
 
 ## 4. GitHub 공식 학습 순서
 
 ### 협업
 
 - [GitHub Flow](https://docs.github.com/en/get-started/using-github/github-flow)
+- [Fork a repository](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/fork-a-repo)
+- [Configure a remote for a fork](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/configuring-a-remote-repository-for-a-fork)
+- [Syncing a fork](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/syncing-a-fork)
 - [About pull requests](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/getting-started/about-pull-requests)
 - [Pull request merges](https://docs.github.com/en/pull-requests/reference/pull-request-merges)
 - [Keeping a PR branch in sync](https://docs.github.com/en/pull-requests/how-tos/create-pull-requests/keeping-your-pull-request-in-sync-with-the-base-branch)
@@ -124,7 +133,39 @@
 - [Artifact attestations](https://docs.github.com/en/actions/concepts/security/artifact-attestations)
 - [Immutable releases](https://docs.github.com/en/code-security/concepts/supply-chain-security/immutable-releases)
 
-## 5. 자주 하는 오해
+## 5. vLLM 기여 공식 자료와 분석 표본
+
+### Current contribution contract
+
+- [vLLM contributing guide](https://docs.vllm.ai/en/latest/contributing/)
+- [Contributing source](https://github.com/vllm-project/vllm/blob/main/docs/contributing/README.md)
+- [AI-assisted contribution instructions](https://github.com/vllm-project/vllm/blob/main/AGENTS.md)
+- [Pull Request template](https://github.com/vllm-project/vllm/blob/main/.github/PULL_REQUEST_TEMPLATE.md)
+- [Developer Certificate of Origin](https://github.com/vllm-project/vllm/blob/main/DCO)
+- [CODEOWNERS](https://github.com/vllm-project/vllm/blob/main/.github/CODEOWNERS)
+- [Mergify PR automation](https://github.com/vllm-project/vllm/blob/main/.github/mergify.yml)
+- [Security policy](https://github.com/vllm-project/vllm/blob/main/SECURITY.md)
+
+### Build, kernel과 model
+
+- [Incremental compilation workflow](https://docs.vllm.ai/en/latest/contributing/incremental_build/)
+- [JIT kernel warmup](https://docs.vllm.ai/en/latest/contributing/jit_kernel_warmup/)
+- [Model contribution guide](https://docs.vllm.ai/en/latest/contributing/model/)
+- [Basic model implementation](https://docs.vllm.ai/en/latest/contributing/model/basic/)
+- [Model registration](https://docs.vllm.ai/en/latest/contributing/model/registration/)
+
+### 이 과정에서 해부한 실제 PR
+
+- [#52692: focused PaliGemma regression bugfix](https://github.com/vllm-project/vllm/pull/52692)
+- [#51875: core prefix-cache contract와 docs](https://github.com/vllm-project/vllm/pull/51875)
+- [#52217: sparse MLA kernel performance evidence](https://github.com/vllm-project/vllm/pull/52217)
+- [#52706: GraniteSWA model support와 parity](https://github.com/vllm-project/vllm/pull/52706)
+- [#52593: Rust version build-path matrix](https://github.com/vllm-project/vllm/pull/52593)
+- [#46514: 장기 FlashMLA DCP PR의 rebase·scope 축소·CI](https://github.com/vllm-project/vllm/pull/46514)
+
+이 PR 목록은 모범 PR ranking이나 전체 통계가 아니다. 변경 유형별 evidence와 장기 review 생애주기를 비교하기 위한 2026-08-19 snapshot이다.
+
+## 6. 자주 하는 오해
 
 | 오해 | 정확한 설명 |
 |---|---|
@@ -138,8 +179,13 @@
 | CI가 초록이면 production이 안전하다 | 정의한 검사 범위와 실행 환경에서 성공했다는 뜻이다. |
 | secret을 Git history에서 지우면 끝이다 | 노출된 credential은 먼저 revoke/rotate해야 한다. |
 | Git tag와 GitHub Release는 같다 | tag는 Git ref, Release는 tag에 metadata/asset을 연결한 GitHub 객체다. |
+| `fetch upstream`이면 내 branch가 최신화된다 | remote-tracking ref만 갱신된다. feature에 merge/rebase해야 graph가 통합된다. |
+| rebase 뒤 old CI가 초록이면 된다 | check는 old head SHA의 결과다. 새 head에서 필요한 검증을 다시 실행해야 한다. |
+| `--force-with-lease`면 다른 commit을 절대 잃지 않는다 | 마지막 관측 이후의 ref 변화는 막지만 shared rewrite 합의와 이미 알고 있던 commit의 의도적 유실까지 막지는 않는다. |
+| 오래된 PR은 conflict만 없으면 된다 | upstream이 설계 전제·dispatch·test 의미를 바꿨는지 다시 검증해야 한다. |
+| 큰 Open Source PR은 CI가 알아서 전부 돈다 | vLLM처럼 비용 때문에 승인·label·comment로 full CI를 수동 trigger하는 프로젝트도 있다. |
 
-## 6. 더 공부할 주제
+## 7. 더 공부할 주제
 
 - partial clone, sparse checkout와 대형 monorepo
 - commit-graph, packfile, bitmap과 Git 성능

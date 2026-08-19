@@ -47,7 +47,7 @@ git fetch --prune origin
 
 ## 4. 최신 main 반영
 
-개인 branch:
+같은 repository에서 작업하는 개인 branch:
 
 ```bash
 git fetch origin
@@ -65,6 +65,21 @@ git merge origin/main
 git push
 ```
 
+외부 Open Source fork의 개인 PR branch:
+
+```bash
+git fetch upstream --prune
+git fetch origin --prune
+git switch feature/<name>
+git branch backup/<name>-before-rebase HEAD
+git rebase upstream/main
+
+# test와 diff 확인 후
+git fetch origin --prune
+git log --oneline HEAD..origin/feature/<name>
+git push --force-with-lease origin HEAD:feature/<name>
+```
+
 ## 5. A에서 파생한 B, A squash merge 완료
 
 ```bash
@@ -78,7 +93,31 @@ git push --force-with-lease origin branch-b
 
 경계를 모르겠다면 중단하고 graph에서 A/B 고유 commit을 식별한다.
 
-## 6. Conflict
+## 6. 장기 Open Source PR 갱신
+
+```bash
+# read-only 관찰
+git fetch upstream --prune
+git fetch origin --prune
+git rev-list --left-right --count upstream/main...HEAD
+git log --left-right --cherry-pick --oneline upstream/main...HEAD
+
+# rewrite 전 복구점
+git branch backup/<topic>-before-rebase HEAD
+
+# 개인 branch만
+git rebase upstream/main
+
+# patch 유실·중복과 remote-only commit 확인
+git diff --stat upstream/main...HEAD
+git diff --check upstream/main...HEAD
+git fetch origin --prune
+git log --oneline HEAD..origin/<topic>
+```
+
+push 후에는 PR의 base/head, current head SHA, Files changed, outdated thread, approval, 최신 SHA의 CI를 확인한다. stacked PR의 하위 branch가 squash merge되었다면 단순 rebase 전에 `--onto` 경계를 확인한다. 전체 절차는 [장기 PR upstream 동기화](15-long-running-pr-upstream-sync.md)를 따른다.
+
+## 7. Conflict
 
 ```bash
 git status
@@ -104,7 +143,7 @@ git rebase --abort
 git cherry-pick --abort
 ```
 
-## 7. 되돌리기 결정표
+## 8. 되돌리기 결정표
 
 ```text
 아직 commit 전인가?
@@ -120,7 +159,7 @@ commit했지만 아직 나만 쓰는가?
 └─ 효과를 취소           -> git revert <sha>
 ```
 
-## 8. 잃어버린 commit
+## 9. 잃어버린 commit
 
 ```bash
 git reflog -50
@@ -130,7 +169,7 @@ git branch rescue/<name> <candidate-sha>
 
 복구 branch를 만든 뒤에만 추가 정리 작업을 한다.
 
-## 9. 잘못 push함
+## 10. 잘못 push함
 
 ### 일반 main/shared branch
 
@@ -149,7 +188,7 @@ git push origin <branch>
 
 단순 commit 삭제는 이미 복제된 secret을 무효화하지 못한다.
 
-## 10. CI 실패
+## 11. CI 실패
 
 ```text
 workflow가 시작되지 않음
@@ -168,7 +207,7 @@ step 실패
   -> seed/time/network/shared state, retry 횟수와 실패율 기록
 ```
 
-## 11. 실행 전 별도 승인이 필요한 명령
+## 12. 실행 전 별도 승인이 필요한 명령
 
 ```bash
 git reset --hard
@@ -180,7 +219,7 @@ git tag -f
 
 개인 실습 repository 외에는 대상, 영향, 복구점, 공유 여부를 먼저 확인한다. 가능하면 recoverable alternative를 사용한다.
 
-## 12. 도움 요청 시 함께 전달할 정보
+## 13. 도움 요청 시 함께 전달할 정보
 
 secret을 제외하고 다음을 제공한다.
 

@@ -253,6 +253,136 @@ PR 본문에는 실행한 command와 미검증 영역을 쓴다.
 - required check 이름이 바뀌는가?
 - runner 비용과 feedback time은 어떻게 달라지는가?
 
+## Lab 13. Fork와 장기 PR 동기화 재현
+
+세 directory로 공식 upstream, 내 fork, local clone을 흉내 낸다. GitHub 계정이나 network는 필요 없다.
+
+### 13.1 공식 repository 만들기
+
+```bash
+mkdir long-pr-lab
+cd long-pr-lab
+git init --bare upstream.git
+git clone upstream.git maintainer
+cd maintainer
+git switch -c main
+git config user.name 'Maintainer Lab'
+git config user.email 'maintainer@example.com'
+printf 'timeout: 30\nmode: stable\n' > config.yaml
+git add config.yaml
+git commit -m 'add runtime config'
+git push -u origin main
+cd ..
+```
+
+### 13.2 내 fork와 feature branch 만들기
+
+```bash
+git init --bare fork.git
+git clone --branch main upstream.git contributor
+cd contributor
+git config user.name 'Contributor Lab'
+git config user.email 'contributor@example.com'
+git remote rename origin upstream
+git remote add origin ../fork.git
+git push -u origin main
+
+git switch -c feature/retry
+printf 'timeout: 30\nmode: stable\nretries: 3\n' > config.yaml
+git add config.yaml
+git commit -s -m 'add request retry policy'
+git push -u origin feature/retry
+cd ..
+```
+
+### 13.3 PR을 기다리는 동안 upstream 변경 만들기
+
+```bash
+cd maintainer
+printf 'timeout_seconds: 45\nmode: stable\n' > config.yaml
+git add config.yaml
+git commit -m 'rename timeout and raise default'
+git push origin main
+cd ../contributor
+```
+
+rebase 전에 예측한다.
+
+- `fetch`만 하면 `config.yaml` working tree가 바뀌는가?
+- 어느 줄이 conflict가 되는가?
+- 최종 contract에서 retry는 새 `timeout_seconds`와 어떻게 공존해야 하는가?
+
+### 13.4 Backup, rebase, semantic conflict 해결
+
+```bash
+git fetch upstream --prune
+git fetch origin --prune
+git branch backup/retry-before-rebase HEAD
+git log --graph --decorate --oneline --all
+git rebase upstream/main
+```
+
+최종 file을 다음 contract로 직접 편집한다.
+
+```yaml
+timeout_seconds: 45
+mode: stable
+retries: 3
+```
+
+```bash
+git add config.yaml
+git rebase --continue
+git diff --check upstream/main...HEAD
+git diff upstream/main...HEAD
+```
+
+old base를 찾아 `range-diff`한다.
+
+```bash
+git merge-base backup/retry-before-rebase upstream/main
+git range-diff \
+  <old-base-sha>..backup/retry-before-rebase \
+  upstream/main..HEAD
+```
+
+`<old-base-sha>`를 바로 앞 command의 실제 출력으로 바꾼다.
+
+### 13.5 Lease 보호 관찰
+
+먼저 다른 actor가 fork branch에 commit을 push하는 상황을 별도 clone에서 만든다. 그 뒤 contributor clone에서 fetch하지 않은 상태와 fetch한 상태의 `--force-with-lease` 동작을 비교한다. 다른 actor의 commit은 rescue branch로 보존한 뒤에만 실험 branch를 정리한다.
+
+성공 기준:
+
+- `origin`과 `upstream`의 역할을 설명한다.
+- rebase 전 old tip을 backup ref로 찾을 수 있다.
+- conflict를 한쪽 선택이 아니라 combined contract로 해결한다.
+- `range-diff`에서 retry patch가 유지된 것을 설명한다.
+- lease 거절을 `--force`로 우회하지 않고 remote-only commit을 조사한다.
+
+## Lab 14. 실제 vLLM PR evidence audit
+
+다음 PR을 code 양이 아니라 “merge 가능한 증거 packet” 관점에서 읽는다.
+
+- [작은 bugfix #52692](https://github.com/vllm-project/vllm/pull/52692)
+- [kernel 성능 #52217](https://github.com/vllm-project/vllm/pull/52217)
+- [장기 DCP PR #46514](https://github.com/vllm-project/vllm/pull/46514)
+
+각 PR에 대해 다음 표를 직접 채운다.
+
+| 질문 | 관찰 |
+|---|---|
+| 실제 symptom과 root cause는 무엇인가? | |
+| duplicate 또는 dependency 관계는 무엇인가? | |
+| current diff의 non-goal은 무엇인가? | |
+| base에서 실패하고 branch에서 성공한 증거는 무엇인가? | |
+| hardware/model/dtype/shape 중 고정된 조건은 무엇인가? | |
+| reviewer가 의심하거나 변경을 요구한 지점은 무엇인가? | |
+| 새 commit 뒤 CI가 어느 SHA에서 다시 실행되었는가? | |
+| 오래된 설명이 current diff에 맞게 갱신되었는가? | |
+
+그다음 같은 문제에 대한 빈 PR template과 evidence가 채워진 PR body를 각각 작성해 reviewer가 추가로 찾아야 하는 정보를 비교한다. 실전 form은 [vLLM contribution checklist](examples/vllm-contribution-checklist.md)를 사용한다.
+
 ## 최종 과제
 
 Helm chart repository를 가정하여 다음 deliverable을 만든다.
