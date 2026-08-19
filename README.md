@@ -33,6 +33,9 @@
   - [Delivery, release, 공급망 보안](study/git-github/10-delivery-release-and-security.md)
   - [Platform Engineering 실전](study/git-github/11-platform-engineering-playbook.md)
   - [Hands-on lab](study/git-github/12-hands-on-labs.md)
+  - [초대형 Open Source 기여 생애주기](study/git-github/13-large-open-source-contribution-lifecycle.md)
+  - [vLLM 기여 절차와 실제 PR 해부](study/git-github/14-vllm-contribution-and-pr-anatomy.md)
+  - [장기 PR의 upstream 동기화](study/git-github/15-long-running-pr-upstream-sync.md)
   - [명령·사고 대응 runbook](study/git-github/90-command-and-incident-runbook.md)
 
 ### Attention Architecture / LLM Sequence Modeling

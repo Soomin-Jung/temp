@@ -211,4 +211,17 @@ generated file만 “ours”나 “theirs”로 선택하면 source와 결과가
 | conflict가 너무 복잡하고 경계 불명확 | abort 후 graph와 commit 범위 재확인 |
 | GitHub stacked PR 사용 가능 | stack 도구 사용, graph도 함께 확인 |
 
+## 11. PR이 오래 열린 경우
+
+이 장은 graph 변환 자체를 설명한다. 실제 Open Source PR이 여러 주 지연되면 다음도 함께 관리해야 한다.
+
+- fork의 `origin`과 공식 저장소의 `upstream` 분리
+- rewrite 전 backup ref와 origin의 remote-only commit 확인
+- rebase 전후 `range-diff`
+- upstream이 이미 구현한 commit 제거와 scope 축소
+- force push 뒤 outdated review thread와 approval 상태
+- 최신 head SHA에서 local test와 비용이 큰 CI 재실행
+
+전체 절차와 vLLM 실제 사례는 [장기 PR의 upstream 동기화와 재검증](15-long-running-pr-upstream-sync.md)을 따른다.
+
 > 이 장의 본질: branch 동기화는 “최신 코드를 복사하는 일”이 아니라, **내 변경의 부모를 최신 통합 지점으로 다시 연결하고 그 조합을 재검증하는 일**이다.

@@ -2,7 +2,7 @@
 
 - 작성일: 2026-08-19
 - 분류: `study/git-github`
-- 범위: Git 내부 모델, 로컬 작업, 브랜치와 통합, 원격 협업, Pull Request, 리뷰, 충돌, stacked PR, 복구, GitHub Actions, CI/CD, 저장소 통제, 릴리스와 공급망 보안
+- 범위: Git 내부 모델, 로컬 작업, 브랜치와 통합, 원격 협업, Pull Request, 리뷰, 충돌, stacked PR, 복구, GitHub Actions, CI/CD, 저장소 통제, 릴리스와 공급망 보안, 초대형 Open Source 기여, vLLM PR, 장기 PR 동기화
 
 ## 1. 이 학습 모듈의 목표
 
@@ -64,10 +64,13 @@ flowchart TB
 | 10 | [CD, release, 공급망 보안](10-delivery-release-and-security.md) | build 결과를 어떻게 승인·배포·추적·복구하는가? |
 | 11 | [Platform Engineering 실전](11-platform-engineering-playbook.md) | Helm·Kubernetes·upstream fork 저장소에 Git workflow를 어떻게 적용하는가? |
 | 12 | [단계별 실습](12-hands-on-labs.md) | graph 생성, 충돌, rebase, 복구, PR/CI를 손으로 재현할 수 있는가? |
+| 13 | [초대형 Open Source 기여 생애주기](13-large-open-source-contribution-lifecycle.md) | 큰 프로젝트에서 일을 고르고 설계·검증·review까지 어떻게 끝내는가? |
+| 14 | [vLLM 기여 절차와 실제 PR 해부](14-vllm-contribution-and-pr-anatomy.md) | vLLM 규칙과 변경 유형별 실제 PR 증거는 어떻게 다른가? |
+| 15 | [장기 PR의 upstream 동기화](15-long-running-pr-upstream-sync.md) | review 지연 중 main·dependency 변화에 맞춰 diff와 CI를 어떻게 갱신하는가? |
 | 90 | [명령·사고 대응 runbook](90-command-and-incident-runbook.md) | 현재 상태에서 다음 안전한 명령을 빠르게 선택할 수 있는가? |
 | 99 | [용어집과 공식 자료](99-glossary-and-references.md) | 낯선 용어를 정확한 원문 정의로 다시 확인할 수 있는가? |
 
-처음에는 0→7을 순서대로 읽는다. 그다음 8→11로 팀 운영과 자동화를 연결하고, 12의 실습을 수행한다. 실제 사고 중에는 90에서 시작하되 명령을 실행하기 전에 반드시 `git status`, `git branch --show-current`, `git log --graph`로 현재 상태를 확인한다.
+처음에는 0→7을 순서대로 읽는다. 그다음 8→11로 팀 운영과 자동화를 연결한다. Open Source 기여가 목표라면 13→14→15로 이어서 읽고, 12의 Lab 13–14로 장기 PR을 재현한다. 실제 사고 중에는 90에서 시작하되 명령을 실행하기 전에 반드시 `git status`, `git branch --show-current`, `git log --graph`로 현재 상태를 확인한다.
 
 ## 4. 이 자료의 안전 원칙
 
@@ -92,5 +95,9 @@ flowchart TB
 - 실패한 GitHub Actions run에서 workflow → job → step → command 순으로 원인을 좁힌다.
 - branch ruleset, CODEOWNERS, required checks가 각각 어떤 실패를 막는지 설명한다.
 - tag, GitHub Release, build artifact, deployment record를 서로 구분한다.
+- fork의 `origin`과 공식 repository의 `upstream`을 분리하고 current main에서 feature branch를 만든다.
+- 초대형 프로젝트에서 중복 PR, RFC 필요성, CODEOWNERS, DCO, 변경 유형별 test 증거를 판단한다.
+- 장기 PR에서 backup, rebase, `range-diff`, `--force-with-lease`, 최신 head CI를 하나의 절차로 수행한다.
+- vLLM의 model·kernel·core·build PR에서 각각 필요한 검증 packet이 왜 다른지 실제 사례로 설명한다.
 
 > 이 모듈의 본질: Git은 파일을 저장하는 도구라기보다 **변경의 인과관계를 DAG로 기록하는 시스템**이고, GitHub 협업은 그 DAG에 어떤 변경을 연결해도 되는지 사람과 자동화가 함께 판정하는 과정이다.
