@@ -4,6 +4,7 @@
 
 상태 표기:
 - `ACTIVE` — 현재 직접 진행 중
+- `VALIDATING` — 구현은 존재하며 실제 runtime/운영 Gate 검증 중
 - `NEXT` — 선행 과제 완료 후 바로 진행
 - `DESIGN` — 아키텍처/검증 단계
 - `ONGOING` — 운영과 함께 상시 수행
@@ -73,16 +74,26 @@ Q3 Gate:
 - NVIDIA Network Operator 기반 RDMA resource 사용
 - 망B는 IB가 없어 Node-local P/D가 우선 topology
 - 0.1.8에서는 한 Pod = 한 P/D Cell 구조로 시작
+- 0.1.8 baseline PR #1은 `main`에 merge 완료
+- PR #2는 기존 renderer를 건드리지 않는 `pdCellSpec.models[]` additive extension으로 구현
+- PR #2 이전 커밋에서 P1:D1 배포, LiteLLM, Anthropic 경로 성공
+- PR #4는 router type, model alias, 비대칭 GPU, model-local KV config와 container 상속을 보완했으며 runtime 테스트 중
+- 망B Mooncake same-node 경로에는 `nvlink_intra`가 필요하고, 현재 공식 `0.3.10.post2` artifact에는 이 기능이 없어 source-built image가 필요
 
 Q3 Gate:
-1. P1:D1 + orchestrated LMRouter + KV transfer E2E
-2. Variable P:D
-3. Cell replica scale-out
-4. 모든 P/D engine metric 수집
-5. Router / Prefill / Decode failure recovery
-6. Kimi-K3 H200 multi-node 재현 가능한 배포
-7. Multi-node soak / failure / performance benchmark
-8. Multi-node P/D feasibility 비교
+
+| Gate | 상태 |
+|---|---|
+| PR #2 이전 커밋 P1:D1 + LiteLLM/Anthropic | 완료 |
+| PR #4 HEAD Qwen3.6-27B P1:D1 | 검증 중 |
+| Mooncake 0.3.10-post2 `nvlink_intra` source build / standalone bench | 신규 blocker |
+| P2:D1 → P2:D2 → P1:D3 | 대기 |
+| Cell replica 0↔1 / scale-out | 대기 |
+| 모든 P/D engine metric 수집 | 후순위 |
+| Router / Prefill / Decode failure recovery | 대기 |
+| Kimi-K3 H200 multi-node 재현 가능한 배포 | 병행 과제 |
+| Multi-node soak / failure / performance benchmark | 대기 |
+| Multi-node P/D feasibility 비교 | 장기 |
 
 운영 자동화 포인트:
 - serving group 단위 health 판단
@@ -144,7 +155,7 @@ Q3 Gate:
 
 ## 4. Cache Plane
 
-**상태: DESIGN**
+**상태: ACTIVE / VALIDATING**
 
 범위:
 - local prefix caching
@@ -171,6 +182,15 @@ Q3 Gate:
 - `Offloading`, `P/D Transfer`, `Shared KV Reuse`를 하나의 기능으로 묶지 않는다.
 - 망B와 망A의 network capability 차이를 cache architecture에 반영한다.
 - 중앙 remote cache를 기본값으로 가정하지 않는다.
+- Mooncake `nvlink`는 MNNVL, `nvlink_intra`는 same-node NVLink/NVSwitch로 구분한다.
+- connector 이름뿐 아니라 wheel/image에 compile된 transport feature까지 compatibility axis로 관리한다.
+
+현재 초점:
+
+- 공식 Mooncake `0.3.10.post2` wheel로 CUDA ABI 문제 해소
+- 망B same-node `nvlink_intra` 누락 확인
+- `USE_CUDA=ON + USE_MNNVL=ON + USE_INTRA_NVLINK=ON` source-built artifact 계획
+- Helm/Router 이전에 standalone transfer bench로 GPU memory data path 검증
 
 Q3 Gate:
 1. connector × model × topology compatibility matrix
@@ -183,6 +203,8 @@ Q3 Gate:
 - cache tier health / capacity 관리
 - cache-aware routing policy
 - connector 실패 시 recompute fallback
+
+장기-context production에서는 `recompute`를 기본 failure policy로 사용하지 않는다. 기본은 `fail`로 두고 transfer 오류를 명시적으로 노출한다.
 
 ---
 

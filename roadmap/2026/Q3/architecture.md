@@ -2,6 +2,8 @@
 
 이 문서는 Q3 과제들이 각각 어디에 위치하고 최종적으로 어떻게 연결되는지 보여주는 상위 아키텍처 스케치다.
 
+최근 검토: 2026-08-24 KST
+
 ## 현재 운영 흐름
 
 ```text
@@ -18,6 +20,27 @@ Observability
 ```
 
 현재 구조는 이미 다중 모델 운영이 가능하지만, Q3부터는 단일 vLLM instance를 전제로 한 구조를 넘어 **P/D Cell, Multi-node, KV locality, Stateful Conversation**을 수용해야 한다.
+
+---
+
+## 현재 Node-local P/D Cell data path
+
+```mermaid
+flowchart TB
+    R["Cell Router :8000"]
+    P["Prefill Engine"]
+    K["GPU KV Transfer"]
+    D["Decode Engine"]
+    S["Cell Service"]
+
+    S --> R --> P --> K --> D
+```
+
+- 단기 API는 기존 integrated/Ray renderer와 분리된 `pdCellSpec.models[]`이다.
+- Router/P/D는 한 Pod에 있어 Node-locality와 failure domain을 공유한다.
+- 망B H200의 Mooncake 목표 transport는 same-node `nvlink_intra`다. MNNVL용 `nvlink`와 구분한다.
+- 현재 공식 `0.3.10.post2` artifact의 CUDA ABI 문제는 해결됐지만 `nvlink_intra` feature가 없어 source-built image가 필요하다.
+- PR #2 이전 커밋 P1:D1 data path는 성공했고, PR #4 HEAD에서 Qwen3.6-27B topology 확대 검증 중이다.
 
 ---
 
@@ -155,6 +178,8 @@ flowchart TB
 - NIXL
 - Mooncake / MooncakeStore
 
+현재 P/D transfer에서는 connector 선택만으로 충분하지 않다. connector package version, CUDA ABI, compile된 transport feature, runtime selector, 실제 선택 로그를 하나의 compatibility contract로 관리한다.
+
 ### 5. Stateful Serving Plane
 
 주요 개념:
@@ -181,6 +206,14 @@ flowchart TB
 - H200 중심 GPU pool
 - IB 없음
 - Node-local P/D가 우선적인 topology
+- Mooncake 사용 시 `nvlink_intra` build/runtime path 우선
+
+Mooncake protocol 경계:
+
+- `nvlink`: Multi-Node NVLink(MNNVL)
+- `nvlink_intra`: 동일 Node NVLink/NVSwitch
+- `rdma`: IB/RoCE/GDRDMA
+- `tcp`: 일반 network fallback
 
 실제 node/GPU 수량과 hostname/IP는 공개 저장소에 두지 않는다.
 

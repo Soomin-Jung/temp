@@ -78,6 +78,7 @@ Observability는 Prometheus / Grafana / Loki / Alloy / DCGM 계열을 사용하�
 - [vLLM Stack 진행계획](vllm-stack/2026-08-18-진행계획.md)
 - [P/D Master Plan](vllm-stack/pd-disaggregation/2026-08-18-vllm-stack-pd-disaggregation-master-plan.md)
 - [Node-local P/D Cell](vllm-stack/pd-disaggregation/2026-08-18-node-local-pd-cell-0.1.8-plan.md)
+- [Mooncake 0.3.10-post2 폐쇄망 Source Build](vllm-stack/pd-disaggregation/2026-08-24-mooncake-0.3.10-post2-offline-build.md)
 
 ---
 
@@ -113,12 +114,14 @@ PD Cell Pod
 - 외부 Service는 Cell Router만 노출
 - P/D/Router container별 metrics port를 노출해 Prometheus가 개별 scrape 가능하도록 구성
 - 기본 Helm lint/template/test/pre-commit 검증 완료
-- 실제 환경에서 P/D Cell 동작 스모크 확인
+- PR #2 이전 커밋 `36e45f0c277d4206ce233c8057a383e387c616c1`에서 P1:D1, LiteLLM, Anthropic 경로 확인
 - 장기 context, cancellation, restart/recovery, P2:D2/P3:D1, router/global discovery, LiteLLM path, 성능 비교는 계속 검증 대상
 
 ## PR #4 — P/D values / template / router contract audit
 
 현재 상태: **Open Draft / PR #2 위에 stacked / 실제 환경 테스트 중**
+
+검증 순서: Qwen3.6-27B P1:D1 재검증 후 P2:D1 → P2:D2 → P1:D3, replica 0↔1
 
 주요 반영:
 
@@ -152,7 +155,7 @@ Network B는 InfiniBand가 없으므로 node-local P/D의 KV transfer가 host/TC
 
 목표 Mooncake 계열:
 
-- `mooncake-transfer-engine == 0.3.10-post2`
+- `mooncake-transfer-engine == 0.3.10.post2`
 - 필요한 transport: `nvlink` 및 특히 `nvlink_intra`
 
 ## 확인된 상태
@@ -161,13 +164,19 @@ Network B는 InfiniBand가 없으므로 node-local P/D의 KV transfer가 host/TC
 - 그러나 기본 배포 wheel에는 원하는 `nvlink_intra` transport가 포함되지 않는 빌드 조합이 존재
 - 따라서 단순 pip wheel 교체로는 현재 요구사항을 만족하지 못함
 
+Transport 의미:
+
+- `nvlink`: Multi-Node NVLink(MNNVL), `USE_MNNVL=ON`
+- `nvlink_intra`: 동일 Node NVLink/NVSwitch, `USE_INTRA_NVLINK=ON`
+- Network B H200 Node-local P/D의 목표는 `nvlink_intra`
+
 ## 다음 구현 방향
 
 **P/D Helm PR과 분리된 별도 image-build PR**로 다룬다.
 
 목표:
 
-1. vLLM base image 안에서 Mooncake를 source build
+1. Mooncake `v0.3.10.post2` source를 고정하고 vLLM base image 안에서 build
 2. NVLink/NVLink-intra 관련 build flag/dependency를 명시
 3. 폐쇄망에서 외부 GitHub/Go/module/package fetch가 발생하지 않도록 필요한 source/dependency를 사전 반입
 4. Artifactory가 proxy 가능한 Docker/YUM/APK/Python 영역과, 별도 반입이 필요한 Go/Git source dependency를 구분
@@ -269,6 +278,7 @@ PD disaggregation, multi-node deployment, KV cache/routing, stateful conversatio
 
 ## Qwen 3.x
 
+- 현재 P/D 운영 검증 우선 모델은 Qwen3.6-27B
 - Qwen 3.8 27B + MTP deployment/streaming validation 진행
 - reasoning strength/profile별 서비스 동작과 speculative/MTP path 검증
 

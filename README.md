@@ -1,5 +1,7 @@
 # 작업 메모 / 계획 저장소
 
+현재 상태의 최우선 진입점: [CURRENT CONTEXT — Canonical State](CURRENT_CONTEXT.md)
+
 ## 디렉터리 기준
 
 - `roadmap/` : 연도/분기별 주요 과제, 목표 아키텍처, Workstream 현황을 보는 상위 인덱스
@@ -59,7 +61,8 @@
 - [vLLM Stack 진행 계획](vllm-stack/2026-08-18-진행계획.md)
 - [P/D Disaggregation 인덱스](vllm-stack/pd-disaggregation/README.md)
   - [P/D Disaggregation Master Plan](vllm-stack/pd-disaggregation/2026-08-18-vllm-stack-pd-disaggregation-master-plan.md)
-  - [Node-local P/D Cell 0.1.8 계획](vllm-stack/pd-disaggregation/2026-08-18-node-local-pd-cell-0.1.8-plan.md)
+  - [Node-local P/D Cell 0.1.8 현재 구현 계획](vllm-stack/pd-disaggregation/2026-08-18-node-local-pd-cell-0.1.8-plan.md)
+  - [Mooncake 0.3.10-post2 폐쇄망 Source Build](vllm-stack/pd-disaggregation/2026-08-24-mooncake-0.3.10-post2-offline-build.md)
 - [Model Serving Validation Contract](vllm-stack/model-serving-validation.md)
 
 ### MOC Operations Control Plane
