@@ -6,6 +6,7 @@
 
 - [DeepSeek-V4](deepseek-v4/README.md)
 - [Kimi-K3](kimi-k3/README.md)
+- [GLM-5.2](glm-5.2/README.md) — historical deployment decision / parked track
 
 ## 기록 형식
 
