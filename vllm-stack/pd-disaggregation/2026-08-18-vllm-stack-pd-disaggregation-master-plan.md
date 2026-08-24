@@ -1,6 +1,17 @@
 # vLLM Stack P/D Disaggregation 구현 Master Plan
 
-작성일: 2026-08-18
+작성일: 2026-08-18  
+최종 업데이트: 2026-08-24 KST
+
+## 현재 진행 상태
+
+- PR #1: custom 0.1.8 baseline이 `main`에 merge됨
+- PR #2: top-level `pdCellSpec` additive renderer 구현, Draft 유지
+- Runtime: PR #2 이전 커밋 `36e45f0c277d4206ce233c8057a383e387c616c1`에서 P1:D1, LiteLLM, Anthropic 경로 성공
+- PR #4: values/container/router 계약 audit 완료 후 Qwen3.6-27B runtime 확대 테스트 중
+- Mooncake: CUDA ABI 문제는 공식 `0.3.10.post2` wheel로 해소했으나, 망B same-node 경로에 필요한 `nvlink_intra`가 현재 artifact에 없어 source-built image가 새 blocker
+
+초기 성공은 PR #4 HEAD의 완료 판정이 아니다. P1:D1 재검증 후 P2:D1 → P2:D2 → P1:D3, Cell replica, failure, metrics 순으로 Gate를 닫는다.
 
 ## 목표
 
@@ -12,7 +23,7 @@
 - Cell replica 단위 scale-out
 - Prefill/Decode 수량 조정
 - 기존 profile 기반 vLLM 실행 방식 재사용
-- Cell 내부 전용 orchestrated P/D Router
+- Cell 내부 전용 P/D Router(LMStack/vLLM/custom image별 CLI 계약 분리)
 - KV connector 기반 node-local transfer
 - 기존 Global Router의 모델 discovery 구조 유지
 - 모델별 단일 Service endpoint 유지
@@ -30,8 +41,10 @@ pdCellSpec:
   enabled: true
   models:
     - name: example-pd
-      servedModelName: example-model
+      servedModelNames: [example-model, example-alias]
       replicaCount: 2
+      kvTransfer:
+        connector: MooncakeConnector
       prefill:
         count: 2
       decode:
@@ -66,7 +79,30 @@ Global Router
          └─ Decode pool
 ```
 
-Global Router는 Cell 내부 topology를 알 필요가 없다. Cell Router만 최신 orchestrated P/D 기능을 사용하며, Cell 내부 엔진은 localhost/static membership으로 격리한다.
+Global Router는 Cell 내부 topology를 알 필요가 없다. Cell Router는 image에 맞는 P/D 계약을 사용하며, Cell 내부 엔진은 localhost/static membership으로 격리한다.
+
+- `router.type=lmstack`: `disaggregated_prefill_orchestrated` + static backend/model/alias
+- `router.type=vllm`: `--vllm-pd-disaggregation` + 반복형 Prefill/Decode endpoint
+- `router.type=custom`: 명시적 command/args
+
+LMStack Router와 vLLM Router의 CLI는 호환되지 않는다.
+
+## KV Transfer와 transport
+
+KV connector는 모델·profile·topology 호환성에 종속되므로 `pdCellSpec.models[].kvTransfer`가 직접 소유한다.
+
+운영 기본 failure policy는 P/D 모두 `fail`이다. `recompute`는 transfer failure를 숨기고 Decode에 Prefill을 유입시키므로 장기-context production 기본값으로 사용하지 않는다.
+
+Mooncake transport 의미:
+
+| Protocol | 범위 | Build flag |
+|---|---|---|
+| `nvlink` | Multi-Node NVLink(MNNVL) | `USE_MNNVL=ON` |
+| `nvlink_intra` | 동일 Node NVLink/NVSwitch | `USE_INTRA_NVLINK=ON` |
+| `rdma` | IB/RoCE/GDRDMA | CUDA/RDMA support |
+| `tcp` | 일반 network fallback | GPU buffer에는 `USE_CUDA=ON` |
+
+망B H200 Node-local P/D의 목표 Mooncake path는 `nvlink_intra`다. 이 기능을 포함한 `0.3.10.post2` source-built wheel/image는 Helm 변경과 분리한 별도 PR로 만든다.
 
 ## Profile 원칙
 
@@ -130,15 +166,16 @@ engine-level degraded serving은 장기 PDSG 범위로 남긴다.
 
 ## 개발 Gate
 
-1. Helm lint/template
-2. P1:D1 단일 Cell
-3. P/D topology 변경
-4. Cell replica scale-out
-5. `/v1/models` / Service / 상위 Router 연동
-6. 모든 engine metrics 수집
-7. P/D/Router container 장애 및 자동 복귀
-8. 기존 integrated deployment regression
-9. integrated vs P/D 성능 비교
+1. Helm lint/template — 완료
+2. PR #2 이전 커밋 P1:D1 단일 Cell — 완료
+3. PR #4 HEAD P1:D1 재검증 — 진행 중
+4. P2:D1 → P2:D2 → P1:D3 topology 변경
+5. Cell replica 0↔1 및 scale-out
+6. `/v1/models` / Service / 상위 Router 연동
+7. 모든 engine metrics 수집
+8. P/D/Router container 장애 및 자동 복귀
+9. 기존 integrated deployment regression
+10. integrated vs P/D 성능 비교
 
 ## 단기 종료선
 
@@ -148,7 +185,7 @@ engine-level degraded serving은 장기 PDSG 범위로 남긴다.
 - configurable P:D
 - Cell replica scaling
 - profile reuse
-- orchestrated Router
+- image별 CLI가 검증된 Cell P/D Router
 - KV transfer
 - discovery/service integration
 - metrics
@@ -177,6 +214,11 @@ modelSpec
 ```
 
 단기 작업에서 재사용해야 하는 것은 모델 identity, P/D topology, profile contract, KV policy, Router contract, metrics label, failure semantics이다.
+
+상세 현재 기준:
+
+- [Node-local P/D Cell 구현 계획](2026-08-18-node-local-pd-cell-0.1.8-plan.md)
+- [Mooncake 0.3.10-post2 폐쇄망 Source Build 계획](2026-08-24-mooncake-0.3.10-post2-offline-build.md)
 
 ## 원칙
 

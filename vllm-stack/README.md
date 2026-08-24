@@ -7,13 +7,15 @@ vLLM Production Stack의 운영 기준선, version migration, 배포 topology, P
 | 영역 | 문서 | 상태 |
 |---|---|---|
 | 전체 진행 순서 | [2026-08-18 진행 계획](2026-08-18-진행계획.md) | 기준 계획 |
-| P/D Disaggregation | [P/D 문서 인덱스](pd-disaggregation/README.md) | 단기 Node-local Cell 우선 |
+| P/D Disaggregation | [P/D 문서 인덱스](pd-disaggregation/README.md) | PR #2 P1:D1 성공, PR #4 검증 중 |
+| Mooncake image | [0.3.10-post2 폐쇄망 Source Build](pd-disaggregation/2026-08-24-mooncake-0.3.10-post2-offline-build.md) | `nvlink_intra` build blocker |
 | 배포 검증 | [Model Serving Validation Contract](model-serving-validation.md) | 구현 요구사항·golden test |
 
 ## 구조 원칙
 
-1. `modelSpec`은 사용자에게 노출되는 모델/endpoint identity를 나타낸다.
+1. 의미상 모델 block은 사용자에게 노출되는 모델/endpoint identity를 나타낸다. 단기 0.1.8 P/D의 실제 root는 `pdCellSpec.models[]`이다.
 2. integrated, P/D, multi-node는 같은 모델을 구현하는 runtime topology다.
 3. 단기 0.1.8 변경은 additive extension으로 두고 기존 integrated renderer의 회귀를 막는다.
 4. 0.1.12+ 이관은 파일 복사가 아니라 model identity, topology, routing, metrics, failure semantics의 semantic migration으로 수행한다.
 5. 배포 완료는 Pod Ready가 아니라 API contract, inference health, streaming/tool/reasoning 결과까지 검증된 상태를 의미한다.
+6. Mooncake `nvlink`와 `nvlink_intra`를 구분하고, requested protocol이 아니라 실제 installed transport 로그로 data path를 판정한다.

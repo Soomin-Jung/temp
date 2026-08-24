@@ -1,7 +1,7 @@
 # 2026 Q3 — LLM E2E Platform 확장
 
 기준일: 2026-08-18  
-최근 검토: 2026-08-19 KST
+최근 검토: 2026-08-24 KST
 
 ## 분기 목표
 
@@ -36,8 +36,11 @@ MOC는 전체 과제의 중심이 아니라 여러 플랫폼 capability를 운�
 
 1. **P/D Disaggregation 통합 배포**
    - custom vLLM Production Stack 0.1.8 운영 기준선을 보존하면서 Node-local P/D Cell을 우선 구현
-   - 하나의 modelSpec 안에서 Prefill / Decode topology 정의
-   - orchestrated LMRouter + KV transfer + Cell replica + Prometheus + failure recovery 통합
+   - 단기 0.1.8에서는 기존 renderer와 분리한 `pdCellSpec.models[]` 한 block에서 Prefill / Decode topology 정의
+   - PR #2 이전 커밋에서 P1:D1 + LiteLLM + Anthropic 경로 성공, PR #4 확대 테스트 진행
+   - Qwen3.6-27B P/D profile과 P1:D1 → P2:D1 → P2:D2 → P1:D3 검증
+   - Cell Router + KV transfer + Cell replica + Prometheus + failure recovery 통합
+   - 망B same-node Mooncake `nvlink_intra`를 위해 `0.3.10.post2` source-built vLLM image 별도 PR
    - 상세: [`vllm-stack/pd-disaggregation/`](../../../vllm-stack/pd-disaggregation/)
 
 2. **Kimi-K3 망A Multi-node 운영 배포**
@@ -55,7 +58,7 @@ MOC는 전체 과제의 중심이 아니라 여러 플랫폼 capability를 운�
 ### P1 — P0를 지속 가능하게 만드는 플랫폼 기반
 
 4. **vLLM Production Stack Modernization**
-   - 0.1.8 custom baseline 유지 및 regression 검증
+   - 0.1.8 custom baseline PR #1 merge 완료
    - Node-local P/D를 단기 additive extension으로 구현
    - 이후 0.1.12+로 semantic rebase
    - custom fork 확대보다 upstream primitive + organization overlay 구조를 지향
@@ -72,6 +75,7 @@ MOC는 전체 과제의 중심이 아니라 여러 플랫폼 capability를 운�
 6. **KV Cache / Cache-aware Routing**
    - GPU local APC, host offload, P→D KV transfer, shared remote KV를 서로 다른 capability로 분리
    - LMCache / NIXL / Mooncake / vLLM native connector 호환성 정리
+   - Mooncake `nvlink`(MNNVL)와 `nvlink_intra`(same-node)를 구분하고 image build feature를 compatibility matrix에 포함
    - cache locality + load + health를 함께 보는 routing 구조 검토
 
 7. **Stateful Conversation Serving**
@@ -97,7 +101,7 @@ MOC는 전체 과제의 중심이 아니라 여러 플랫폼 capability를 운�
 | Serving Foundation | Production Stack, LiteLLM, LMRouter, Observability | 진행 중 |
 | Distributed Inference | P/D, Multi-node, GDRDMA, Native MP/LWS | 최우선 진행 |
 | Model Enablement & Performance | 신규 모델, topology, SD, tuning, metric 분석 | 상시 진행 |
-| Cache Plane | KV offload, P/D transfer, shared KV, cache-aware routing | 설계/검증 트랙 |
+| Cache Plane | KV offload, P/D transfer, shared KV, cache-aware routing | Mooncake transport 검증 진행 |
 | Stateful Serving | Responses state, conversation store, session routing | 아키텍처 과제 |
 | Operations Control | MOC Core + 운영 비즈니스 로직 | Core 가용 / Business logic backlog |
 
@@ -108,6 +112,8 @@ MOC는 전체 과제의 중심이 아니라 여러 플랫폼 capability를 운�
 ## Q3 핵심 성공 기준
 
 - [ ] Node-local P/D Cell이 기존 integrated deployment를 깨지 않고 운영 Chart에 통합된다.
+- [x] PR #2 이전 커밋에서 P1:D1 배포와 LiteLLM/Anthropic 기본 data path가 확인된다.
+- [ ] PR #4 HEAD와 source-built Mooncake image에서 Qwen3.6-27B P1:D1이 재현된다.
 - [ ] P/D Cell의 LiteLLM / Global Router / metrics / failure recovery 경로가 E2E로 검증된다.
 - [ ] Kimi-K3가 망A H200 멀티노드 환경에서 재현 가능한 운영 profile로 정립된다.
 - [ ] Multi-node 장애와 engine process failure를 Pod Ready 이상의 health 기준으로 탐지/복구할 수 있다.
@@ -120,6 +126,7 @@ MOC는 전체 과제의 중심이 아니라 여러 플랫폼 capability를 운�
 - [vLLM Stack 진행 계획](../../../vllm-stack/2026-08-18-%EC%A7%84%ED%96%89%EA%B3%84%ED%9A%8D.md)
 - [P/D Disaggregation Master Plan](../../../vllm-stack/pd-disaggregation/2026-08-18-vllm-stack-pd-disaggregation-master-plan.md)
 - [Node-local P/D Cell 상세 계획](../../../vllm-stack/pd-disaggregation/2026-08-18-node-local-pd-cell-0.1.8-plan.md)
+- [Mooncake 0.3.10-post2 폐쇄망 Source Build](../../../vllm-stack/pd-disaggregation/2026-08-24-mooncake-0.3.10-post2-offline-build.md)
 - [Model Serving Validation Contract](../../../vllm-stack/model-serving-validation.md)
 - [MOC Capability Backlog](../../../moc/README.md)
 - [DeepSeek-V4 모델/장애 조사](../../../models/deepseek-v4/)
