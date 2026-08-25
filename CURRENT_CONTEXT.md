@@ -170,7 +170,7 @@ Qwen3.6-27B P1:D1
 
 ---
 
-# 4. Mooncake / KV Transfer — 현재 blocker
+# 4. Mooncake / KV Transfer — 현재 상태
 
 Network B의 node-local P/D는 host/TCP 우회가 아니라 **NVLink/NVSwitch GPU-local path**가 목표다.
 
@@ -190,42 +190,55 @@ Transport build mapping:
 ## PR #5 — Mooncake NVLink transport image build
 
 Repository: `Soomin-Jung/vllm-production-stack-custom`  
-상태: **Open Draft / main에서 독립 분기 / GPU runtime 전 merge 금지**
+상태: **Merged / 폐쇄망 Kaniko image build 성공 / GPU runtime은 PR #4에서 검증 중**
 
-Branch:
+Merged commit:
 
 ```text
-agent/mooncake-0.3.10-post2-nvlink-image
+88185894123342e22a0a60c9c2e3f0f9ab115a18
 ```
 
-현재 구현:
+구현:
 
-- `docker/Dockerfile.vllm-mooncake`
-- Mooncake `v0.3.10.post2` source/commit 고정
-- pybind11 / yalantinglibs submodule lock
-- `USE_CUDA=ON`
-- `USE_MNNVL=ON`
-- `USE_INTRA_NVLINK=ON`
-- Store/etcd/Rust/Go/EP/TENT 경로 제외
-- GitHub/PyPI/Go online fetch 없는 offline build context
-- source bundle + Python wheelhouse + SHA256SUMS 사전 반입
-- Kaniko 호환 static validation/runtime verification 도구 포함
+- `docker/Dockerfile.vllm-mooncake` dedicated overlay
+- 내부 검증 base 기본값 `vllm/vllm-openai:v0.26.0-cu129`
+- corporate CA, `pip.conf`, `sources.list`를 builder/runtime에 공통 적용
+- base의 `/etc/apt/sources.list.d/*.list` 제거
+- Mooncake `v0.3.10.post2`와 pybind11/yalantinglibs 고정
+- 수동 반입 source closure: `mooncake-offline_0.3.10.post2.tar.gz`
+- Python/APT dependency는 사내 Artifactory proxy 사용; GitHub/Go online fetch 없음
+- `USE_CUDA=ON`, `USE_MNNVL=ON`, `USE_INTRA_NVLINK=ON`
+- Store/etcd/Rust/Go/EP/TENT 제외
+- Mooncake CMake link용 `LIBRARY_PATH=/usr/local/cuda/lib64/stubs:${LIBRARY_PATH}`
+- `SHA256SUMS`가 있으면 archive checksum 검증
+- `SOURCE_MANIFEST.env`가 있으면 고정 commit까지 검증; 없으면 version과 populated submodule 필수 파일 검증
+- wheel 생성, final image 설치, 전용 static validation까지 실환경에서 통과
 
-현재 남은 실제 gate:
+실제 transport 선택 주의:
 
-1. connected zone에서 source bundle/wheelhouse 생성
-2. 폐쇄망 반입 후 checksum 검증
-3. 실제 `v0.27.1-cu129` digest 기준 Kaniko build
-4. P/D 양쪽 extension load 검증
-5. `nvlink_intra` 실제 P→D GPU KV transfer 확인
-6. `nvlink` 비교
-7. long-context / streaming / cancellation / concurrency
-8. TCP fallback 부재와 transfer latency 비교
-9. Cell restart/recovery
+```text
+NVLink compile flag가 하나라도 ON인 build:
 
-**Dockerfile integration strategy는 아직 검토 중**이다. 현재 PR은 dedicated overlay Dockerfile을 사용한다. 기존 image Dockerfile에 흡수할지 여부는 build ownership과 기존 image regression 범위를 기준으로 결정하며, 결론 전에는 채팅의 가설보다 PR #5 current diff를 우선한다.
+MC_INTRANODE_NVLINK 존재
+  -> nvlink_intra
+else MC_FORCE_MNNVL 존재 또는 HCA 없음
+  -> nvlink
+else
+  -> rdma
+```
 
-이 작업이 끝나기 전에는 Network B node-local P/D 성능을 최종 평가하지 않는다.
+환경변수는 값이 아니라 **존재 여부**를 보므로 비활성화할 때 `"0"`으로 남기지 않고 항목을 제거한다. 이 compile branch에는 TCP 자동 fallback이 없다. `USE_TCP=ON`은 TCP 구현체를 compile할 뿐 자동 선택을 뜻하지 않는다. vLLM의 `mooncake_protocol` log는 requested protocol이며, 실제 설치 transport는 Mooncake log와 remote segment metadata로 확인한다.
+
+PR #4에서 남은 runtime gate:
+
+1. Prefill/Decode 양쪽 extension load
+2. `nvlink_intra` 실제 P→D GPU KV transfer
+3. `nvlink` 비교와 실제 선택 transport 확인
+4. long-context / streaming / cancellation / concurrency
+5. transfer latency / TTFT 비교
+6. Cell restart/recovery
+
+상세 compile/selection/전송 경로는 [Mooncake 0.3.10-post2 폐쇄망 Source Build](vllm-stack/pd-disaggregation/2026-08-24-mooncake-0.3.10-post2-offline-build.md)를 source of truth로 사용한다. Network B node-local P/D의 최종 성능 평가는 위 runtime gate 이후 확정한다.
 
 ---
 
