@@ -3,7 +3,7 @@
 업데이트: 2026-08-25 KST  
 상태: Historical context / archived decisions
 
-이 문서는 오래된 ChatGPT 대화방을 정리하면서, 현재 아키텍처의 배경이 된 과거 운영 경험 중 다시 참고할 가치가 있는 것만 압축 보존한다. 현재 설계의 source of truth는 `CURRENT_CONTEXT.md`와 영역별 canonical 문서다.
+이 문서는 현재 아키텍처의 배경이 된 과거 운영 경험 중 다시 참고할 가치가 있는 것만 압축 보존한다. 현재 설계의 source of truth는 `docs/context/platform-state.md`와 영역별 canonical 문서다.
 
 ## 1. Docker / NFS xattr 제약과 Singularity 우회
 
@@ -68,9 +68,9 @@ LMCache 계열 CPU/KV offload를 실제 inference 환경에서 검증한 경험�
 우선순위는 다음과 같다.
 
 1. 실제 code / PR current state
-2. `CURRENT_CONTEXT.md`
+2. `docs/context/platform-state.md`
 3. 영역별 canonical 문서
 4. 최신 runtime validation
 5. 이 historical document
 
-따라서 과거 ChatGPT 대화의 세부 탐색 과정은 삭제해도 된다.
+오래된 탐색 기록은 current source of truth로 사용하지 않는다.
