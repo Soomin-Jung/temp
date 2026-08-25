@@ -4,7 +4,7 @@
 
 ## 인덱스
 
-- [DeepSeek-V4](deepseek-v4/README.md)
+- [DeepSeek-V4](deepseek-v4/README.md) — SWA + CSA + HCA / mHC / DeepSeekMoE / Muon / FP4 / MTP + DSpark / latest Flash-0731 & Pro-0813 deep dive
 - [Kimi-K3](kimi-k3/README.md) — architecture lineage / systems deep dive
 - [GLM-5.2](glm-5.2/README.md) — MLA + DSA + IndexShare + MoE + MTP + agentic RL / EDA-agent deep dive
 
