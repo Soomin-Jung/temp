@@ -27,7 +27,7 @@ Prefill과 Decode를 서로 다른 실행 자원으로 분리하되, 사용자�
 
 ## 읽는 순서
 
-1. [Current Context](../../CURRENT_CONTEXT.md)
+1. [Platform Engineering State](../../docs/context/platform-state.md)
 2. [Master Plan](2026-08-18-vllm-stack-pd-disaggregation-master-plan.md)
 3. [0.1.8 Node-local P/D Cell 상세 계획](2026-08-18-node-local-pd-cell-0.1.8-plan.md)
 4. [Mooncake 0.3.10-post2 폐쇄망 Source Build 계획](2026-08-24-mooncake-0.3.10-post2-offline-build.md)
