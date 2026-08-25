@@ -1,7 +1,5 @@
 # 작업 메모 / 계획 저장소
 
-현재 상태의 최우선 진입점: [CURRENT CONTEXT — Canonical State](CURRENT_CONTEXT.md)
-
 ## 디렉터리 기준
 
 - `roadmap/` : 연도/분기별 주요 과제, 목표 아키텍처, Workstream 현황을 보는 상위 인덱스
