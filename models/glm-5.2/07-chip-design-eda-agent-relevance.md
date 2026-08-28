@@ -168,7 +168,7 @@ standalone GLM-5.2 : 44.0%
 
 공개 benchmark의 빈도만으로:
 
-- Synopsys/Cadence/Siemens 고객사의 표준 model
+- Synopsys/Cadence/Siemens 생태계의 표준 model
 - 주요 반도체 회사 내부의 dominant model
 - production tape-out workflow의 de-facto standard
 
