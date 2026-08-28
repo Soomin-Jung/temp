@@ -32,7 +32,7 @@ MOC는 전체 과제의 중심이 아니라 여러 플랫폼 capability를 운�
 
 ## Q3 우선순위
 
-### P0 — 고객 일정에 직접 연결된 과제
+### P0 — 현재 분기 우선 추진 과제
 
 1. **P/D Disaggregation 통합 배포**
    - custom vLLM Production Stack 0.1.8 운영 기준선을 보존하면서 Node-local P/D Cell을 우선 구현
