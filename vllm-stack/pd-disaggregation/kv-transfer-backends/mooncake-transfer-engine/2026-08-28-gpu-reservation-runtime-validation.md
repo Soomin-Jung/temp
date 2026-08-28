@@ -1,9 +1,12 @@
 # Mooncake P/D Cell GPU Reservation Runtime Validation — 2026-08-28
 
-> 결론: **PR #4의 Pod-local aggregate GPU reservation 구조는 실제 P/D KV transfer까지 성공 검증됐다.**
+> 결론: **PR #4의 Pod-local aggregate GPU reservation 구조로 실제 P/D KV transfer 성공 run을 확인했다.**
 >
-> 이 문서는 GPU namespace 문제 해결책 자체의 validation record다.
-> Prefill/Decode 단독 restart 문제는 별도 lifecycle/resilience 이슈로 취급한다.
+> 다만 이후 완전히 새로 생성된 P/D Cell에서도 Mooncake `nvlink_intra`
+> `cudaIpcOpenMemHandle(...)=CUDA_ERROR_INVALID_CONTEXT(201)`가 재현되었다.
+>
+> 따라서 이 문서는 GPU reservation/common CVD/`--device-ids` 구조의 성공 검증 기록이며,
+> Mooncake CUDA IPC의 **재현성/안정성 자체는 Issue #6에서 계속 추적**한다.
 
 ---
 
