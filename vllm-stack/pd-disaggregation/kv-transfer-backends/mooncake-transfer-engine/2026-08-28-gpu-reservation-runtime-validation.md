@@ -287,6 +287,79 @@ dynamic Router engine-id refresh        NOT SUPPORTED in current baseline
 
 ---
 
+## 9.1 Whole-cell guardian 구현
+
+Partial Prefill/Decode restart는 현재 vllm-router/Mooncake generation state를 안전하게
+이어갈 수 없으므로 **P/D Cell 전체를 하나의 failure domain으로 recycle**하도록
+production-stack PR #4에 guardian을 추가했다.
+
+구성:
+
+```text
+P/D Cell Pod
+├─ gpu-reservation
+├─ pd-router
+├─ prefill-*
+├─ decode-*
+└─ pd-cell-guardian
+```
+
+guardian은 모든 핵심 container가 최초 Ready 된 뒤 각 `restartCount`를 baseline으로
+저장한다.
+
+```text
+all core containers Ready
+  -> baseline restartCount 저장
+  -> ARMED
+
+Prefill / Decode / Router / reservation 중 하나 restart
+  -> restartCount 증가 감지
+  -> 자기 Pod UID precondition으로 Kubernetes DELETE
+  -> Deployment가 fresh Pod 생성
+```
+
+Kubernetes 기본 container restart를 그대로 허용하면 surviving Router/engine이 stale
+Mooncake generation/CUDA IPC state를 유지할 수 있으므로, partial restart 직후 해당
+Pod generation 자체를 폐기하는 방식이다.
+
+guardian은 같은 vLLM image의 Python runtime을 재사용하며 GPU는 사용하지 않는다.
+
+```text
+NVIDIA_VISIBLE_DEVICES=void
+poll interval=2s
+delete grace=5s
+```
+
+RBAC:
+
+```text
+pods/get
+pods/delete
+```
+
+만 namespace Role로 부여한다.
+
+Pod 기본 ServiceAccount token 자동 mount는 끄고, guardian container에만 projected
+token과 `kube-root-ca.crt`를 mount한다.
+
+현재 남은 검증은 implementation 자체가 아니라 다음 runtime recovery path다.
+
+```text
+cold transfer PASS
+  -> Prefill kill
+  -> guardian detects restartCount
+  -> whole Pod deleted
+  -> new Pod / new UID
+  -> fresh GPU reservation
+  -> fresh Router/P/D/Mooncake generations
+  -> actual KV transfer PASS
+```
+
+P1D1 반복 recycle과 P1D2 whole-cell recycle까지 통과하면 restart policy를
+production-validated로 올린다.
+
+---
+
 ## 10. 운영 baseline
 
 현재 검증된 baseline:
