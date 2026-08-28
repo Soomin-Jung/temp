@@ -1,6 +1,18 @@
 # 2026-08-28 Mooncake `nvlink_intra` — Kubernetes Container GPU Namespace Incident
 
-> Status: **Root-cause boundary isolated; mitigation design implemented in `vllm-production-stack-custom` PR #4; GPU-node runtime certification pending**
+> Status: **GPU namespace mitigation runtime-validated for cold-start P/D transfer; independent engine restart resilience remains open**
+>
+> 2026-08-28 validation update:
+>
+> - P1D1 / Prefill TP2 / Decode TP2
+> - aggregate GPU reservation 4개 정상 할당
+> - common Cell-wide CUDA namespace + non-overlapping vLLM `--device-ids` 정상
+> - Mooncake `nvlink_intra` `cudaIpcOpenMemHandle` 성공
+> - Prefill transfer metrics: successful=4, failed=0, 약 159 GB/s
+> - Decode DEBUG에서 remote KV receive/load 확인
+> - 따라서 **GPU reservation workaround 자체는 PASS**
+> - 단, Prefill container 단독 restart 후 `CUDA_ERROR_INVALID_CONTEXT(201)`가 재현되어
+>   restart/generation lifecycle은 별도 이슈로 유지
 >
 > Baseline under investigation:
 >
