@@ -1,6 +1,6 @@
 # Platform Engineering State
 
-> Last updated: 2026-08-25 KST
+> Last updated: 2026-09-02 KST
 >
 > 이 문서는 현재 LLM E2E Platform 관련 구현·검증 상태와 주요 engineering decision을 빠르게 확인하기 위한 상태 인덱스다. 실제 구현 상태는 각 GitHub repository의 code/PR을 최우선으로 하고, 세부 기술 근거는 영역별 canonical 문서를 따른다.
 
@@ -362,11 +362,17 @@ Canonical:
 ```text
 Durable Conversation Store
   + Conversation State Facade
+  + typed Responses fidelity / explicit tool ownership
   + optional Router Affinity
 ```
 
 - process-local response/session state를 durability source of truth로 쓰지 않는다.
 - `affinity != durability`.
+- 현재 Codex upstream은 Responses wire protocol만 지원하며 provider-relative 기본 inference path는 `/responses`다. API key 기본 경로는 `https://api.openai.com/v1/responses`, ChatGPT 계열 인증은 `https://chatgpt.com/backend-api/codex/responses`다.
+- Codex의 Responses wire protocol 사용과 durable server-side state 요구는 분리한다. HTTP `store=false` + full-history fallback은 가능하지만 WebSocket incremental continuation과 일반 `previous_response_id` failover에는 state owner가 필요하다.
+- vLLM 0.28.0의 opt-in Responses store는 replica-local memory dictionary이고 eviction이 없어 production durability로 인정하지 않는다.
+- vLLM Agentic API는 state facade, PostgreSQL, Responses SSE/WebSocket, tool execution을 묶는 POC 우선 후보로 본다. tenant/persisted-state authorization, retention, upgrade/HA hardening을 통과하기 전에는 production standard로 확정하지 않는다.
+- LiteLLM의 Responses endpoint와 deployment affinity는 routing capability이며 durable state가 아니다. Agentic API downstream에 유지하려면 typed item/event/tool fidelity golden test가 필요하다.
 - OpenAI Responses / Anthropic 호환은 response identity, reasoning item, tool call/result, streaming terminal state, retry/idempotency까지 구조화해 보존해야 한다.
 - MOC는 conversation primary store가 아니라 rollout/drain/health policy와 integration할 수 있는 control plane이다.
 

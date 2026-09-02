@@ -210,10 +210,11 @@ Q3 Gate:
 
 ## 5. Stateful Serving
 
-**상태: DESIGN**
+**상태: DESIGN / CANDIDATE VALIDATION**
 
 범위:
 - `/v1/responses` 계열 server-side state
+- Codex Responses HTTP/SSE/WebSocket compatibility
 - conversation store
 - response / tool lineage
 - session-aware routing
@@ -229,13 +230,25 @@ Q3 Gate:
 - conversation store와 KV cache를 같은 저장소 문제로 취급하지 않는다.
 - semantic state는 engine lifecycle 밖에서 durable하게 관리한다.
 - router/cache와 연결할 때는 session identity만 공유하고 storage contract는 분리한다.
+- Responses wire protocol, durable state, tool execution을 서로 다른 capability로 검증한다.
+- `affinity != durability`, `state hydration != model token reduction`을 기본 계약으로 둔다.
+
+현재 확인:
+- current Codex는 Responses wire protocol만 허용하며 Chat Completions-only provider에 직접 연결할 수 없다.
+- vLLM 0.28.0 native Responses store는 opt-in process-local memory 구현이므로 production store로 채택하지 않는다.
+- LiteLLM은 Responses routing/affinity tier로 사용할 수 있으나 durable state owner가 아니다.
+- vLLM Agentic API를 `State Facade + PostgreSQL + tool orchestration`의 POC 우선 후보로 검증한다.
+- Agentic API의 tenant/persisted-state authorization과 retention/production hardening은 채택 blocker다.
 
 Q3 Gate:
-1. canonical conversation / response state schema
-2. storage backend abstraction
-3. multi-replica 환경의 previous-response continuation 설계
-4. session routing과 cache locality 연결 방식 정의
-5. retention / compaction / failure semantics 정리
+1. Codex → Agentic API → vLLM direct HTTP/SSE/WebSocket golden test
+2. canonical conversation / response state schema와 PostgreSQL storage contract
+3. cross-replica/restart/rolling-update 이후 previous-response continuation
+4. LiteLLM 포함/우회 path의 typed item, event, tool-call fidelity 비교
+5. session routing과 cache locality 연결 방식 정의
+6. retention / compaction / failure / idempotency semantics 정리
+7. principal별 response/conversation object authorization 검증
+8. long-context에서 client bytes, hydrated input tokens, prefix-cache 효과를 분리 측정
 
 운영 자동화 포인트:
 - state backend health / capacity
