@@ -1,6 +1,6 @@
 # Platform Engineering State
 
-> Last updated: 2026-09-02 KST
+> Last updated: 2026-09-03 KST
 >
 > 이 문서는 현재 LLM E2E Platform 관련 구현·검증 상태와 주요 engineering decision을 빠르게 확인하기 위한 상태 인덱스다. 실제 구현 상태는 각 GitHub repository의 code/PR을 최우선으로 하고, 세부 기술 근거는 영역별 canonical 문서를 따른다.
 
@@ -53,11 +53,12 @@ Observability는 Prometheus / Grafana / Loki / Alloy / DCGM 계열을 사용하�
 
 ## vLLM
 
-- active validation 계열: **vLLM 0.27.x**
-- 현재 P/D 실험의 실질 기준 image: **`v0.27.1-cu129` 계열**
-- 현재 운영 GPU server driver 기준: **575.57.08**; CUDA 13 계열은 별도 validation track으로 본다.
-- 모델별로 0.26.0 ↔ 0.27.x regression을 stage-gate로 확인한다.
-- `기능 지원`과 `production-safe`를 구분한다.
+- 현재 **검증된 비교 기준선**은 vLLM 0.27.x / `v0.27.1-cu129` 계열이다.
+- **차기 validation candidate는 vLLM 0.28.0 / `v0.28.0-cu129`** 으로 올린다.
+- v0.28.0의 default CUDA image는 CUDA 13.0이지만, 현재 CUDA 12.9 계열 runtime 검증과 driver 승격을 한 변경으로 묶지 않는다.
+- v0.28.0은 Model Runner V2 E/P/D, Kimi-K3·DeepSeek-V4 최적화, speculative decoding, tiered KV offload를 포함하므로 현재 workload에 직접 영향이 큰 feature release로 취급한다.
+- v0.28.0의 upstream KV connector 기준은 Mooncake `>=0.3.12`, NIXL `1.3.2`, LMCache `>=0.3.9`다.
+- 모델별로 0.27.x ↔ 0.28.0 regression을 stage-gate로 확인하고, `기능 지원`과 `production-safe`를 구분한다.
 
 ## vLLM Production Stack
 
@@ -68,8 +69,10 @@ Observability는 Prometheus / Grafana / Loki / Alloy / DCGM 계열을 사용하�
 
 ### Long-term
 
-- **0.1.12+** upstream P/D orchestration/routing/observability primitive를 기준으로 semantic migration
-- 0.1.8 custom patch를 무한 누적하지 않고 필요한 조직별 정책만 custom layer로 재적용
+- `vllm-production-stack-custom`은 **upstream vLLM Production Stack fork + 최소 overlay** 구조로 유지한다.
+- 특정 0.1.8 snapshot에 custom patch를 계속 누적하지 않고 upstream 변경을 지속적으로 sync/rebase한다.
+- P/D, routing, observability 등 upstream primitive가 제공되는 영역은 가능한 한 upstream 구현을 사용하고, 조직별 deployment/profile/policy 차이만 얇은 overlay로 유지한다.
+- version migration은 파일 복사가 아니라 model identity, topology, routing, metrics, failure semantics를 보존하는 semantic migration으로 수행한다.
 
 상세 문서:
 
@@ -78,6 +81,8 @@ Observability는 Prometheus / Grafana / Loki / Alloy / DCGM 계열을 사용하�
 - [Node-local P/D Cell](../../vllm-stack/pd-disaggregation/2026-08-18-node-local-pd-cell-0.1.8-plan.md)
 - [Mooncake 0.3.10-post2 폐쇄망 Source Build](../../vllm-stack/pd-disaggregation/2026-08-24-mooncake-0.3.10-post2-offline-build.md)
 - [Stateful Conversation Architecture](../../vllm-stack/stateful-conversation-architecture.md)
+- [vLLM 0.28.0 Migration & KV Connector Compatibility](../../vllm-stack/2026-09-03-vllm-0.28-migration.md)
+- [API Routing Contract](../../vllm-stack/api-routing-contract.md)
 
 ---
 
@@ -158,6 +163,9 @@ Qwen3.6-27B P1:D1
 - local patch로 `cache_or_caches`를 single cache list 형태로 정규화한 뒤 Mooncake transfer init과 CUDA Graph capture까지 통과한 사례가 있음.
 - Decode profile의 `max_num_batched_tokens=256`은 Mamba/GDN `block_size=1600` assertion과 충돌했으므로 profile tuning 시 hybrid-state block constraint를 함께 본다.
 - 이 항목은 upstream/general guarantee가 아니라 **현재 runtime observation**이며 최종 image/patch contract가 확정되면 별도 문서/PR로 승격한다.
+- Prefill/Decode는 같은 모델이어도 scheduler workload가 다르므로 MBT를 따로 tune한다. Prefill은 큰 chunk/compute efficiency, Decode는 ITL·state capacity·speculative verification budget을 우선한다.
+- Decode에서 speculative decoding을 사용할 때 `num_speculative_tokens`, `max_num_batched_tokens`, `max_num_seqs`를 독립 knob로 보지 않고 joint sweep한다.
+- CUDA Graph는 단순 on/off가 아니라 backend capability와 P/D role을 기준으로 `FULL_DECODE_ONLY`, `FULL_AND_PIECEWISE` 등을 선택한다.
 
 ## Failure boundary
 
@@ -170,6 +178,8 @@ Qwen3.6-27B P1:D1
 # 4. Mooncake / KV Transfer — 현재 상태
 
 Network B의 node-local P/D는 host/TCP 우회가 아니라 **NVLink/NVSwitch GPU-local path**가 목표다.
+
+vLLM 0.28.0 migration에서는 Mooncake `0.3.12.post1` 계열을 검증 대상으로 올린다. 다만 해당 release의 x86 official wheel build에도 `USE_INTRA_NVLINK=ON`이 포함되지 않으므로 **same-node `nvlink_intra` 요구사항은 계속 source build 대상**이다. 기존 0.3.10.post2 custom image는 source-build/air-gap skeleton의 검증된 기준으로 보존한다.
 
 ## 목표
 
@@ -387,6 +397,8 @@ Root:
 - [GPU Architecture](../../study/gpu-architecture/README.md)
 - [Git & GitHub](../../study/git-github/README.md)
 - [Speculative Decoding](../../study/speculative-decoding/2026-08-18-speculative-decoding-mtp-dspark.md)
+- [Inference Serving Optimization](../../study/inference-serving-optimization/README.md)
+- [Scheduler Budget / SD / CUDA Graph](../../study/inference-serving-optimization/01-scheduler-budget-spec-decode-cudagraph.md)
 
 Backlog:
 
