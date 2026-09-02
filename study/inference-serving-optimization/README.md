@@ -181,15 +181,14 @@ per-request state
 
 speculative decoding에서는 target verification을 위해 draft slot이 추가된다.
 
-vLLM 계열에서는 실제 schedulable budget을 대략 다음 관점으로 본다.
+vLLM에서는 runtime version에 따라 speculative drafting headroom accounting이 다르다.
 
-```text
-raw batch-token budget
-  - reserved speculative slots
-  = effective scheduler-issued token budget
-```
+- v0.26/v0.27: `max_num_seqs` 기준 worst-case drafting headroom을 정적으로 선점하는 방식
+- v0.28: scheduler logical token budget과 physical input-slot budget을 분리하고 실제 scheduled request 수에 따라 drafting slot을 동적으로 차감하는 방식
 
-구체적인 reservation은 method별 `max_num_new_slots_for_drafting`와 `max_num_seqs`에 의해 달라진다.
+따라서 `raw MBT - slots × max_num_seqs`를 모든 version에 그대로 적용하지 않는다. method별 `max_num_new_slots_for_drafting`와 version별 scheduler accounting을 함께 본다.
+
+정확한 source-level 계산은 [vLLM Speculative Decoding Token Budget Deep Dive](../speculative-decoding/2026-09-03-vllm-speculative-decoding-token-budget-deep-dive.md)를 따른다.
 
 따라서 K를 늘릴 때:
 
