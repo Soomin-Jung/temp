@@ -2,9 +2,9 @@
 
 기준:
 
-- vLLM: `v0.27.1`
-- vLLM runtime pin: `nixl == 1.3.1`
-- NIXL upstream latest 참고: `v1.4.0` (production baseline 아님)
+- 재현 기준: vLLM `v0.27.1` / `nixl == 1.3.1`
+- 차기 validation: vLLM `v0.28.0-cu129` / `nixl == 1.3.2`
+- 더 새로운 NIXL upstream release는 architecture/delta 참고용이며 vLLM pin보다 앞서 production image에 올리지 않는다.
 
 이 디렉터리는 NIXL을 **vLLM connector가 아니라 독립적인 inference data movement library**부터 이해한 뒤 vLLM P/D integration으로 올라간다.
 
@@ -628,3 +628,17 @@ vllm/distributed/kv_transfer/kv_connector/v1/nixl/
 - NIXL v1.3.1 source: https://github.com/ai-dynamo/nixl/tree/v1.3.1
 - vLLM v0.27.1 NIXL connector: https://github.com/vllm-project/vllm/tree/v0.27.1/vllm/distributed/kv_transfer/kv_connector/v1/nixl
 - vLLM requirement pin: https://github.com/vllm-project/vllm/blob/v0.27.1/requirements/kv_connectors.txt
+
+
+## vLLM 0.28 Migration Note
+
+vLLM 0.28.0은 NIXL을 `1.3.2`로 exact pin한다. 따라서 0.27.1/1.3.1에서 확인한 connector lifecycle과 backend behavior를 그대로 가정하지 않고 다음을 재검증한다.
+
+- NixlPull/NixlPush connector API
+- metadata/descriptor compatibility
+- UCX same-node CUDA IPC/P2P
+- cross-node RDMA
+- cancellation/restart
+- heterogeneous TP/model architecture restrictions
+
+상세 version matrix는 [vLLM 0.28.0 Migration & KV Connector Compatibility](../../../2026-09-03-vllm-0.28-migration.md)를 따른다.
