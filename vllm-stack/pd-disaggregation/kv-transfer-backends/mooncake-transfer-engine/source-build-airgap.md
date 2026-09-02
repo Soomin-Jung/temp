@@ -183,7 +183,7 @@ Git 자체가 없는 build environment에서도 source identity를 검사할 수
 
 ---
 
-# Part B. 사내 mirror / CA 계층
+# Part B. Private mirror / CA 계층
 
 ## 7. Base configuration은 builder와 runtime 공통 부모로
 
@@ -208,7 +208,7 @@ RUN set -eux; \
 이 구조의 이유:
 
 - builder도 내부 APT/pip/CA 필요
-- final runtime도 사내 CA 필요
+- final runtime도 private CA가 필요한 환경이면 동일 trust chain 적용
 - external repository list와 internal mirror가 섞이는 것 방지
 - 민감한 실제 URL/credential은 public repo에 넣지 않음
 
@@ -232,7 +232,7 @@ CMake/Ninja
 verbs headers
 ```
 
-없으면 **base image의 CUDA version과 정확히 맞는** devel package를 사내 APT mirror에서 설치한다.
+없으면 **base image의 CUDA version과 정확히 맞는** devel package를 private APT mirror에서 설치한다.
 
 PR #5의 CUDA 12.9 baseline:
 
