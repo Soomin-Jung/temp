@@ -26,7 +26,7 @@
 - [Model Serving Validation Contract](../model-serving-validation.md)
 - [vLLM 0.28.0 Migration & KV Connector Compatibility](../migrations/vllm-0.28.md)
 - [API Routing Contract](../api-routing-contract.md)
-- [Serving Optimization Mental Model](../../study/inference-serving-optimization/README.md)
+- [Serving Optimization Mental Model](../../study/llm-serving-optimization/README.md)
 
 ---
 

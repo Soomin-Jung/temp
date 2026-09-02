@@ -348,7 +348,7 @@ https://github.com/MoonshotAI/Kimi-K3/blob/main/k3_tech_report.pdf
 
 기존 Study:
 
-[../speculative-decoding/2026-08-18-speculative-decoding-mtp-dspark.md](../speculative-decoding/00-foundations-and-method-lineage.md)
+[../speculative-decoding/00-foundations-and-method-lineage.md](../speculative-decoding/00-foundations-and-method-lineage.md)
 
 핵심 운영식:
 
