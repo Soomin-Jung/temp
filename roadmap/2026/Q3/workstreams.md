@@ -59,7 +59,7 @@ Q3 Gate:
 범위:
 - Node-local P/D Disaggregation
 - Kimi-K3 Multi-node
-- 망A IB / GPUDirect RDMA
+- Network A IB / GPUDirect RDMA
 - 향후 Multi-node P/D
 - Native Multiprocess / LWS 검토
 
@@ -74,9 +74,9 @@ Q3 Gate:
 - topology-aware scheduling
 
 현재 확정 상태:
-- 망A H200 환경에서 vLLM NCCL 로그를 통해 IB/GDRDMA channel 확인
+- Network A H200 환경에서 vLLM NCCL 로그를 통해 IB/GDRDMA channel 확인
 - NVIDIA Network Operator 기반 RDMA resource 사용
-- 망B는 IB가 없어 Node-local P/D가 우선 topology
+- Network B는 IB가 없어 Node-local P/D가 우선 topology
 - 0.1.8에서는 한 Pod = 한 P/D Cell 구조로 시작
 - 0.1.8 baseline PR #1은 `main`에 merge 완료
 - PR #2는 기존 renderer를 건드리지 않는 `pdCellSpec.models[]` additive extension으로 구현
@@ -186,7 +186,7 @@ Q3 Gate:
 
 설계 원칙:
 - `Offloading`, `P/D Transfer`, `Shared KV Reuse`를 하나의 기능으로 묶지 않는다.
-- 망B와 망A의 network capability 차이를 cache architecture에 반영한다.
+- Network B와 Network A의 network capability 차이를 cache architecture에 반영한다.
 - 중앙 remote cache를 기본값으로 가정하지 않는다.
 - Mooncake `nvlink`는 MNNVL, `nvlink_intra`는 same-node NVLink/NVSwitch로 구분한다.
 - connector 이름뿐 아니라 wheel/image에 compile된 transport feature까지 compatibility axis로 관리한다.
