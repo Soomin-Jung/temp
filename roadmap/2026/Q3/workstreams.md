@@ -16,25 +16,29 @@
 **상태: ACTIVE**
 
 범위:
-- vLLM Production Stack custom baseline
-- 0.1.8 → 0.1.12+ semantic migration
+- vLLM 0.27.x comparison baseline → 0.28.0 validation
+- vLLM Production Stack upstream fork + thin overlay
 - LiteLLM
+- Agentic API Responses lane
 - Global LMRouter / model discovery
 - Prometheus / serving health contract
 
 핵심 개념:
-- upstream-first
+- upstream-first / fork sync
 - Helm overlay / profile-driven deployment
-- API compatibility contract
+- API semantics별 path routing
 - routing responsibility separation
+- runtime version × connector ABI compatibility
 - engine-aware health
 
 Q3 Gate:
 1. 0.1.8 baseline regression 검증
-2. P/D additive extension이 기존 integrated deployment를 변경하지 않는지 검증
-3. LiteLLM / Global Router / P/D Cell Router의 책임 경계 확정
-4. 0.1.12+ 이관 시 재사용할 model identity / profile / topology / metrics contract 확정
-5. base URL / auth / model discovery / chat / streaming / reasoning / tool-call golden test 계약 확정
+2. vLLM 0.28.0-cu129 integrated baseline과 주요 model regression 검증
+3. P/D additive extension이 기존 integrated deployment를 변경하지 않는지 검증
+4. Chat/Completions → LiteLLM, Messages → LiteLLM Anthropic, Responses → Agentic API → LMStack Router path contract 확정
+5. upstream Production Stack sync/rebase workflow와 thin overlay 경계 확정
+6. model identity / profile / topology / metrics contract 확정
+7. base URL / auth / model discovery / chat / responses / streaming / reasoning / tool-call golden test 계약 확정
 
 운영 자동화 포인트:
 - endpoint 등록/제외
@@ -78,7 +82,8 @@ Q3 Gate:
 - PR #2는 기존 renderer를 건드리지 않는 `pdCellSpec.models[]` additive extension으로 구현
 - PR #2 이전 커밋에서 P1:D1 배포, LiteLLM, Anthropic 경로 성공
 - PR #4는 router type, model alias, 비대칭 GPU, model-local KV config와 container 상속을 보완했으며 runtime 테스트 중
-- 망B Mooncake same-node 경로에는 `nvlink_intra`가 필요하고, 현재 공식 `0.3.10.post2` artifact에는 이 기능이 없어 source-built image가 필요
+- Network B Mooncake same-node 경로에는 `nvlink_intra`가 필요하다. 0.3.10 source-build overlay는 확보했으며 vLLM 0.28에서는 0.3.12.post1 source-build compatibility를 재검증한다.
+- Prefill/Decode는 scheduler workload가 다르므로 MBT/graph mode를 역할별로 분리하고, Decode SD는 K×MBT×max_num_seqs joint tuning한다.
 
 Q3 Gate:
 
@@ -86,7 +91,8 @@ Q3 Gate:
 |---|---|
 | PR #2 이전 커밋 P1:D1 + LiteLLM/Anthropic | 완료 |
 | PR #4 HEAD Qwen3.6-27B P1:D1 | 검증 중 |
-| Mooncake 0.3.10-post2 `nvlink_intra` source build / standalone bench | 신규 blocker |
+| Mooncake 0.3.10-post2 source-build overlay | 완료 |
+| vLLM 0.28.0 + Mooncake 0.3.12.post1 `nvlink_intra` | 신규 validation |
 | P2:D1 → P2:D2 → P1:D3 | 대기 |
 | Cell replica 0↔1 / scale-out | 대기 |
 | 모든 P/D engine metric 수집 | 후순위 |
@@ -174,9 +180,9 @@ Q3 Gate:
 
 주요 구현 후보:
 - vLLM native connector
-- LMCache
-- NIXL
-- Mooncake / MooncakeStore
+- LMCache `>=0.3.9` (0.28 baseline)
+- NIXL `1.3.2` (0.28 baseline)
+- Mooncake `>=0.3.12` / MooncakeStore
 
 설계 원칙:
 - `Offloading`, `P/D Transfer`, `Shared KV Reuse`를 하나의 기능으로 묶지 않는다.
@@ -187,9 +193,10 @@ Q3 Gate:
 
 현재 초점:
 
-- 공식 Mooncake `0.3.10.post2` wheel로 CUDA ABI 문제 해소
-- 망B same-node `nvlink_intra` 누락 확인
-- `USE_CUDA=ON + USE_MNNVL=ON + USE_INTRA_NVLINK=ON` source-built artifact 계획
+- 0.3.10.post2 기준 source-built overlay와 air-gap build skeleton 확보
+- vLLM 0.28.0의 connector baseline인 Mooncake 0.3.12 / NIXL 1.3.2로 compatibility 이동
+- Mooncake 0.3.12.post1 official x86 wheel에도 `USE_INTRA_NVLINK=ON`이 없음을 확인
+- `USE_CUDA=ON + USE_INTRA_NVLINK=ON` source-built artifact 재검증; 필요 시 `USE_MNNVL=ON` 비교
 - Helm/Router 이전에 standalone transfer bench로 GPU memory data path 검증
 
 Q3 Gate:
@@ -236,19 +243,22 @@ Q3 Gate:
 현재 확인:
 - current Codex는 Responses wire protocol만 허용하며 Chat Completions-only provider에 직접 연결할 수 없다.
 - vLLM 0.28.0 native Responses store는 opt-in process-local memory 구현이므로 production store로 채택하지 않는다.
-- LiteLLM은 Responses routing/affinity tier로 사용할 수 있으나 durable state owner가 아니다.
+- pinned LMStack Router 0.1.9는 `/v1/responses`를 model-routing 후 backend에 전달하지만 `/v1/messages`는 제공하지 않는다.
+- LiteLLM은 Chat/Messages compatibility와 model registry를 담당하되 durable state owner로 사용하지 않는다.
 - vLLM Agentic API를 `State Facade + PostgreSQL + tool orchestration`의 POC 우선 후보로 검증한다.
+- Agentic API는 하나의 logical `LLM_API_BASE`를 가지므로 multi-model backend selection은 LMStack Router가 담당한다.
 - Agentic API의 tenant/persisted-state authorization과 retention/production hardening은 채택 blocker다.
 
 Q3 Gate:
 1. Codex → Agentic API → vLLM direct HTTP/SSE/WebSocket golden test
-2. canonical conversation / response state schema와 PostgreSQL storage contract
-3. cross-replica/restart/rolling-update 이후 previous-response continuation
-4. LiteLLM 포함/우회 path의 typed item, event, tool-call fidelity 비교
-5. session routing과 cache locality 연결 방식 정의
-6. retention / compaction / failure / idempotency semantics 정리
-7. principal별 response/conversation object authorization 검증
-8. long-context에서 client bytes, hydrated input tokens, prefix-cache 효과를 분리 측정
+2. Codex → Agentic API → LMStack Router → multi-model vLLM path 검증
+3. canonical conversation / response state schema와 PostgreSQL storage contract
+4. cross-replica/restart/rolling-update 이후 previous-response continuation
+5. LiteLLM 포함/우회 path의 typed item, event, tool-call fidelity 비교
+6. session routing과 cache locality 연결 방식 정의
+7. retention / compaction / failure / idempotency semantics 정리
+8. principal별 response/conversation object authorization 검증
+9. long-context에서 client bytes, hydrated input tokens, prefix-cache 효과를 분리 측정
 
 운영 자동화 포인트:
 - state backend health / capacity
