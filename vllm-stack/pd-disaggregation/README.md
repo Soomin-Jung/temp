@@ -1,6 +1,6 @@
 # P/D Disaggregation
 
-업데이트: 2026-08-25 KST
+업데이트: 2026-09-03 KST
 
 Prefill과 Decode를 서로 다른 실행 자원으로 분리하되, 사용자에게는 하나의 served model endpoint로 유지하는 배포 구조를 정리한다.
 
@@ -14,18 +14,20 @@ Prefill과 Decode를 서로 다른 실행 자원으로 분리하되, 사용자�
 - 장애 정책: engine 일부가 실패하면 Cell 전체를 route에서 제외하고 완전 복구 후 재가입
 - 관측 단위: Pod가 아니라 router/prefill/decode container와 port
 - long-context production의 KV load failure policy: P/D 모두 `fail` 우선
-- 장기 방향: 0.1.12+의 범용 disaggregated serving과 fabric/multi-node P/D로 semantic migration
+- 장기 방향: upstream Production Stack fork를 지속 sync하면서 upstream disaggregated-serving primitive를 우선 채택하고, 필요한 topology/policy만 thin overlay로 유지
 
-## 2026-08-25 상태
+## 2026-09-03 상태
 
 - PR #1: custom 0.1.8 baseline merge 완료
 - PR #2: P/D Cell additive extension 구현, Draft
 - P1:D1: PR #2 이전 커밋에서 배포/LiteLLM/Anthropic 경로 성공
 - PR #4: values, router, alias, 비대칭 GPU, KV config 계약 보완 후 runtime matrix 검증 중
-- PR #5: Mooncake `0.3.10.post2`를 폐쇄망 source build하고 `nvlink`/`nvlink_intra` transport를 포함하는 custom vLLM image build 경로 merge 완료
-- Mooncake image build 성공과 실제 P/D KV transfer transport 인증은 별도 Gate로 관리
-- 최신 upstream 분석 기준: vLLM `v0.27.1`; NIXL runtime pin `1.3.1`; Mooncake 실무 재현 기준 `0.3.10.post2`
-- PR #4 GPU runtime matrix가 충분히 끝나기 전에는 P/D PR을 merge하지 않음
+- PR #5: Mooncake `0.3.10.post2` 폐쇄망 source build와 `nvlink`/`nvlink_intra` overlay image 경로 merge 완료. 이 구현은 이후 version upgrade의 air-gap/source-build skeleton으로 보존한다.
+- 현재 비교 기준선은 vLLM `v0.27.1`; **차기 validation candidate는 `v0.28.0-cu129`** 이다.
+- vLLM 0.28.0 KV connector upstream 기준은 NIXL `1.3.2`, Mooncake `>=0.3.12`, LMCache `>=0.3.9`다.
+- Mooncake `0.3.12.post1` official x86 wheel에도 `USE_INTRA_NVLINK=ON`이 포함되지 않으므로 Network B의 same-node `nvlink_intra`는 계속 source-build Gate가 필요하다.
+- Mooncake image build 성공과 실제 P/D KV transfer transport 인증은 별도 Gate로 관리한다.
+- PR #4 GPU runtime matrix가 충분히 끝나기 전에는 P/D PR을 merge하지 않는다.
 
 ## 읽는 순서
 
@@ -38,7 +40,9 @@ Prefill과 Decode를 서로 다른 실행 자원으로 분리하되, 사용자�
 7. [Mooncake Transfer Engine Deep Dive](kv-transfer-backends/mooncake-transfer-engine/README.md)
 8. [NIXL Deep Dive](kv-transfer-backends/nixl/README.md)
 9. [Mooncake 0.3.10-post2 최초 폐쇄망 Build 기록](2026-08-24-mooncake-0.3.10-post2-offline-build.md) — historical incident/build note
-10. [vLLM Stack 전체 진행 계획](../2026-08-18-진행계획.md)
+10. [vLLM 0.28.0 Migration & KV Connector Compatibility](../2026-09-03-vllm-0.28-migration.md)
+11. [Scheduler Budget / Spec Decode / CUDA Graph](../../study/inference-serving-optimization/01-scheduler-budget-spec-decode-cudagraph.md)
+12. [vLLM Stack 전체 진행 계획](../2026-08-18-진행계획.md)
 
 ## KV Transfer 문서 구조
 
@@ -80,12 +84,15 @@ kv-transfer-backends/
 - NCCL tuning과 KV transfer backend tuning은 별도다.
 - image build/import 성공과 실제 GPU-direct KV transfer 성공을 분리한다.
 - engine/container별 metrics와 inference-aware readiness가 없으면 운영 완료로 보지 않는다.
+- Prefill과 Decode는 같은 model weight를 사용해도 scheduler workload가 다르므로 `max_num_batched_tokens`, `max_num_seqs`, CUDA Graph mode를 역할별로 별도 검증한다.
+- speculative decoding을 사용하는 Decode에서는 `num_speculative_tokens`, scheduler budget, concurrency, graph shape를 joint tuning axis로 본다.
+- Mamba/GDN/KDA hybrid model은 KV capacity뿐 아니라 recurrent/state block과 runtime alignment constraint를 함께 본다.
 
 ## 네트워크별 우선 검증
 
 ### Network B — node-local P/D
 
-1. Mooncake `nvlink_intra` actual data path 인증
+1. vLLM 0.28.0-cu129 + Mooncake 0.3.12.post1 source build에서 `nvlink_intra` actual data path 인증
 2. NIXL `NixlPushConnector + UCX` same-node CUDA IPC/P2P 평가
 3. NIXL Pull과 동일 workload 비교
 4. NVLink/NVSwitch/PCIe 실제 physical counter까지 확인
