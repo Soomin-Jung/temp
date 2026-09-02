@@ -85,8 +85,13 @@
 
 ### DeepSeek-V4
 
+- [DeepSeek-V4 Architecture / Training / Serving Deep Dive](models/deepseek-v4/README.md)
 - [개선판의 DSpark checkpoint와 vLLM 구현 차이](models/deepseek-v4/2026-08-18-dspark-checkpoint-and-vllm-implementation.md)
 - [vLLM 0.27.x DeepGEMM SM90 CUDA IMA 분석](models/deepseek-v4/2026-08-18-vllm-0.27-deepgemm-sm90-cuda-ima.md)
+
+### GLM-5.2
+
+- [GLM-5.2 Architecture / Agentic Training / Systems Deep Dive](models/glm-5.2/README.md)
 
 ### Kimi K3 / Kimi Architecture Lineage
 
@@ -101,6 +106,7 @@
   - [Post-Training / Agentic RL / MTP / Speculative Decoding](models/kimi-k3/07-posttraining-agentic-rl-and-speculative.md)
   - [K3 Architecture Reconstruction — 2.8T 구조 직접 계산](models/kimi-k3/08-k3-architecture-reconstruction.md)
   - [K3 Systems & Serving — EP, CP, Hybrid Cache, P/D](models/kimi-k3/09-k3-systems-and-serving.md)
+  - [B300 8-GPU Single-Node Feasibility](models/kimi-k3/2026-08-24-b300-single-node-feasibility.md)
   - [논문 읽기 순서, 핵심 수식, 용어집](models/kimi-k3/99-papers-and-glossary.md)
 
 ### LLM Serving Weekly Report
