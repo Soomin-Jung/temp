@@ -332,7 +332,7 @@ Canonical:
 
 현재 production-validation 방향:
 
-- vLLM 0.27.x 공식 지원 경로 검증
+- vLLM 0.27.x를 재현 기준으로 유지하고 0.28.0에서 Kimi-K3 Decode Context Parallel / FlashKDA / shared-expert sharding 계열 최적화를 별도 검증
 - **H200 ×16에서 안전성 검증 후 ×32로 확장**
 - 초기 scope는 text / 짧은 context / seq1 / eager부터 시작
 - Ray 의존 축소와 native multiprocess backend 검토
@@ -347,9 +347,17 @@ B300 단일노드:
 
 ## DeepSeek V4
 
+- [DeepSeek-V4 Deep Dive](../../models/deepseek-v4/README.md)
 - Flash / Pro 계열 deployment + DSpark 검증
 - 0.26.0에서 성공하던 구성과 0.27.x DeepGEMM/CUDA regression 분리 추적
+- 0.28.0 sparse MLA plain/MTP/DSpark E2E와 CUDA Graph 변화는 새 validation axis로 추가
 - production promotion은 H100/H200 stage-gate 후 결정
+
+## GLM-5.2
+
+- [GLM-5.2 Architecture / Systems Deep Dive](../../models/glm-5.2/README.md)
+- MLA + DSA + IndexShare + MTP + long-horizon agentic RL을 architecture/runtime 관점에서 추적
+- multi-node TP/PP/MTP 조합은 기능 지원과 실제 KV/state capacity, collective cost를 분리해 검증
 
 ## Qwen 3.x
 
