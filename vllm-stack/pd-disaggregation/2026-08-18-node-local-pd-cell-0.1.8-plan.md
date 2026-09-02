@@ -1,7 +1,7 @@
 # vLLM Stack 0.1.8 Node-local P/D Cell 구현 계획
 
 작성일: 2026-08-18  
-최종 업데이트: 2026-08-24 KST
+최종 업데이트: 2026-09-03 KST
 
 ## 0. 현재 상태
 
@@ -14,7 +14,7 @@
 | 초기 P1:D1 runtime | 성공 | PR #2 이전 커밋 `36e45f0c277d4206ce233c8057a383e387c616c1`에서 배포, LiteLLM 연결, Anthropic 경로 확인 |
 | PR #4 template audit | 테스트 중 | values 상속, router type, alias, 비대칭 GPU, model-local KV config 보완 |
 | Qwen3.6-27B 운영 검증 | 진행 중 | P/D 역할별 profile 최적화와 topology 확대 검증 |
-| Mooncake same-node NVLink | 이미지 재빌드 필요 | `mooncake-transfer-engine==0.3.10.post2` source build에 `nvlink`과 `nvlink_intra` 포함 필요 |
+| Mooncake same-node NVLink | 0.3.10 overlay 확보 / 0.3.12 재검증 | PR #5 source-build skeleton을 vLLM 0.28 + Mooncake 0.3.12.post1에 적용하고 actual `nvlink_intra` path 인증 |
 | Prometheus 다중 port scrape | 후순위 | runtime/data path 안정화 후 namespace/scrape rule 검증 |
 
 초기 P1:D1 성공은 현재 PR #4 HEAD 전체가 검증됐다는 뜻이 아니다. PR #4는 같은 runtime에서 다시 P1:D1을 통과한 뒤 P2:D1, P2:D2, P1:D3 순서로 확장한다.
@@ -234,11 +234,11 @@ Using RDMA transport ...
 
 요청 protocol과 실제 transport가 일치하지 않으면 startup 성공을 data path 성공으로 간주하지 않는다.
 
-### 현재 image blocker
+### image build 상태와 다음 migration
 
-CUDA runtime ABI 문제는 `mooncake-transfer-engine==0.3.10.post2` 공식 wheel로 교체하여 해소했다. 그러나 현재 반입한 artifact에서는 `nvlink_intra` 초기화가 “rebuild Mooncake” 오류로 거절되어, same-node NVLink transport가 compile되지 않은 상태로 확인됐다.
+초기 `0.3.10.post2` official artifact에는 `nvlink_intra`가 없어 source build가 필요했고, 이 build path는 PR #5로 확보했다.
 
-따라서 다음 image는 정확히 `v0.3.10.post2` source를 고정하고 최소한 아래를 켜서 빌드한다.
+vLLM 0.28 migration에서는 Mooncake `0.3.12.post1`을 새 source pin으로 사용한다. 해당 official x86 release build에도 `USE_INTRA_NVLINK=ON`이 없으므로 아래 compile capability는 계속 필요하다.
 
 ```text
 USE_CUDA=ON
@@ -246,7 +246,7 @@ USE_MNNVL=ON
 USE_INTRA_NVLINK=ON
 ```
 
-빌드/반입 계약은 [Mooncake 0.3.10-post2 폐쇄망 source build 계획](2026-08-24-mooncake-0.3.10-post2-offline-build.md)에 분리한다.
+0.3.10 빌드/반입 계약은 [Mooncake 0.3.10-post2 폐쇄망 source build 계획](2026-08-24-mooncake-0.3.10-post2-offline-build.md)에 보존한다. 현재 0.28 migration은 [vLLM 0.28.0 Migration & KV Connector Compatibility](../2026-09-03-vllm-0.28-migration.md)를 우선한다.
 
 ---
 
@@ -264,9 +264,12 @@ Prefill 중심:
 Decode 중심:
 
 - ITL / decode token throughput
-- 동시 sequence와 KV capacity
+- 동시 sequence와 KV + recurrent/state capacity
 - transfer load failure 격리
 - 진행 중 Decode 지연 보호
+- `max_num_batched_tokens` / `max_num_seqs` 역할별 튜닝
+- speculative decoding 사용 시 K와 scheduler budget joint sweep
+- backend capability에 따라 `FULL_DECODE_ONLY` 등 CUDA Graph mode 검증
 
 공통 불변 조건:
 
@@ -372,3 +375,11 @@ engine 하나가 죽으면 Cell을 신규 요청 route에서 제외하고 contai
 핵심 원칙:
 
 > 모델 identity는 하나이고 Prefill/Decode는 내부 실행 phase다. 단기 `pdCellSpec`은 기존 0.1.8 renderer를 보호하기 위한 API 격리이며, 장기 의미 모델은 하나의 disaggregated serving group으로 수렴한다.
+
+
+## 2026-09-03 Update Note
+
+이 문서는 0.1.8 Node-local Cell의 Helm/API 계약을 보존한다. 현재 runtime/version 판단은 다음 문서를 우선한다.
+
+- [vLLM 0.28.0 Migration & KV Connector Compatibility](../2026-09-03-vllm-0.28-migration.md)
+- [Scheduler Budget / Speculative Decoding / CUDA Graph](../../study/inference-serving-optimization/01-scheduler-budget-spec-decode-cudagraph.md)
