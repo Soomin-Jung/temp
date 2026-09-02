@@ -1,8 +1,8 @@
 # Mooncake Transfer Engine Source Build in an Air-gapped vLLM Image
 
 기준 구현 reference: `Soomin-Jung/vllm-production-stack-custom` PR #5  
-검증 이력: Mooncake `0.3.10.post2`  
-새 runtime 분석 기준: vLLM `v0.27.1`
+검증 이력: Mooncake `0.3.10.post2` source-build overlay  
+차기 validation: vLLM `v0.28.0-cu129` + Mooncake `0.3.12.post1`
 
 이 문서는 PR #5를 단순 복사하지 않고 **최신 vLLM base image에도 재사용 가능한 폐쇄망 build pattern**으로 일반화한다.
 
@@ -44,16 +44,9 @@ Unsupported transport nvlink_intra, please rebuild Mooncake
 
 ---
 
-## 2. vLLM v0.27.1에서 먼저 확인할 것
+## 2. vLLM base image가 바뀔 때 먼저 확인할 것
 
-vLLM `v0.27.1` source의 Dockerfile 기본값은:
-
-```text
-CUDA_VERSION=13.0.3
-PYTHON_VERSION=3.12
-```
-
-이지만 release artifact에는 CUDA 12.9 계열도 존재하며, 사내 registry가 어떤 tag/digest를 mirror했는지는 별도 문제다.
+vLLM release마다 default CUDA/Python/Torch 조합과 별도 CUDA variant가 바뀔 수 있다. v0.28.0은 default CUDA 13 image와 `v0.28.0-cu129` image를 함께 제공하므로, connector migration과 driver/CUDA migration을 같은 변경으로 묶지 않는다.
 
 **Dockerfile을 쓰기 전에 실제 base image 안에서 확인한다.**
 
@@ -88,12 +81,15 @@ NVIDIA driver requirement
 
 ## 3. upstream vLLM KV connector dependency 정책
 
-vLLM v0.27.1:
-
 ```text
-requirements/kv_connectors.txt
+vLLM 0.27.1
   nixl == 1.3.1
   mooncake-transfer-engine >= 0.3.8
+
+vLLM 0.28.0
+  lmcache >= 0.3.9
+  nixl == 1.3.2
+  mooncake-transfer-engine >= 0.3.12
 ```
 
 Dockerfile에서는 `INSTALL_KV_CONNECTORS=false`가 기본이고, true일 때 KV connector dependencies를 설치한다.
@@ -117,6 +113,10 @@ FROM prebuilt image with connector deps
 ```
 
 PR #5는 Strategy B와 유사하게 runtime에서 기존 Mooncake package를 제거하고 custom wheel을 설치한다.
+
+### 0.3.12.post1에서도 source build가 필요한가
+
+Network B의 same-node `nvlink_intra` 기준으로는 **그렇다**. 0.3.12.post1 official x86 release workflow는 `USE_CUDA=ON`을 사용하지만 `USE_INTRA_NVLINK=ON`을 포함하지 않는다. 따라서 0.3.10의 build pattern은 재사용하되 source/submodule lock, build requirements, CMake target, wheel ABI를 새 version에 맞춰 다시 검증한다.
 
 ---
 
