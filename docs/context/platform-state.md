@@ -78,12 +78,12 @@ Observability는 Prometheus / Grafana / Loki / Alloy / DCGM 계열을 사용하�
 
 상세 문서:
 
-- [vLLM Stack 진행계획](../../vllm-stack/2026-08-18-진행계획.md)
-- [P/D Master Plan](../../vllm-stack/pd-disaggregation/2026-08-18-vllm-stack-pd-disaggregation-master-plan.md)
-- [Node-local P/D Cell](../../vllm-stack/pd-disaggregation/2026-08-18-node-local-pd-cell-0.1.8-plan.md)
-- [Mooncake 0.3.10-post2 폐쇄망 Source Build](../../vllm-stack/pd-disaggregation/2026-08-24-mooncake-0.3.10-post2-offline-build.md)
+- [vLLM Stack 진행계획](../../vllm-stack/history/2026-08-18-stack-execution-plan.md)
+- [P/D Master Plan](../../vllm-stack/pd-disaggregation/history/2026-08-18-master-plan.md)
+- [Node-local P/D Cell](../../vllm-stack/pd-disaggregation/node-local-pd-cell-vllm-stack-0.1.8.md)
+- [Mooncake 0.3.10-post2 폐쇄망 Source Build](../../vllm-stack/pd-disaggregation/history/2026-08-24-mooncake-0.3.10-post2-offline-build.md)
 - [Stateful Conversation Architecture](../../vllm-stack/stateful-conversation-architecture.md)
-- [vLLM 0.28.0 Migration & KV Connector Compatibility](../../vllm-stack/2026-09-03-vllm-0.28-migration.md)
+- [vLLM 0.28.0 Migration & KV Connector Compatibility](../../vllm-stack/migrations/vllm-0.28.md)
 - [API Routing Contract](../../vllm-stack/api-routing-contract.md)
 
 ---
@@ -244,7 +244,7 @@ PR #4에서 남은 runtime gate:
 5. transfer latency / TTFT 비교
 6. Cell restart/recovery
 
-상세 compile/selection/전송 경로는 [Mooncake 0.3.10-post2 폐쇄망 Source Build](../../vllm-stack/pd-disaggregation/2026-08-24-mooncake-0.3.10-post2-offline-build.md)를 source of truth로 사용한다.
+상세 compile/selection/전송 경로는 [Mooncake 0.3.10-post2 폐쇄망 Source Build](../../vllm-stack/pd-disaggregation/history/2026-08-24-mooncake-0.3.10-post2-offline-build.md)를 source of truth로 사용한다.
 
 ---
 
@@ -328,7 +328,7 @@ Core v0.1은 아직 실제 vLLM workload 생성, route traffic, GPU placement/au
 Canonical:
 
 - [Kimi-K3 Study / Architecture](../../models/kimi-k3/README.md)
-- [B300 8-GPU Single-Node Feasibility](../../models/kimi-k3/2026-08-24-b300-single-node-feasibility.md)
+- [B300 8-GPU Single-Node Feasibility](../../models/kimi-k3/notes/2026-08-24-b300-single-node-feasibility.md)
 
 현재 production-validation 방향:
 
@@ -408,9 +408,9 @@ Root:
 - [Attention](../../study/attention/README.md)
 - [GPU Architecture](../../study/gpu-architecture/README.md)
 - [Git & GitHub](../../study/git-github/README.md)
-- [Speculative Decoding](../../study/speculative-decoding/2026-08-18-speculative-decoding-mtp-dspark.md)
-- [Inference Serving Optimization](../../study/inference-serving-optimization/README.md)
-- [Scheduler Budget / SD / CUDA Graph](../../study/inference-serving-optimization/01-scheduler-budget-spec-decode-cudagraph.md)
+- [Speculative Decoding](../../study/speculative-decoding/00-foundations-and-method-lineage.md)
+- [Inference Serving Optimization](../../study/llm-serving-optimization/README.md)
+- [Scheduler Budget / SD / CUDA Graph](../../study/llm-serving-optimization/01-scheduler-token-budget.md)
 
 Backlog:
 

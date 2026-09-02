@@ -6,10 +6,10 @@ vLLM Production Stack의 운영 기준선, version migration, 배포 topology, P
 
 | 영역 | 문서 | 상태 |
 |---|---|---|
-| 전체 진행 순서 | [2026-08-18 진행 계획](2026-08-18-진행계획.md) | 기준 계획 |
+| 전체 진행 순서 | [2026-08-18 진행 계획](history/2026-08-18-stack-execution-plan.md) | 기준 계획 |
 | P/D Disaggregation | [P/D 문서 인덱스](pd-disaggregation/README.md) | PR #2 P1:D1 성공, PR #4 검증 중 |
-| vLLM 0.28 migration | [0.28.0 Migration & KV Connector Compatibility](2026-09-03-vllm-0.28-migration.md) | 차기 validation candidate |
-| Mooncake image | [0.3.10-post2 폐쇄망 Source Build](pd-disaggregation/2026-08-24-mooncake-0.3.10-post2-offline-build.md) | 검증된 source-build skeleton; 0.28에서는 0.3.12 계열로 재검증 |
+| vLLM 0.28 migration | [0.28.0 Migration & KV Connector Compatibility](migrations/vllm-0.28.md) | 차기 validation candidate |
+| Mooncake image | [0.3.10-post2 폐쇄망 Source Build](pd-disaggregation/history/2026-08-24-mooncake-0.3.10-post2-offline-build.md) | 검증된 source-build skeleton; 0.28에서는 0.3.12 계열로 재검증 |
 | API routing | [Chat / Messages / Responses Routing Contract](api-routing-contract.md) | 구현 기준 |
 | Stateful Serving | [Responses / Codex State Architecture](stateful-conversation-architecture.md) | Agentic API candidate validation |
 | 배포 검증 | [Model Serving Validation Contract](model-serving-validation.md) | 구현 요구사항·golden test |

@@ -32,17 +32,17 @@ Prefill과 Decode를 서로 다른 실행 자원으로 분리하되, 사용자�
 ## 읽는 순서
 
 1. [Platform Engineering State](../../docs/context/platform-state.md)
-2. [Master Plan](2026-08-18-vllm-stack-pd-disaggregation-master-plan.md)
-3. [0.1.8 Node-local P/D Cell 상세 계획](2026-08-18-node-local-pd-cell-0.1.8-plan.md)
+2. [Master Plan](history/2026-08-18-master-plan.md)
+3. [0.1.8 Node-local P/D Cell 상세 계획](node-local-pd-cell-vllm-stack-0.1.8.md)
 4. **[KV Transfer Backends — vLLM/Mooncake/NIXL 전체 지도](kv-transfer-backends/README.md)**
 5. [vLLM KV Transfer Runtime Path](kv-transfer-backends/vllm-kv-transfer-path.md)
 6. [Mooncake vs NIXL 선택/비교](kv-transfer-backends/backend-selection.md)
 7. [Mooncake Transfer Engine Deep Dive](kv-transfer-backends/mooncake-transfer-engine/README.md)
 8. [NIXL Deep Dive](kv-transfer-backends/nixl/README.md)
-9. [Mooncake 0.3.10-post2 최초 폐쇄망 Build 기록](2026-08-24-mooncake-0.3.10-post2-offline-build.md) — historical incident/build note
-10. [vLLM 0.28.0 Migration & KV Connector Compatibility](../2026-09-03-vllm-0.28-migration.md)
-11. [Scheduler Budget / Spec Decode / CUDA Graph](../../study/inference-serving-optimization/01-scheduler-budget-spec-decode-cudagraph.md)
-12. [vLLM Stack 전체 진행 계획](../2026-08-18-진행계획.md)
+9. [Mooncake 0.3.10-post2 최초 폐쇄망 Build 기록](history/2026-08-24-mooncake-0.3.10-post2-offline-build.md) — historical incident/build note
+10. [vLLM 0.28.0 Migration & KV Connector Compatibility](../migrations/vllm-0.28.md)
+11. [Scheduler Budget / Spec Decode / CUDA Graph](../../study/llm-serving-optimization/01-scheduler-token-budget.md)
+12. [vLLM Stack 전체 진행 계획](../history/2026-08-18-stack-execution-plan.md)
 
 ## KV Transfer 문서 구조
 
