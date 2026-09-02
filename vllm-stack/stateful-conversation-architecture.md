@@ -10,7 +10,8 @@
 3. **Responses protocol 지원과 durable state 지원은 다른 문제다.** Codex의 HTTP fallback은 `store=false`와 전체 item history로도 동작할 수 있다. 반면 WebSocket incremental continuation, 일반 client의 `previous_response_id`/conversation 사용, multi-replica failover까지 보장하려면 state owner가 필요하다.
 4. vLLM 0.28.0은 opt-in in-memory Responses store를 제공하지만, replica-local dictionary이고 eviction이 없어 source 자체가 memory leak 가능성을 경고한다. **개발·단일 replica 기능이지 production durable store가 아니다.**
 5. [vLLM Agentic API](https://github.com/vllm-project/agentic-api)는 기존에 정의한 `Conversation State Facade + Durable Store`를 구현하는 가장 직접적인 후보다. 그러나 tenant/persisted-state authorization, retention, 운영 hardening이 완료되기 전에는 shared production 표준으로 확정하지 않는다.
-6. 권고 배치는 **model별 sidecar가 아니라 inference routing plane 앞의 model-agnostic state/tool orchestration tier**다. shared session에는 PostgreSQL을 사용하며, LiteLLM은 Responses fidelity 검증을 통과한 경우에만 그 downstream routing hop으로 유지한다.
+6. 권고 배치는 **model별 sidecar가 아니라 inference routing plane 앞의 model-agnostic state/tool orchestration tier**다. shared session에는 PostgreSQL을 사용하며, multi-model backend selection은 하나의 logical `LLM_API_BASE` 뒤 LMStack Router가 담당한다.
+7. 현재 API lane의 구체적인 routing contract는 [API Routing Contract](api-routing-contract.md)를 따른다. Chat/Completions와 Messages는 기존 LiteLLM compatibility lane, Responses는 Agentic API → LMStack Router lane으로 분리한다.
 
 ## 질문별 답
 
@@ -213,7 +214,7 @@ Codex / Responses clients
   -> API Gateway / custom auth-policy layer
   -> Agentic API replicas
        <-> PostgreSQL
-  -> Responses-transparent model gateway/router
+  -> LMStack Router / Responses-transparent model router
   -> vLLM Service / Router
   -> vLLM engine replicas
 ```
