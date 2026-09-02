@@ -41,7 +41,7 @@ flowchart TB
 
 - 단기 API는 기존 integrated/Ray renderer와 분리된 `pdCellSpec.models[]`이다.
 - Router/P/D는 한 Pod에 있어 Node-locality와 failure domain을 공유한다.
-- 망B H200의 Mooncake 목표 transport는 same-node `nvlink_intra`다. MNNVL용 `nvlink`와 구분한다.
+- Network B H200의 Mooncake 목표 transport는 same-node `nvlink_intra`다. MNNVL용 `nvlink`와 구분한다.
 - 0.3.10.post2 source-build overlay는 확보했으며, vLLM 0.28 migration에서는 Mooncake 0.3.12.post1을 같은 원칙으로 재빌드한다. official x86 wheel에는 여전히 `USE_INTRA_NVLINK=ON`이 없다.
 - PR #2 이전 커밋 P1:D1 data path는 성공했고, PR #4 HEAD에서 Qwen3.6-27B topology 확대 검증 중이다.
 - vLLM 0.27.1은 비교 기준선, 0.28.0-cu129은 차기 runtime validation candidate다.
@@ -182,7 +182,7 @@ vLLM `0.27.1-cu129`은 비교 기준선으로 남기고 `0.28.0-cu129`을 차기
 실행 형태:
 - Single-node integrated vLLM
 - Node-local P/D Cell
-- 망A Multi-node vLLM
+- Network A Multi-node vLLM
 - 향후 Multi-node P/D Serving Group
 
 ### 4. KV Cache Plane
@@ -229,13 +229,13 @@ vLLM 0.28.0 기준 upstream connector baseline은 LMCache `>=0.3.9`, NIXL `1.3.2
 
 ### 6. GPU / Network Runtime
 
-망A:
+Network A:
 - H200 중심 GPU pool
 - IB / GPUDirect RDMA 검증
 - NVIDIA Network Operator / RDMA resource
 - NVLink / NVSwitch / NCCL
 
-망B:
+Network B:
 - H200 중심 GPU pool
 - IB 없음
 - Node-local P/D가 우선적인 topology
