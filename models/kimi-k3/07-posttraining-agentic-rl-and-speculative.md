@@ -468,7 +468,7 @@ p(x_{t+1}\mid x_{\le t})
 
 MTP와 speculative decoding의 일반 원리는:
 
-- [Speculative Decoding Study](../../study/speculative-decoding/2026-08-18-speculative-decoding-mtp-dspark.md)
+- [Speculative Decoding Study](../../study/speculative-decoding/00-foundations-and-method-lineage.md)
 
 를 참고한다.
 

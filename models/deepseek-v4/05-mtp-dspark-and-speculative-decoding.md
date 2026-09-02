@@ -287,7 +287,7 @@ checkpoint load
 
 상세 runtime 버전 분석은 기존 문서 참고:
 
-- [DSpark checkpoint와 vLLM 구현 차이](2026-08-18-dspark-checkpoint-and-vllm-implementation.md)
+- [DSpark checkpoint와 vLLM 구현 차이](notes/2026-08-18-dspark-checkpoint-and-vllm-implementation.md)
 
 ---
 
@@ -373,4 +373,4 @@ dependency와 verification cost까지 함께 최적화하자"
 - DSpark paper: https://arxiv.org/abs/2607.05147
 - Flash-0731 model/config: https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash-0731
 - Pro-0813 model/config: https://huggingface.co/deepseek-ai/DeepSeek-V4-Pro-0813
-- Runtime 상세: [2026-08-18-dspark-checkpoint-and-vllm-implementation.md](2026-08-18-dspark-checkpoint-and-vllm-implementation.md)
+- Runtime 상세: [2026-08-18-dspark-checkpoint-and-vllm-implementation.md](notes/2026-08-18-dspark-checkpoint-and-vllm-implementation.md)

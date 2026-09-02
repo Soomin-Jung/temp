@@ -60,7 +60,7 @@
   - [RDMA와 GPUDirect RDMA](gpu-architecture/11-rdma-and-gpudirect-rdma.md)
   - [InfiniBand·RoCE와 GPU network 하드웨어](gpu-architecture/12-infiniband-roce-and-hardware.md)
   - [NCCL·집단통신·관측 실습](gpu-architecture/13-nccl-collectives-observability-labs.md)
-  - [GPU Architecture 용어집](gpu-architecture/glossary.md)
+  - [GPU Architecture 용어집](gpu-architecture/99-glossary-and-references.md)
 
 GPU 자체는 0→8, multi-GPU와 cluster 통신은 9→13 순서로 읽는다. 운영 이슈를 진단할 때는 메트릭(6) → 병목 진단(7) → NCCL 관측(13) → IB/RoCE(12) → RDMA/GDRDMA(11) → local topology(10) 순서로 역추적한다.
 
@@ -83,19 +83,10 @@ GPU 자체는 0→8, multi-GPU와 cluster 통신은 9→13 순서로 읽는다. 
 ### Speculative Decoding
 
 - [Speculative Decoding Study 인덱스](speculative-decoding/README.md)
-  - [전통 SD, MTP, DFlash, DSpark의 구조적 차이](speculative-decoding/2026-08-18-speculative-decoding-mtp-dspark.md)
-  - [vLLM SD Method Taxonomy & Selection Guide](speculative-decoding/2026-09-03-vllm-sd-method-taxonomy-and-selection-guide.md)
-  - [vLLM SD Token Budget Deep Dive — MBT, scheduled tokens, method별 draft slots](speculative-decoding/2026-09-03-vllm-speculative-decoding-token-budget-deep-dive.md)
+  - [전통 SD, MTP, DFlash, DSpark의 구조적 차이](speculative-decoding/00-foundations-and-method-lineage.md)
+  - [vLLM SD Method Taxonomy & Selection Guide](speculative-decoding/01-vllm-method-taxonomy-and-selection.md)
+  - [vLLM SD Token Budget Deep Dive — MBT, scheduled tokens, method별 draft slots](speculative-decoding/02-vllm-token-budget-and-slot-topology.md)
 
-### Inference Serving Optimization
-
-- [Serving Optimization Mental Model](inference-serving-optimization/README.md)
-  - workload → scheduler → model architecture → kernel/CUDA Graph → state/memory → hardware를 하나의 병목 모델로 연결
-  - P/D role별 scheduler profile, state-based model capacity, TP/state trade-off, 운영 benchmark 방법
-- [Scheduler Budget, Speculative Decoding & CUDA Graph](inference-serving-optimization/01-scheduler-budget-spec-decode-cudagraph.md)
-  - `max_num_batched_tokens`, speculative draft slot, `max_num_seqs`, CUDA Graph mode를 joint tuning하는 방법
-
-이 모듈은 특정 모델의 추천 숫자를 저장하는 곳이 아니라 **새 model/GPU/runtime에서도 병목을 재구성할 수 있는 일반 원리**를 저장한다.
 
 ## 작성 원칙
 
@@ -105,4 +96,4 @@ GPU 자체는 0→8, multi-GPU와 cluster 통신은 9→13 순서로 읽는다. 
 4. 공식 원문과 확인일을 남기고, 공개되지 않은 구조는 추측하지 않는다.
 5. 실험은 가설, 고정 조건, 변경 변수, 반증 조건을 함께 기록한다.
 6. 외부에 공개할 수 없는 호스트명, 주소, 수량, 조직·프로젝트명은 기록하지 않는다.
-7. display math는 `$$` 대신 fenced `math` 문법을 사용하고 [Markdown 렌더링 규칙](../docs/markdown-rendering.md)에 따라 전체 검증한다.
+7. display math는 `$$` 대신 fenced `math` 문법을 사용하고 [Markdown 렌더링 규칙](../docs/conventions/markdown-rendering.md)에 따라 전체 검증한다.
