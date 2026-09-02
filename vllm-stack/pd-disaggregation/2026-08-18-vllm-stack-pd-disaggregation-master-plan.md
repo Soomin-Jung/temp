@@ -1,7 +1,7 @@
 # vLLM Stack P/D Disaggregation 구현 Master Plan
 
 작성일: 2026-08-18  
-최종 업데이트: 2026-08-24 KST
+최종 업데이트: 2026-09-03 KST
 
 ## 현재 진행 상태
 
@@ -9,7 +9,9 @@
 - PR #2: top-level `pdCellSpec` additive renderer 구현, Draft 유지
 - Runtime: PR #2 이전 커밋 `36e45f0c277d4206ce233c8057a383e387c616c1`에서 P1:D1, LiteLLM, Anthropic 경로 성공
 - PR #4: values/container/router 계약 audit 완료 후 Qwen3.6-27B runtime 확대 테스트 중
-- Mooncake: CUDA ABI 문제는 공식 `0.3.10.post2` wheel로 해소했으나, 망B same-node 경로에 필요한 `nvlink_intra`가 현재 artifact에 없어 source-built image가 새 blocker
+- Mooncake: `0.3.10.post2` source-built `nvlink_intra` overlay는 PR #5로 확보했다. 현재는 actual transport/runtime Gate와 vLLM 0.28용 Mooncake `0.3.12.post1` source-build compatibility가 다음 검증 대상
+- Runtime migration: vLLM `0.27.1`은 비교 기준선, `0.28.0-cu129`은 차기 validation candidate
+- Repository strategy: custom Production Stack은 upstream fork + thin overlay로 유지
 
 초기 성공은 PR #4 HEAD의 완료 판정이 아니다. P1:D1 재검증 후 P2:D1 → P2:D2 → P1:D3, Cell replica, failure, metrics 순으로 Gate를 닫는다.
 
@@ -102,7 +104,7 @@ Mooncake transport 의미:
 | `rdma` | IB/RoCE/GDRDMA | CUDA/RDMA support |
 | `tcp` | 일반 network fallback | GPU buffer에는 `USE_CUDA=ON` |
 
-망B H200 Node-local P/D의 목표 Mooncake path는 `nvlink_intra`다. 이 기능을 포함한 `0.3.10.post2` source-built wheel/image는 Helm 변경과 분리한 별도 PR로 만든다.
+Network B H200 Node-local P/D의 목표 Mooncake path는 `nvlink_intra`다. `0.3.10.post2` source-build overlay는 이미 확보했으며, vLLM 0.28 validation에서는 Mooncake `0.3.12.post1`을 동일한 air-gap/build contract로 재검증한다. official x86 wheel에는 `USE_INTRA_NVLINK=ON`이 없으므로 source build 자체는 여전히 필요하다.
 
 ## Profile 원칙
 
@@ -191,7 +193,7 @@ engine-level degraded serving은 장기 PDSG 범위로 남긴다.
 - metrics
 - strict failure recovery
 
-다음은 0.1.12+ 장기 트랙으로 이동한다.
+다음은 current upstream fork의 장기 트랙으로 이동한다. 특정 0.1.12 snapshot 자체가 목표가 아니라 upstream primitive를 계속 흡수하는 것이 목표다.
 
 - independent P/D pool scaling
 - degraded Cell serving
@@ -227,3 +229,12 @@ modelSpec
 > Prefill/Decode는 별도 모델이 아니라 한 모델 내부의 실행 topology다.
 >
 > 단기 구현에서 얻은 계약은 0.1.12 범용 Disaggregated Serving으로 그대로 이동할 수 있어야 한다.
+
+
+## 2026-09-03 Update Note
+
+이 문서의 0.1.8/0.1.12 매핑은 당시 설계 경계를 설명하는 historical semantic map이다. 현재 migration 판단과 connector version은 다음 문서를 우선한다.
+
+- [vLLM 0.28.0 Migration & KV Connector Compatibility](../2026-09-03-vllm-0.28-migration.md)
+- [P/D Disaggregation Index](README.md)
+- [Inference Serving Optimization](../../study/inference-serving-optimization/README.md)
