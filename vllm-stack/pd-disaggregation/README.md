@@ -31,18 +31,27 @@ Prefill과 Decode를 서로 다른 실행 자원으로 분리하되, 사용자�
 
 ## 읽는 순서
 
+### Current / canonical
+
 1. [Platform Engineering State](../../docs/context/platform-state.md)
-2. [Master Plan](history/2026-08-18-master-plan.md)
-3. [0.1.8 Node-local P/D Cell 상세 계획](node-local-pd-cell-vllm-stack-0.1.8.md)
-4. **[KV Transfer Backends — vLLM/Mooncake/NIXL 전체 지도](kv-transfer-backends/README.md)**
-5. [vLLM KV Transfer Runtime Path](kv-transfer-backends/vllm-kv-transfer-path.md)
-6. [Mooncake vs NIXL 선택/비교](kv-transfer-backends/backend-selection.md)
-7. [Mooncake Transfer Engine Deep Dive](kv-transfer-backends/mooncake-transfer-engine/README.md)
-8. [NIXL Deep Dive](kv-transfer-backends/nixl/README.md)
-9. [Mooncake 0.3.10-post2 최초 폐쇄망 Build 기록](history/2026-08-24-mooncake-0.3.10-post2-offline-build.md) — historical incident/build note
-10. [vLLM 0.28.0 Migration & KV Connector Compatibility](../migrations/vllm-0.28.md)
-11. [Scheduler Budget / Spec Decode / CUDA Graph](../../study/llm-serving-optimization/01-scheduler-token-budget.md)
-12. [vLLM Stack 전체 진행 계획](../history/2026-08-18-stack-execution-plan.md)
+2. [0.1.8 Node-local P/D Cell contract](node-local-pd-cell-vllm-stack-0.1.8.md)
+3. **[KV Transfer Backends — vLLM/Mooncake/NIXL 전체 지도](kv-transfer-backends/README.md)**
+4. [vLLM KV Transfer Runtime Path](kv-transfer-backends/vllm-kv-transfer-path.md)
+5. [Mooncake vs NIXL 선택/비교](kv-transfer-backends/backend-selection.md)
+6. [Mooncake Transfer Engine Deep Dive](kv-transfer-backends/mooncake-transfer-engine/README.md)
+7. [NIXL Deep Dive](kv-transfer-backends/nixl/README.md)
+8. [vLLM 0.28.0 Migration & KV Connector Compatibility](../migrations/vllm-0.28.md)
+9. [LLM Serving Optimization](../../study/llm-serving-optimization/README.md)
+10. [Scheduler, Token Budget, MBT와 max-num-seqs](../../study/llm-serving-optimization/01-scheduler-token-budget.md)
+11. [CUDA Graph, Compilation, Capture Size](../../study/llm-serving-optimization/03-cuda-graphs-and-compilation.md)
+
+### Historical records
+
+- [2026-08-18 P/D Master Plan](history/2026-08-18-master-plan.md)
+- [2026-08-18 vLLM Stack execution plan](../history/2026-08-18-stack-execution-plan.md)
+- [2026-08-24 Mooncake 0.3.10-post2 최초 폐쇄망 Build](history/2026-08-24-mooncake-0.3.10-post2-offline-build.md)
+- [2026-08-28 Mooncake GPU reservation runtime validation](kv-transfer-backends/mooncake-transfer-engine/records/2026-08-28-gpu-reservation-runtime-validation.md)
+- [2026-08-28 Mooncake nvlink_intra container GPU namespace incident](kv-transfer-backends/mooncake-transfer-engine/records/2026-08-28-nvlink-intra-container-gpu-namespace-incident.md)
 
 ## KV Transfer 문서 구조
 
@@ -55,7 +64,10 @@ kv-transfer-backends/
 │   ├── README.md
 │   ├── transport-and-runtime-paths.md
 │   ├── source-build-airgap.md
-│   └── vllm-connector-flow-debugging.md
+│   ├── vllm-connector-flow-debugging.md
+│   └── records/
+│       ├── 2026-08-28-gpu-reservation-runtime-validation.md
+│       └── 2026-08-28-nvlink-intra-container-gpu-namespace-incident.md
 └── nixl/
     ├── README.md
     ├── vllm-integration.md

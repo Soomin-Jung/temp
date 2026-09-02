@@ -78,10 +78,11 @@ Observability는 Prometheus / Grafana / Loki / Alloy / DCGM 계열을 사용하�
 
 상세 문서:
 
-- [vLLM Stack 진행계획](../../vllm-stack/history/2026-08-18-stack-execution-plan.md)
-- [P/D Master Plan](../../vllm-stack/pd-disaggregation/history/2026-08-18-master-plan.md)
+- [P/D Disaggregation Current Index](../../vllm-stack/pd-disaggregation/README.md)
 - [Node-local P/D Cell](../../vllm-stack/pd-disaggregation/node-local-pd-cell-vllm-stack-0.1.8.md)
-- [Mooncake 0.3.10-post2 폐쇄망 Source Build](../../vllm-stack/pd-disaggregation/history/2026-08-24-mooncake-0.3.10-post2-offline-build.md)
+- [Historical: 2026-08-18 vLLM Stack execution plan](../../vllm-stack/history/2026-08-18-stack-execution-plan.md)
+- [Historical: 2026-08-18 P/D Master Plan](../../vllm-stack/pd-disaggregation/history/2026-08-18-master-plan.md)
+- [Historical: Mooncake 0.3.10-post2 최초 폐쇄망 Source Build](../../vllm-stack/pd-disaggregation/history/2026-08-24-mooncake-0.3.10-post2-offline-build.md)
 - [Stateful Conversation Architecture](../../vllm-stack/stateful-conversation-architecture.md)
 - [vLLM 0.28.0 Migration & KV Connector Compatibility](../../vllm-stack/migrations/vllm-0.28.md)
 - [API Routing Contract](../../vllm-stack/api-routing-contract.md)
@@ -409,8 +410,9 @@ Root:
 - [GPU Architecture](../../study/gpu-architecture/README.md)
 - [Git & GitHub](../../study/git-github/README.md)
 - [Speculative Decoding](../../study/speculative-decoding/00-foundations-and-method-lineage.md)
-- [Inference Serving Optimization](../../study/llm-serving-optimization/README.md)
-- [Scheduler Budget / SD / CUDA Graph](../../study/llm-serving-optimization/01-scheduler-token-budget.md)
+- [LLM Serving Optimization](../../study/llm-serving-optimization/README.md)
+- [Scheduler / Token Budget](../../study/llm-serving-optimization/01-scheduler-token-budget.md)
+- [CUDA Graph / Compilation](../../study/llm-serving-optimization/03-cuda-graphs-and-compilation.md)
 
 Backlog:
 

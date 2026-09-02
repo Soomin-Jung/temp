@@ -2,16 +2,19 @@
 
 ## 디렉터리 기준
 
-- `roadmap/` : 연도/분기별 주요 과제, 목표 아키텍처, Workstream 현황을 보는 상위 인덱스
-- `vllm-stack/` : vLLM Production Stack 커스텀, 버전 이관, P/D Disaggregation, 배포·검증 구조
-- `multi-node/` : 멀티노드 vLLM, Ray 대체, native multiprocess
-- `kv-cache/` : KV Cache, connector, offloading, cache-aware routing
-- `moc/` : MOC 설계/구현 관련 중요 결정
-- `study/` : 공부하면서 남길 가치가 있는 핵심 정리
-- `models/` : 모델별 architecture, checkpoint, 배포 호환성, 장애 조사
-- `weekly-report/` : vLLM 생태계, 오픈웨이트 모델, LLM serving·최적화·논문 주간 보고서
-- `docs/` : 저장소 작성·렌더링·검증 규칙
-- `misc/` : 임시 메모
+- `study/` : 모델을 가로지르는 개념, mental model, 원리, 실습
+- `models/` : 모델 family별 architecture, training, serving 특성 및 시점성 notes
+- `vllm-stack/` : serving platform 구현 계약, migration, P/D, runtime integration과 records
+- `roadmap/` : 연도/분기별 목표, 의존성, 종료 기준과 program-level status
+- `docs/context/` : 현재 플랫폼 상태와 historical context
+- `docs/conventions/` : 저장소 구조, Markdown, 작성·검증 규칙
+- `docs/operations/` : 플랫폼 공통 운영 reference
+- `docs/tooling/` : 개발·운영 도구 사용과 troubleshooting
+- `moc/` : MOC control-plane 설계와 capability
+- `weekly-report/` : vLLM/모델/serving 생태계 주간 변화 추적
+- `tools/` : 저장소 검증·자동화 도구
+
+세부 ownership과 문서 수명주기는 [Repository Structure and Document Lifecycle](docs/conventions/repository-structure.md)을 따른다.
 
 ## Roadmap
 
@@ -56,14 +59,14 @@
 ### vLLM Production Stack / P-D Disaggregation
 
 - [vLLM Stack 문서 인덱스](vllm-stack/README.md)
-- [vLLM Stack 진행 계획](vllm-stack/history/2026-08-18-stack-execution-plan.md)
+- [Historical: 2026-08-18 vLLM Stack execution plan](vllm-stack/history/2026-08-18-stack-execution-plan.md)
 - [vLLM 0.28.0 Migration & KV Connector Compatibility](vllm-stack/migrations/vllm-0.28.md)
 - [Chat / Messages / Responses API Routing Contract](vllm-stack/api-routing-contract.md)
 - [Stateful Conversation / Agentic API Architecture](vllm-stack/stateful-conversation-architecture.md)
 - [P/D Disaggregation 인덱스](vllm-stack/pd-disaggregation/README.md)
-  - [P/D Disaggregation Master Plan](vllm-stack/pd-disaggregation/history/2026-08-18-master-plan.md)
+  - [Historical: P/D Disaggregation Master Plan](vllm-stack/pd-disaggregation/history/2026-08-18-master-plan.md)
   - [Node-local P/D Cell 0.1.8 현재 구현 계획](vllm-stack/pd-disaggregation/node-local-pd-cell-vllm-stack-0.1.8.md)
-  - [Mooncake 0.3.10-post2 폐쇄망 Source Build](vllm-stack/pd-disaggregation/history/2026-08-24-mooncake-0.3.10-post2-offline-build.md)
+  - [Historical: Mooncake 0.3.10-post2 최초 폐쇄망 Source Build](vllm-stack/pd-disaggregation/history/2026-08-24-mooncake-0.3.10-post2-offline-build.md)
 - [Model Serving Validation Contract](vllm-stack/model-serving-validation.md)
 
 ### MOC Operations Control Plane
@@ -81,8 +84,9 @@
   - [전통 SD, MTP, DFlash, DSpark의 구조적 차이](study/speculative-decoding/00-foundations-and-method-lineage.md)
   - [vLLM SD Method Taxonomy & Selection Guide](study/speculative-decoding/01-vllm-method-taxonomy-and-selection.md)
   - [vLLM SD Token Budget Deep Dive — MBT, scheduled tokens, method별 draft slots](study/speculative-decoding/02-vllm-token-budget-and-slot-topology.md)
-- [Inference Serving Optimization Mental Model](study/llm-serving-optimization/README.md)
-- [Scheduler Budget, Speculative Decoding & CUDA Graph](study/llm-serving-optimization/01-scheduler-token-budget.md)
+- [LLM Serving Optimization — 운영자가 보는 전체 지도](study/llm-serving-optimization/README.md)
+- [Scheduler, Token Budget, MBT와 max-num-seqs](study/llm-serving-optimization/01-scheduler-token-budget.md)
+- [CUDA Graph, Compilation, Capture Size](study/llm-serving-optimization/03-cuda-graphs-and-compilation.md)
 
 ### DeepSeek-V4
 
@@ -117,6 +121,7 @@
 
 ### 문서 품질
 
+- [Repository Structure and Document Lifecycle](docs/conventions/repository-structure.md)
 - [Markdown 수식·링크·렌더링 규칙](docs/conventions/markdown-rendering.md)
 
 ## 운영 원칙
@@ -125,6 +130,6 @@
 2. 연도/분기별 우선순위와 의존성은 `roadmap/`에서 관리하고 상세 설계는 주제 디렉터리에 둡니다. 현재 구현 상태 인덱스는 `docs/context/platform-state.md`에서 관리하되 루트 README의 전면 진입점으로 노출하지 않습니다.
 3. 계획은 현재 상태 / 다음 단계 / 검증 기준 / 보류사항을 분리해 기록합니다.
 4. 실제 구현 저장소와 연결되는 경우 관련 저장소, PR, 커밋 번호를 적습니다.
-5. 완료된 계획도 삭제하지 않고 결과를 덧붙여 이력으로 남깁니다.
+5. 완료되거나 superseded된 계획은 current 문서에 남겨두지 않고 `history/`, `records/`, `notes/`로 이동해 맥락을 보존합니다.
 6. 공개 저장소인 동안에는 민감한 내부정보를 기록하지 않습니다.
 7. display math는 `$$` 대신 GitHub 공식 fenced `math` 문법을 사용하고, 변경 후 `node tools/validate_markdown.mjs .`로 전체 문서를 검사합니다.
