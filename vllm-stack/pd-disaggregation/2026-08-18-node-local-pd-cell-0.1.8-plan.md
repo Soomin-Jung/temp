@@ -156,7 +156,7 @@ Global Router
 |---|---|
 | `lmstack` | static discovery + `disaggregated_prefill_orchestrated` + model label/alias |
 | `vllm` | `--vllm-pd-disaggregation` + 반복형 `--prefill`/`--decode` + connector/policy |
-| `custom` | `command` 선택, `args` 필수; 사내 image용 escape hatch |
+| `custom` | `command` 선택, `args` 필수; custom image용 escape hatch |
 
 LMStack Router와 vLLM Router는 CLI가 호환되지 않는다. repository만 교체하고 args를 재사용하면 안 된다.
 
