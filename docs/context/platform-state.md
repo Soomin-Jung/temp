@@ -362,9 +362,10 @@ B300 단일노드:
 ## Qwen 3.x
 
 - P/D 운영 검증 우선: Qwen3.6-27B
+- long-context workload에서는 TP1을 단순 compute 관점으로 선택하지 않는다. weight replication에 따른 KV/recurrent-state headroom 감소와 replica count를 함께 보고 **TP1 vs TP2를 capacity/collective trade-off로 검증**한다.
 - Qwen3.8-27B + MTP deployment/streaming validation
 - reasoning profile과 speculative/MTP path 검증
-- GDN/Mamba hybrid cache는 일반 dense-attention 모델과 다른 runtime constraint를 가짐
+- GDN/Mamba hybrid cache는 일반 dense-attention 모델과 다른 runtime constraint를 가지며, state block/alignment가 scheduler budget 하한에 영향을 줄 수 있다.
 
 ## Gemma / 기타
 
