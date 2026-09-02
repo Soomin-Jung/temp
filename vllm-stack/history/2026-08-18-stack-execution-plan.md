@@ -20,13 +20,13 @@
 
 상세 문서:
 
-- [P/D 문서 인덱스](pd-disaggregation/README.md)
-- [Node-local P/D Cell 현재 구현 계획](pd-disaggregation/2026-08-18-node-local-pd-cell-0.1.8-plan.md)
-- [Mooncake 0.3.10-post2 폐쇄망 Source Build](pd-disaggregation/2026-08-24-mooncake-0.3.10-post2-offline-build.md)
-- [Model Serving Validation Contract](model-serving-validation.md)
-- [vLLM 0.28.0 Migration & KV Connector Compatibility](2026-09-03-vllm-0.28-migration.md)
-- [API Routing Contract](api-routing-contract.md)
-- [Serving Optimization Mental Model](../study/inference-serving-optimization/README.md)
+- [P/D 문서 인덱스](../pd-disaggregation/README.md)
+- [Node-local P/D Cell 현재 구현 계획](../pd-disaggregation/node-local-pd-cell-vllm-stack-0.1.8.md)
+- [Mooncake 0.3.10-post2 폐쇄망 Source Build](../pd-disaggregation/history/2026-08-24-mooncake-0.3.10-post2-offline-build.md)
+- [Model Serving Validation Contract](../model-serving-validation.md)
+- [vLLM 0.28.0 Migration & KV Connector Compatibility](../migrations/vllm-0.28.md)
+- [API Routing Contract](../api-routing-contract.md)
+- [Serving Optimization Mental Model](../../study/inference-serving-optimization/README.md)
 
 ---
 

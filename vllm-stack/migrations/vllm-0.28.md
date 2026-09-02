@@ -253,7 +253,7 @@ P와 D는 별도 sweep한다.
 
 특히 v0.28은 v0.26/v0.27의 `max_num_seqs` 기준 static worst-case drafting headroom과 달리, scheduler logical token budget과 physical input-slot budget을 분리해 실제 scheduled request별 drafting slot을 accounting한다. 이전 version의 `MBT - slots × max_num_seqs` 식을 0.28에 그대로 적용하지 않는다.
 
-상세 source-level accounting은 [Speculative Decoding Token Budget Deep Dive](../study/speculative-decoding/2026-09-03-vllm-speculative-decoding-token-budget-deep-dive.md)를 따른다.
+상세 source-level accounting은 [Speculative Decoding Token Budget Deep Dive](../../study/speculative-decoding/02-vllm-token-budget-and-slot-topology.md)를 따른다.
 
 - K = 0 / 3 / 5 / 7 등
 - concurrency ladder

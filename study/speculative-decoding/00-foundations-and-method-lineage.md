@@ -17,9 +17,9 @@ Speculative Decoding(SD)은 흔히 "작은 모델이 미리 생성하고 큰 모
 
 모델별 checkpoint 구조와 vLLM 버전별 구현 차이는 다음 문서에서 별도로 다룬다.
 
-- [vLLM SD Token Budget Deep Dive — MBT, scheduled tokens, method별 draft slots](2026-09-03-vllm-speculative-decoding-token-budget-deep-dive.md)
-- [DeepSeek-V4 DSpark checkpoint와 vLLM 구현](../../models/deepseek-v4/2026-08-18-dspark-checkpoint-and-vllm-implementation.md)
-- [vLLM 0.27.x DeepGEMM SM90 CUDA IMA 분석](../../models/deepseek-v4/2026-08-18-vllm-0.27-deepgemm-sm90-cuda-ima.md)
+- [vLLM SD Token Budget Deep Dive — MBT, scheduled tokens, method별 draft slots](02-vllm-token-budget-and-slot-topology.md)
+- [DeepSeek-V4 DSpark checkpoint와 vLLM 구현](../../models/deepseek-v4/notes/2026-08-18-dspark-checkpoint-and-vllm-implementation.md)
+- [vLLM 0.27.x DeepGEMM SM90 CUDA IMA 분석](../../models/deepseek-v4/notes/2026-08-18-vllm-0.27-deepgemm-sm90-cuda-ima.md)
 
 ---
 
