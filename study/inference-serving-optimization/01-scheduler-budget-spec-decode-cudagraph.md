@@ -55,9 +55,11 @@ uniform speculative decode의 query length는 개념적으로:
 
 다만 실제 slot reservation은 method마다 다르며, vLLM source의 `max_num_new_slots_for_drafting`를 기준으로 판단해야 한다.
 
-vLLM의 config는 speculative decoding이 사용할 추가 slot을 고려해 `max_num_scheduled_tokens`를 별도로 계산한다.
+vLLM의 speculative budget accounting은 version별로 구분한다.
 
-공개 이슈/소스에서 확인되는 핵심 형태:
+### v0.26 / v0.27
+
+parallel drafter의 worst-case input headroom을 `max_num_seqs` 기준으로 정적으로 선점하므로 개념적으로:
 
 ```text
 max_num_scheduled_tokens
@@ -66,15 +68,28 @@ max_num_batched_tokens
   - max_num_new_slots_for_drafting × max_num_seqs
 ```
 
-method에 따라 drafting slot 수 계산은 달라질 수 있다.
+형태로 scheduler-visible budget이 줄어든다.
 
-따라서 "decode 요청당 정확히 K+1만큼 MBT를 항상 차지한다"라고 단순화하면 안 된다.
+### v0.28
 
-정확한 mental model은:
+scheduler가 직접 issue하는 **logical token budget**과 drafter까지 포함한 **physical input-slot budget**을 분리한다. 실제 scheduled request마다 추가 drafting slot을 차감하므로 v0.26/v0.27의 worst-case 식을 그대로 적용하지 않는다.
 
-> SD는 각 active request가 미래 draft position을 위해 추가 scheduler/KV slot을 요구하므로, 동일 MBT에서 normal decode보다 실제 issue 가능한 token budget이 줄어들 수 있다.
+개념적으로:
 
-vLLM은 이 값이 작아지면 startup warning으로 MBT를 올리거나 K/max_num_seqs를 낮추라고 안내한다.
+```text
+sum(scheduler-issued tokens) <= logical scheduler budget
+
+sum(
+  scheduler-issued tokens
+  + per-request drafting slots
+) <= max_num_batched_tokens
+```
+
+method에 따라 `max_num_new_slots_for_drafting` 계산도 달라진다.
+
+따라서 "decode 요청당 정확히 K+1만큼 MBT를 항상 차지한다"라고 단순화하면 안 된다. 정확한 의미는 **scheduler-issued token, drafter-added input slot, accepted token, KV lookahead를 서로 다른 자원으로 본다**는 것이다.
+
+source-level 상세는 [vLLM Speculative Decoding Token Budget Deep Dive](../speculative-decoding/2026-09-03-vllm-speculative-decoding-token-budget-deep-dive.md)를 canonical reference로 사용한다.
 
 ## 4. 왜 K와 MBT를 같이 sweep해야 하는가
 
@@ -306,6 +321,8 @@ launch overhead를 메모리로 산 전형적인 trade-off.
   https://github.com/vllm-project/vllm/blob/main/vllm/config/scheduler.py
 - vLLM speculative budget config  
   https://github.com/vllm-project/vllm/blob/main/vllm/config/vllm.py
+- Repository source-level budget deep dive  
+  ../speculative-decoding/2026-09-03-vllm-speculative-decoding-token-budget-deep-dive.md
 - Dynamic Speculative Decoding  
   https://github.com/vllm-project/vllm/blob/main/docs/features/speculative_decoding/dynamic_speculative_decoding.md
 - CUDA Graph design  
