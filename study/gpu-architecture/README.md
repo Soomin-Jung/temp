@@ -49,7 +49,7 @@ flowchart TD
 | 11 | [RDMA와 GPUDirect RDMA](11-rdma-and-gpudirect-rdma.md) | verbs 객체와 NIC DMA가 GPU memory transfer를 어떻게 완성하는가? |
 | 12 | [InfiniBand·RoCE와 GPU network 하드웨어](12-infiniband-roce-and-hardware.md) | IB/RoCE fabric과 ConnectX·BlueField·Quantum·Spectrum-X의 역할은 무엇인가? |
 | 13 | [NCCL·집단통신·관측 실습](13-nccl-collectives-observability-labs.md) | collective의 실제 byte 수와 slow rank·link counter를 어떻게 연결하는가? |
-| 부록 | [용어집](glossary.md) | 주요 원문 용어, 한국어 의미, 발음을 빠르게 찾을 수 있는가? |
+| 부록 | [용어집](99-glossary-and-references.md) | 주요 원문 용어, 한국어 의미, 발음을 빠르게 찾을 수 있는가? |
 
 GPU 자체 구조를 먼저 익힐 때는 0→8 순서로 읽는다. multi-GPU와 cluster 통신까지 이해하려면 이어서 9→13을 읽는다. 통신 장애를 조사할 때는 13의 현상에서 시작해 12→11→10 순서로 아래 계층을 격리한다.
 

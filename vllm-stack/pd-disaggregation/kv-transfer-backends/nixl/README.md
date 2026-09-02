@@ -641,4 +641,4 @@ vLLM 0.28.0은 NIXL을 `1.3.2`로 exact pin한다. 따라서 0.27.1/1.3.1에서 
 - cancellation/restart
 - heterogeneous TP/model architecture restrictions
 
-상세 version matrix는 [vLLM 0.28.0 Migration & KV Connector Compatibility](../../../2026-09-03-vllm-0.28-migration.md)를 따른다.
+상세 version matrix는 [vLLM 0.28.0 Migration & KV Connector Compatibility](../../../migrations/vllm-0.28.md)를 따른다.

@@ -1696,7 +1696,7 @@ https://github.com/vllm-project/vllm/tree/v0.28.0/docs/features/speculative_deco
 
 - [Speculative Decoding: 전통 SD, MTP, DFlash, DSpark의 구조적 차이](00-foundations-and-method-lineage.md)
 - [vLLM Speculative Decoding Token Budget Deep Dive](02-vllm-token-budget-and-slot-topology.md)
-- [Scheduler Budget, Speculative Decoding & CUDA Graph](../inference-serving-optimization/01-scheduler-budget-spec-decode-cudagraph.md)
+- [Scheduler Budget, Speculative Decoding & CUDA Graph](../llm-serving-optimization/01-scheduler-token-budget.md)
 - [DeepSeek-V4 MTP / DSpark](../../models/deepseek-v4/05-mtp-dspark-and-speculative-decoding.md)
 
 ---
