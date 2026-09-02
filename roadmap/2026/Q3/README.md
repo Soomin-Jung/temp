@@ -11,7 +11,7 @@ MOC는 전체 과제의 중심이 아니라 여러 플랫폼 capability를 운�
 
 ## 현재 인프라 기준
 
-### 망A
+### Network A
 
 - H200 중심 GPU pool
 - 노드 내부 NVLink/NVSwitch topology
@@ -20,7 +20,7 @@ MOC는 전체 과제의 중심이 아니라 여러 플랫폼 capability를 운�
 - NVIDIA Network Operator 기반 RDMA device resource 사용
 - H100/L40S를 포함한 heterogeneous GPU pool은 topology capability를 별도 profile로 관리
 
-### 망B
+### Network B
 
 - H200 중심 GPU pool
 - InfiniBand 없음
@@ -43,7 +43,7 @@ MOC는 전체 과제의 중심이 아니라 여러 플랫폼 capability를 운�
    - Network B same-node Mooncake `nvlink_intra` source-build overlay는 0.3.10.post2 기준으로 확보했고, vLLM 0.28 migration에서는 Mooncake 0.3.12.post1 계열로 재검증
    - 상세: [`vllm-stack/pd-disaggregation/`](../../../vllm-stack/pd-disaggregation/)
 
-2. **Kimi-K3 망A Multi-node 운영 배포**
+2. **Kimi-K3 Network A Multi-node 운영 배포**
    - H200 + IB/GDRDMA 환경에서 멀티노드 배포를 운영 수준으로 정립
    - 단순 기동 성공이 아니라 topology, lifecycle, health, failure recovery, benchmark까지 포함
    - Ray는 현재/검증 경로로 활용하되 장기적으로 vLLM native multiprocess + LWS 계열을 검토
@@ -122,7 +122,7 @@ MOC는 전체 과제의 중심이 아니라 여러 플랫폼 capability를 운�
 - [x] PR #2 이전 커밋에서 P1:D1 배포와 LiteLLM/Anthropic 기본 data path가 확인된다.
 - [ ] PR #4 HEAD와 source-built Mooncake image에서 Qwen3.6-27B P1:D1이 재현된다.
 - [ ] P/D Cell의 LiteLLM / Global Router / metrics / failure recovery 경로가 E2E로 검증된다.
-- [ ] Kimi-K3가 망A H200 멀티노드 환경에서 재현 가능한 운영 profile로 정립된다.
+- [ ] Kimi-K3가 Network A H200 멀티노드 환경에서 재현 가능한 운영 profile로 정립된다.
 - [ ] Multi-node 장애와 engine process failure를 Pod Ready 이상의 health 기준으로 탐지/복구할 수 있다.
 - [ ] vLLM 0.28.0-cu129이 주요 모델/P-D/connector Gate를 통과하고 0.27.x 대비 승격 여부가 결정된다.
 - [ ] Production Stack custom repository가 upstream fork + thin overlay workflow로 정착한다.
