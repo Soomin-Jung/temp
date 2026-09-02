@@ -1,6 +1,6 @@
 # KV Transfer Backends for vLLM P/D Disaggregation
 
-업데이트: 2026-08-25 KST
+업데이트: 2026-09-03 KST
 
 이 디렉터리는 vLLM P/D disaggregation에서 **KV cache가 실제로 어떤 소프트웨어 계층과 하드웨어 경로를 통과해 Prefill(P)에서 Decode(D)로 이동하는지**를 소스 코드 기준으로 정리한다.
 
@@ -21,21 +21,24 @@
 
 ### vLLM runtime 기준
 
-2026-08-25 현재 vLLM 최신 release는 `v0.27.1`이다.
+현재 두 runtime baseline을 분리해서 본다.
 
-- vLLM: `v0.27.1`
-- upstream Dockerfile 기본: Python 3.12 / CUDA 13.0.3
-- release에는 CUDA 12.9 계열 artifact도 존재하므로 **실제 base image의 CUDA/PyTorch ABI를 image 내부에서 확인**한다.
-- `requirements/kv_connectors.txt`
-  - `nixl == 1.3.1`
-  - `mooncake-transfer-engine >= 0.3.8`
+| 역할 | vLLM | NIXL | Mooncake |
+|---|---|---|---|
+| 재현/비교 기준 | `v0.27.1` | `1.3.1` | 검증 이력 `0.3.10.post2` |
+| 차기 validation | `v0.28.0-cu129` | `1.3.2` | upstream `>=0.3.12`, 검토 pin `0.3.12.post1` |
 
-즉 두 backend의 version policy가 다르다.
+vLLM 0.28.0 `requirements/kv_connectors.txt` 기준:
 
-- **NIXL**: vLLM이 exact pin한다. v0.27.1 분석은 `NIXL 1.3.1`을 runtime compatibility baseline으로 본다.
-- **Mooncake**: lower bound만 있으므로 reproducible deployment를 위해 별도 pin이 필요하다. 현재 검증 이력은 `0.3.10.post2`다.
+- `lmcache >= 0.3.9`
+- `nixl == 1.3.2`
+- `mooncake-transfer-engine >= 0.3.12`
 
-NIXL upstream 최신 release는 `1.4.0`이지만 vLLM 0.27.1의 공식 pin보다 새 버전이다. 따라서 이 문서에서 NIXL 1.4.0은 **upstream architecture/delta 참고용**으로만 사용하고, production image에 무검증 upgrade하지 않는다.
+v0.28.0 default Docker image는 CUDA 13.0이지만 CUDA 12.9 image도 공식 제공된다. 현재 runtime migration에서는 `v0.28.0-cu129`을 먼저 검증해 connector 변화와 CUDA/driver 승격을 분리한다.
+
+Mooncake는 lower bound이므로 reproducible deployment에서 exact source/artifact pin이 필요하다. 특히 `0.3.12.post1` official x86 wheel release build에도 `USE_INTRA_NVLINK=ON`이 없으므로 Network B의 same-node `nvlink_intra`는 계속 source-build capability로 관리한다.
+
+상세 migration 판단은 [vLLM 0.28.0 Migration & KV Connector Compatibility](../../2026-09-03-vllm-0.28-migration.md)를 따른다.
 
 ---
 
@@ -101,7 +104,7 @@ Transfer runtime 내부에서 데이터 이동을 수행하는 구현체다.
 
 ## 3. vLLM 공통 경로
 
-vLLM v0.27.1에서는 Scheduler와 Worker가 각자 별도 connector instance를 가진다.
+아래 lifecycle은 vLLM 0.27.1에서 확인한 기준 구조이며 0.28 migration에서는 connector interface/metadata 변화 여부를 다시 diff한다. Scheduler와 Worker는 각자 별도 connector instance를 가진다.
 
 ```text
 KVTransferConfig
@@ -254,7 +257,7 @@ Mooncake 역시 자체 transfer engine을 사용한다.
 
 ## 8. 핵심 upstream source
 
-### vLLM v0.27.1
+### vLLM 0.27.1 / 0.28.0
 
 - `vllm/config/kv_transfer.py`
 - `vllm/distributed/kv_transfer/kv_connector/factory.py`
@@ -285,7 +288,8 @@ Mooncake 역시 자체 transfer engine을 사용한다.
 ## 9. 현재 실무 기준
 
 - 기존 Mooncake source build 경험은 `Soomin-Jung/vllm-production-stack-custom` PR #5를 canonical implementation reference로 사용한다.
-- PR #5의 `v0.26.0-cu129` 고정 package 이름을 v0.27.1 image에 그대로 복사하지 않는다. 먼저 base image의 CUDA runtime/devel ABI를 확인한다.
+- PR #5의 `v0.26.0-cu129` package/build assumption을 0.27/0.28 image에 그대로 복사하지 않는다. base image의 Python/Torch/CUDA/glibc ABI와 connector requirement를 먼저 확인한다.
+- vLLM 0.28 validation은 NIXL 1.3.2 / Mooncake 0.3.12 계열로 다시 lock하며, Mooncake `nvlink_intra` feature는 source-build CMake flag까지 provenance에 기록한다.
 - 새 image는 tag만이 아니라 digest와 build manifest를 기록한다.
 - Network B는 먼저 node-local transfer를 인증한 뒤 cross-node와 분리한다.
 - Network A는 RDMA initialization 성공과 GPU-direct 성공을 분리해서 인증한다.
