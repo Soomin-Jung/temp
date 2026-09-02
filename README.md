@@ -57,6 +57,9 @@
 
 - [vLLM Stack 문서 인덱스](vllm-stack/README.md)
 - [vLLM Stack 진행 계획](vllm-stack/2026-08-18-진행계획.md)
+- [vLLM 0.28.0 Migration & KV Connector Compatibility](vllm-stack/2026-09-03-vllm-0.28-migration.md)
+- [Chat / Messages / Responses API Routing Contract](vllm-stack/api-routing-contract.md)
+- [Stateful Conversation / Agentic API Architecture](vllm-stack/stateful-conversation-architecture.md)
 - [P/D Disaggregation 인덱스](vllm-stack/pd-disaggregation/README.md)
   - [P/D Disaggregation Master Plan](vllm-stack/pd-disaggregation/2026-08-18-vllm-stack-pd-disaggregation-master-plan.md)
   - [Node-local P/D Cell 0.1.8 현재 구현 계획](vllm-stack/pd-disaggregation/2026-08-18-node-local-pd-cell-0.1.8-plan.md)
@@ -72,9 +75,11 @@
 - [GPU Architecture: 구조에서 LLM Serving 병목까지](study/gpu-architecture/README.md)
 - [Study 인덱스](study/README.md)
 
-### Speculative Decoding
+### Speculative Decoding / Serving Optimization
 
 - [전통 SD, MTP, DFlash, DSpark의 구조적 차이](study/speculative-decoding/2026-08-18-speculative-decoding-mtp-dspark.md)
+- [Inference Serving Optimization Mental Model](study/inference-serving-optimization/README.md)
+- [Scheduler Budget, Speculative Decoding & CUDA Graph](study/inference-serving-optimization/01-scheduler-budget-spec-decode-cudagraph.md)
 
 ### DeepSeek-V4
 
@@ -108,7 +113,7 @@
 ## 운영 원칙
 
 1. 중요한 논의가 끝나면 해당 주제 디렉터리에 요약 문서를 남깁니다.
-2. 연도/분기별 우선순위와 의존성은 `roadmap/`에서 관리하고 상세 설계는 주제 디렉터리에 둡니다.
+2. 연도/분기별 우선순위와 의존성은 `roadmap/`에서 관리하고 상세 설계는 주제 디렉터리에 둡니다. 현재 구현 상태 인덱스는 `docs/context/platform-state.md`에서 관리하되 루트 README의 전면 진입점으로 노출하지 않습니다.
 3. 계획은 현재 상태 / 다음 단계 / 검증 기준 / 보류사항을 분리해 기록합니다.
 4. 실제 구현 저장소와 연결되는 경우 관련 저장소, PR, 커밋 번호를 적습니다.
 5. 완료된 계획도 삭제하지 않고 결과를 덧붙여 이력으로 남깁니다.
