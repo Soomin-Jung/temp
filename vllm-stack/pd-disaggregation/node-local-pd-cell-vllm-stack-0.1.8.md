@@ -382,4 +382,4 @@ engine 하나가 죽으면 Cell을 신규 요청 route에서 제외하고 contai
 이 문서는 0.1.8 Node-local Cell의 Helm/API 계약을 보존한다. 현재 runtime/version 판단은 다음 문서를 우선한다.
 
 - [vLLM 0.28.0 Migration & KV Connector Compatibility](../migrations/vllm-0.28.md)
-- [Scheduler Budget / Speculative Decoding / CUDA Graph](../../study/inference-serving-optimization/01-scheduler-budget-spec-decode-cudagraph.md)
+- [Scheduler Budget / Speculative Decoding / CUDA Graph](../../study/llm-serving-optimization/01-scheduler-token-budget.md)

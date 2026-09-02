@@ -237,4 +237,4 @@ modelSpec
 
 - [vLLM 0.28.0 Migration & KV Connector Compatibility](../../migrations/vllm-0.28.md)
 - [P/D Disaggregation Index](../README.md)
-- [Inference Serving Optimization](../../../study/inference-serving-optimization/README.md)
+- [Inference Serving Optimization](../../../study/llm-serving-optimization/README.md)
