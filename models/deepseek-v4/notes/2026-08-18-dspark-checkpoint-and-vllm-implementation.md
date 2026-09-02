@@ -4,7 +4,7 @@
 대상: `DeepSeek-V4-Flash` ↔ `DeepSeek-V4-Flash-0731`, `DeepSeek-V4-Pro` ↔ `DeepSeek-V4-Pro-0813`
 범위: target architecture, draft module, checkpoint layout, vLLM 지원 범위
 
-개념적인 SD 분류는 [전통 SD, MTP, DFlash, DSpark의 구조적 차이](../../study/speculative-decoding/2026-08-18-speculative-decoding-mtp-dspark.md)를 먼저 참고한다.
+개념적인 SD 분류는 [전통 SD, MTP, DFlash, DSpark의 구조적 차이](../../../study/speculative-decoding/00-foundations-and-method-lineage.md)를 먼저 참고한다.
 
 ---
 
