@@ -2,9 +2,10 @@
 
 기준:
 
-- vLLM connector: `v0.27.1`
-- Mooncake Transfer Engine reproducible baseline: `0.3.10.post2`
+- 재현 기준: vLLM `v0.27.1` + Mooncake `0.3.10.post2`
+- 차기 validation: vLLM `v0.28.0-cu129` + Mooncake `0.3.12.post1`
 - 실무 source-build reference: `Soomin-Jung/vllm-production-stack-custom` PR #5
+- 0.3.12.post1 official x86 wheel에도 `USE_INTRA_NVLINK=ON`이 없으므로 `nvlink_intra` source-build requirement는 유지
 
 이 디렉터리는 **MooncakeConnector 자체보다 한 단계 아래인 Mooncake Transfer Engine을 중심으로** 설명한다.
 
@@ -61,7 +62,7 @@ H. transfer는 됐지만 wrong block/offset/layout
 
 `import mooncake`가 성공했다고 E~H가 해결되는 것이 아니다.
 
-우리에게 실제로 발생했던 대표 사례도 **wheel은 설치되었지만 `nvlink_intra` 구현이 artifact에 포함되지 않은 packaging 문제**였다.
+우리에게 실제로 발생했던 대표 사례도 **wheel은 설치되었지만 `nvlink_intra` 구현이 artifact에 포함되지 않은 packaging 문제**였다. 이 경계는 0.3.12.post1 x86 official release build에서도 그대로 확인되므로 version upgrade만으로 해결됐다고 보지 않는다.
 
 ---
 
@@ -437,3 +438,18 @@ vllm/distributed/kv_transfer/kv_connector/v1/mooncake/
 - https://github.com/kvcache-ai/Mooncake/blob/v0.3.10.post2/mooncake-transfer-engine/src/transfer_engine_impl.cpp
 - https://github.com/kvcache-ai/Mooncake/blob/v0.3.10.post2/mooncake-transfer-engine/src/multi_transport.cpp
 - https://github.com/Soomin-Jung/vllm-production-stack-custom/pull/5
+
+
+## Version Migration Note — vLLM 0.28 / Mooncake 0.3.12
+
+0.3.10.post2의 source-level 설명은 transport architecture와 최초 incident 재현 기준으로 보존한다. 최신 runtime migration에서는 다음을 다시 diff한다.
+
+- source/submodule lock
+- CMake option/target
+- Python build dependency
+- vLLM Mooncake connector interface
+- hybrid KV/state cache handling
+- transport selection log
+- CUDA/PyTorch/glibc ABI
+
+현재 migration 기준은 [vLLM 0.28.0 Migration & KV Connector Compatibility](../../../2026-09-03-vllm-0.28-migration.md)를 우선한다.
