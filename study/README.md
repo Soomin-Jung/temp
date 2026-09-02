@@ -68,6 +68,16 @@ GPU 자체는 0→8, multi-GPU와 cluster 통신은 9→13 순서로 읽는다. 
 
 - [전통 SD, MTP, DFlash, DSpark의 구조적 차이](speculative-decoding/2026-08-18-speculative-decoding-mtp-dspark.md)
 
+### Inference Serving Optimization
+
+- [Serving Optimization Mental Model](inference-serving-optimization/README.md)
+  - workload → scheduler → model architecture → kernel/CUDA Graph → state/memory → hardware를 하나의 병목 모델로 연결
+  - P/D role별 scheduler profile, state-based model capacity, TP/state trade-off, 운영 benchmark 방법
+- [Scheduler Budget, Speculative Decoding & CUDA Graph](inference-serving-optimization/01-scheduler-budget-spec-decode-cudagraph.md)
+  - `max_num_batched_tokens`, speculative draft slot, `max_num_seqs`, CUDA Graph mode를 joint tuning하는 방법
+
+이 모듈은 특정 모델의 추천 숫자를 저장하는 곳이 아니라 **새 model/GPU/runtime에서도 병목을 재구성할 수 있는 일반 원리**를 저장한다.
+
 ## 작성 원칙
 
 1. architecture, chip, SKU, form factor, system처럼 범위가 다른 용어를 분리한다.
