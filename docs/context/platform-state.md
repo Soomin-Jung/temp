@@ -36,10 +36,12 @@
 ```text
 Client
   -> API Gateway / Ingress
-  -> custom vLLM proxy / API policy layer
-  -> LiteLLM
-  -> vLLM Production Stack / Router / Service
-  -> vLLM engine replicas
+  -> custom vLLM proxy / path-policy layer
+       |-- Chat / Completions -> LiteLLM
+       |-- Messages           -> LiteLLM Anthropic
+       `-- Responses          -> Agentic API <-> PostgreSQL
+                                  -> LMStack Router
+  -> model Service / vLLM engine replicas
   -> GPU / KV transfer / cache layer
 ```
 
@@ -183,7 +185,8 @@ vLLM 0.28.0 migration에서는 Mooncake `0.3.12.post1` 계열을 검증 대상�
 
 ## 목표
 
-- `mooncake-transfer-engine == 0.3.10.post2`
+- 현재 vLLM 0.28 validation pin: Mooncake `0.3.12.post1` 계열
+- `0.3.10.post2`는 최초 source-build/air-gap 구현의 historical baseline
 - `nvlink`
 - 특히 same-node용 `nvlink_intra`
 
