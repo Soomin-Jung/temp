@@ -279,6 +279,9 @@ max_num_seqs = min(default_max_num_seqs, max_num_batched_tokens)
 
 # 5. SD 방법론별 additional drafting slot
 
+> 각 proposer가 **왜** serial/parallel/multi-head/block 구조를 사용하는지와 실제 선택 기준은 [vLLM SD Method Taxonomy & Selection Guide](2026-09-03-vllm-sd-method-taxonomy-and-selection-guide.md)를 먼저 참고한다.
+
+
 기호:
 
 ```text

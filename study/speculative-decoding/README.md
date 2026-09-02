@@ -9,7 +9,14 @@ Speculative decoding을 **알고리즘 → vLLM runtime → scheduler/MBT → �
    - MTP, EAGLE, DFlash, DSpark, model-free 방식의 차이
    - acceptance와 latency/throughput trade-off
 
-2. [vLLM Speculative Decoding Token Budget Deep Dive](2026-09-03-vllm-speculative-decoding-token-budget-deep-dive.md)
+2. [vLLM SD Method Taxonomy & Selection Guide](2026-09-03-vllm-sd-method-taxonomy-and-selection-guide.md)
+   - proposer / candidate topology / verifier / runtime adaptation의 4축 taxonomy
+   - Draft Model, PARD, TLI, EAGLE, EAGLE-3, Medusa, MLP, MTP, DFlash, DSpark, N-gram, Suffix
+   - Dynamic SD와 Adaptive Verification을 proposer와 분리
+   - v0.28 actual proposer dispatch와 support maturity
+   - workload / concurrency / checkpoint 조건별 selection decision tree
+
+3. [vLLM Speculative Decoding Token Budget Deep Dive](2026-09-03-vllm-speculative-decoding-token-budget-deep-dive.md)
    - `max_num_batched_tokens`, `max_num_scheduled_tokens`, `max_num_seqs`
    - method별 `max_num_new_slots_for_drafting`
    - v0.26/v0.27 static worst-case reservation
@@ -18,7 +25,7 @@ Speculative decoding을 **알고리즘 → vLLM runtime → scheduler/MBT → �
    - DeepSeek-V4-Flash-0731 + DSpark K=7 + MBT 4K 실패 계산
    - chunked prefill, CUDA Graph, KV lookahead와의 경계
 
-3. [Scheduler Budget, Speculative Decoding & CUDA Graph](../inference-serving-optimization/01-scheduler-budget-spec-decode-cudagraph.md)
+4. [Scheduler Budget, Speculative Decoding & CUDA Graph](../inference-serving-optimization/01-scheduler-budget-spec-decode-cudagraph.md)
    - SD를 더 넓은 inference-serving optimization 문맥에서 해석
    - MBT/K/graph mode joint tuning
    - P/D role별 실험 축과 관측 지표

@@ -79,6 +79,7 @@
 
 - [Speculative Decoding Study 인덱스](study/speculative-decoding/README.md)
   - [전통 SD, MTP, DFlash, DSpark의 구조적 차이](study/speculative-decoding/2026-08-18-speculative-decoding-mtp-dspark.md)
+  - [vLLM SD Method Taxonomy & Selection Guide](study/speculative-decoding/2026-09-03-vllm-sd-method-taxonomy-and-selection-guide.md)
   - [vLLM SD Token Budget Deep Dive — MBT, scheduled tokens, method별 draft slots](study/speculative-decoding/2026-09-03-vllm-speculative-decoding-token-budget-deep-dive.md)
 - [Inference Serving Optimization Mental Model](study/inference-serving-optimization/README.md)
 - [Scheduler Budget, Speculative Decoding & CUDA Graph](study/inference-serving-optimization/01-scheduler-budget-spec-decode-cudagraph.md)
