@@ -64,6 +64,22 @@
 
 GPU 자체는 0→8, multi-GPU와 cluster 통신은 9→13 순서로 읽는다. 운영 이슈를 진단할 때는 메트릭(6) → 병목 진단(7) → NCCL 관측(13) → IB/RoCE(12) → RDMA/GDRDMA(11) → local topology(10) 순서로 역추적한다.
 
+### LLM Serving Optimization
+
+- [LLM Serving Optimization — 운영자가 보는 전체 지도](llm-serving-optimization/README.md)
+  - [00 — Mental Model: 병목과 자원 교환](llm-serving-optimization/00-mental-model.md)
+  - [01 — Scheduler, MBT, max-num-seqs](llm-serving-optimization/01-scheduler-token-budget.md)
+  - [02 — KV Cache, recurrent state와 capacity](llm-serving-optimization/02-cache-state-capacity.md)
+  - [03 — CUDA Graph, compilation, capture size](llm-serving-optimization/03-cuda-graphs-and-compilation.md)
+  - [04 — Prefill과 Decode 최적화](llm-serving-optimization/04-prefill-decode-optimization.md)
+  - [05 — Parallelism과 Fabric](llm-serving-optimization/05-parallelism-and-fabric.md)
+  - [06 — 모델 아키텍처별 운영 Playbook](llm-serving-optimization/06-model-architecture-playbook.md)
+  - [07 — Observability와 Experiment Design](llm-serving-optimization/07-observability-and-experiment-design.md)
+  - [08 — Production Tuning Runbook](llm-serving-optimization/08-production-tuning-runbook.md)
+  - [99 — Glossary, Source Map, Reading Order](llm-serving-optimization/99-glossary-and-references.md)
+
+이 모듈은 특정 모델의 권장 옵션보다 `workload → phase → resource → architecture → parameter` 순서의 판단법을 중심으로 한다. MBT, max-num-seqs, KV/state, CUDA Graph, speculative decoding, parallelism, NVLink를 하나의 자원 교환 시스템으로 연결하고, 실제 benchmark와 장애에서 binding constraint를 찾는 방법을 정리한다.
+
 ### Speculative Decoding
 
 - [Speculative Decoding Study 인덱스](speculative-decoding/README.md)
