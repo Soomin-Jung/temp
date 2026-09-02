@@ -68,6 +68,7 @@ GPU 자체는 0→8, multi-GPU와 cluster 통신은 9→13 순서로 읽는다. 
 
 - [Speculative Decoding Study 인덱스](speculative-decoding/README.md)
   - [전통 SD, MTP, DFlash, DSpark의 구조적 차이](speculative-decoding/2026-08-18-speculative-decoding-mtp-dspark.md)
+  - [vLLM SD Method Taxonomy & Selection Guide](speculative-decoding/2026-09-03-vllm-sd-method-taxonomy-and-selection-guide.md)
   - [vLLM SD Token Budget Deep Dive — MBT, scheduled tokens, method별 draft slots](speculative-decoding/2026-09-03-vllm-speculative-decoding-token-budget-deep-dive.md)
 
 ### Inference Serving Optimization
