@@ -12,6 +12,7 @@ vLLM Production Stack의 운영 기준선, version migration, 배포 topology, P
 | Historical Mooncake build | [0.3.10-post2 최초 폐쇄망 Source Build](pd-disaggregation/history/2026-08-24-mooncake-0.3.10-post2-offline-build.md) | source-build skeleton 기록; current 0.28 path는 migration 문서 우선 |
 | API routing | [Chat / Messages / Responses Routing Contract](api-routing-contract.md) | 구현 기준 |
 | Stateful Serving | [Responses / Codex State Architecture](stateful-conversation-architecture.md) | Agentic API candidate validation |
+| Source review | [Agentic API + LMStack Router + P/D Cell](reviews/2026-09-02-agentic-lmrouter-pd-routing.md) | point-in-time source audit / implementation gate |
 | 배포 검증 | [Model Serving Validation Contract](model-serving-validation.md) | 구현 요구사항·golden test |
 
 ## 구조 원칙

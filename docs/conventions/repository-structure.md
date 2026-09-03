@@ -46,8 +46,14 @@
 - benchmark snapshot
 - historical plan
 - 특정 version에서 발생한 compatibility failure
+- 특정 source revision을 기준으로 한 architecture / compatibility review
 
-이런 문서는 `history/`, `records/`, `notes/` 아래에 둔다.
+이런 문서는 `history/`, `records/`, `notes/`, `reviews/` 아래에 둔다.
+
+- `history/`: superseded plan과 과거 의사결정
+- `records/`: incident, runtime validation, benchmark 같은 운영 evidence
+- `notes/`: 모델/checkpoint별 시점성 메모
+- `reviews/`: 특정 source/tag/commit을 고정해 검증한 architecture·compatibility audit. current contract의 source of truth가 아니라 canonical 문서를 뒷받침하는 evidence
 
 ## 3. 날짜를 파일명에 넣는 기준
 

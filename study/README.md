@@ -88,6 +88,18 @@ GPU 자체는 0→8, multi-GPU와 cluster 통신은 9→13 순서로 읽는다. 
   - [vLLM SD Token Budget Deep Dive — MBT, scheduled tokens, method별 draft slots](speculative-decoding/02-vllm-token-budget-and-slot-topology.md)
 
 
+### HTTP Streaming / Kubernetes Routing
+
+- [HTTP Streaming and Kubernetes Routing 학습 지도](networking/README.md)
+  - [Protocol stack과 경계](networking/00-protocol-stack-and-boundaries.md)
+  - [HTTP request/response와 streaming](networking/01-http-request-response-and-streaming.md)
+  - [SSE deep dive](networking/02-sse-deep-dive.md)
+  - [WebSocket deep dive](networking/03-websocket-deep-dive.md)
+  - [Kubernetes Service와 EndpointSlice](networking/10-kubernetes-service-endpoints.md)
+  - [L4/L7과 LLM serving routing](networking/11-l4-l7-llm-serving-routing.md)
+  - [관측·실험·장애 주입](networking/12-observability-and-labs.md)
+  - [용어집과 공식 자료](networking/99-glossary-and-references.md)
+
 ## 작성 원칙
 
 1. architecture, chip, SKU, form factor, system처럼 범위가 다른 용어를 분리한다.
