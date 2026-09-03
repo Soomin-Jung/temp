@@ -86,6 +86,7 @@ Observability는 Prometheus / Grafana / Loki / Alloy / DCGM 계열을 사용하�
 - [Stateful Conversation Architecture](../../vllm-stack/stateful-conversation-architecture.md)
 - [vLLM 0.28.0 Migration & KV Connector Compatibility](../../vllm-stack/migrations/vllm-0.28.md)
 - [API Routing Contract](../../vllm-stack/api-routing-contract.md)
+- [Agentic / LMStack Router / P/D Source Review](../../vllm-stack/reviews/2026-09-02-agentic-lmrouter-pd-routing.md)
 
 ---
 
@@ -395,6 +396,7 @@ Durable Conversation Store
 - Codex의 Responses wire protocol 사용과 durable server-side state 요구는 분리한다. HTTP `store=false` + full-history fallback은 가능하지만 WebSocket incremental continuation과 일반 `previous_response_id` failover에는 state owner가 필요하다.
 - vLLM 0.28.0의 opt-in Responses store는 replica-local memory dictionary이고 eviction이 없어 production durability로 인정하지 않는다.
 - vLLM Agentic API는 state facade, PostgreSQL, Responses SSE/WebSocket, tool execution을 묶는 POC 우선 후보로 본다. tenant/persisted-state authorization, retention, upgrade/HA hardening을 통과하기 전에는 production standard로 확정하지 않는다.
+- Responses downstream의 현재 candidate는 LMStack Router 0.1.9 normal forwarding을 thin multi-model hop으로 사용하고, P/D Cell은 별도로 pin한 Responses-aware cell router를 검증하는 구조다. source-level 지원과 production artifact 검증은 분리하며 image digest, SSE/error/cancellation, KV handoff E2E를 gate로 둔다.
 - LiteLLM의 Responses endpoint와 deployment affinity는 routing capability이며 durable state가 아니다. Agentic API downstream에 유지하려면 typed item/event/tool fidelity golden test가 필요하다.
 - OpenAI Responses / Anthropic 호환은 response identity, reasoning item, tool call/result, streaming terminal state, retry/idempotency까지 구조화해 보존해야 한다.
 - MOC는 conversation primary store가 아니라 rollout/drain/health policy와 integration할 수 있는 control plane이다.
@@ -409,6 +411,7 @@ Root:
 - [Attention](../../study/attention/README.md)
 - [GPU Architecture](../../study/gpu-architecture/README.md)
 - [Git & GitHub](../../study/git-github/README.md)
+- [HTTP Streaming / Kubernetes Routing](../../study/networking/README.md)
 - [Speculative Decoding](../../study/speculative-decoding/00-foundations-and-method-lineage.md)
 - [LLM Serving Optimization](../../study/llm-serving-optimization/README.md)
 - [Scheduler / Token Budget](../../study/llm-serving-optimization/01-scheduler-token-budget.md)

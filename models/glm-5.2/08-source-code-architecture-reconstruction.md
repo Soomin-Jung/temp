@@ -314,7 +314,7 @@ I_{q,k}=\sum_{h=1}^{32}w_{q,h}S_{h,q,k}
 ### Causal mask + top-k
 
 ```math
-P_q=\operatorname{TopK}_{2048}(I_q)
+P_q=\mathrm{TopK}_{2048}(I_q)
 ```
 
 output dtype는 int32 position index다.

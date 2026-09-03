@@ -12,6 +12,7 @@
 5. [vLLM Agentic API](https://github.com/vllm-project/agentic-api)는 기존에 정의한 `Conversation State Facade + Durable Store`를 구현하는 가장 직접적인 후보다. 그러나 tenant/persisted-state authorization, retention, 운영 hardening이 완료되기 전에는 shared production 표준으로 확정하지 않는다.
 6. 권고 배치는 **model별 sidecar가 아니라 inference routing plane 앞의 model-agnostic state/tool orchestration tier**다. shared session에는 PostgreSQL을 사용하며, multi-model backend selection은 하나의 logical `LLM_API_BASE` 뒤 LMStack Router가 담당한다.
 7. 현재 API lane의 구체적인 routing contract는 [API Routing Contract](api-routing-contract.md)를 따른다. Chat/Completions와 Messages는 기존 LiteLLM compatibility lane, Responses는 Agentic API → LMStack Router lane으로 분리한다.
+8. LMStack Router 0.1.9와 P/D Cell의 source-level 조건 및 Kubernetes Service가 exact replica routing에 미치는 영향은 [Agentic API + LMStack Router + P/D Cell Routing Review](reviews/2026-09-02-agentic-lmrouter-pd-routing.md)에서 검증한다.
 
 ## 질문별 답
 
@@ -311,10 +312,13 @@ HTTP/SSE만 지원하는 custom facade라면 `supports_websockets = false`로 �
 
 ### Phase 3 — full path
 
-- Codex → Gateway → Agentic API → LiteLLM → vLLM Router → engine
+- Codex → Gateway → Agentic API → LMStack Router normal path → engine
 - direct baseline과 request item, event sequence, tool call ID, terminal status 비교
 - 170K input / 2K output workload에서 client bytes, gateway hydration, vLLM input tokens, TTFT/ITL 분리 측정
 - prefix cache hit/miss와 session affinity를 별도 axis로 측정
+- P/D Cell은 global forwarding과 별개로 cell-local router의 `/v1/responses`, `max_output_tokens`, KV transfer, SSE contract를 검증
+
+LMStack Router 0.1.9 및 P/D/Kubernetes routing의 상세 판정은 [Agentic API + LMStack Router + P/D Cell Routing Review](reviews/2026-09-02-agentic-lmrouter-pd-routing.md)를 따른다.
 
 ### Phase 4 — security/operations
 

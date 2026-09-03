@@ -63,6 +63,7 @@
 - [vLLM 0.28.0 Migration & KV Connector Compatibility](vllm-stack/migrations/vllm-0.28.md)
 - [Chat / Messages / Responses API Routing Contract](vllm-stack/api-routing-contract.md)
 - [Stateful Conversation / Agentic API Architecture](vllm-stack/stateful-conversation-architecture.md)
+- [Agentic API + LMStack Router + P/D Cell Routing Review](vllm-stack/reviews/2026-09-02-agentic-lmrouter-pd-routing.md)
 - [P/D Disaggregation 인덱스](vllm-stack/pd-disaggregation/README.md)
   - [Historical: P/D Disaggregation Master Plan](vllm-stack/pd-disaggregation/history/2026-08-18-master-plan.md)
   - [Node-local P/D Cell 0.1.8 현재 구현 계획](vllm-stack/pd-disaggregation/node-local-pd-cell-vllm-stack-0.1.8.md)
@@ -77,6 +78,10 @@
 
 - [GPU Architecture: 구조에서 LLM Serving 병목까지](study/gpu-architecture/README.md)
 - [Study 인덱스](study/README.md)
+
+### Networking / HTTP / Kubernetes Routing
+
+- [HTTP Streaming and Kubernetes Routing 학습 지도](study/networking/README.md)
 
 ### Speculative Decoding / Serving Optimization
 
