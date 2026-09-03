@@ -47,7 +47,7 @@ Q3 Gate:
 - rollout 검증
 
 상세:
-- [`vllm-stack/2026-08-18-진행계획.md`](../../../vllm-stack/2026-08-18-%EC%A7%84%ED%96%89%EA%B3%84%ED%9A%8D.md)
+- [`vllm-stack/history/2026-08-18-stack-execution-plan.md`](../../../vllm-stack/history/2026-08-18-stack-execution-plan.md)
 - [`vllm-stack/model-serving-validation.md`](../../../vllm-stack/model-serving-validation.md)
 
 ---

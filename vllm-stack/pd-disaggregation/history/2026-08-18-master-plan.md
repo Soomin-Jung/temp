@@ -219,7 +219,7 @@ modelSpec
 
 상세 현재 기준:
 
-- [Node-local P/D Cell 구현 계획](2026-08-18-node-local-pd-cell-0.1.8-plan.md)
+- [Node-local P/D Cell 구현 계획](../node-local-pd-cell-vllm-stack-0.1.8.md)
 - [Mooncake 0.3.10-post2 폐쇄망 Source Build 계획](2026-08-24-mooncake-0.3.10-post2-offline-build.md)
 
 ## 원칙
@@ -235,6 +235,6 @@ modelSpec
 
 이 문서의 0.1.8/0.1.12 매핑은 당시 설계 경계를 설명하는 historical semantic map이다. 현재 migration 판단과 connector version은 다음 문서를 우선한다.
 
-- [vLLM 0.28.0 Migration & KV Connector Compatibility](../2026-09-03-vllm-0.28-migration.md)
-- [P/D Disaggregation Index](README.md)
-- [Inference Serving Optimization](../../study/inference-serving-optimization/README.md)
+- [vLLM 0.28.0 Migration & KV Connector Compatibility](../../migrations/vllm-0.28.md)
+- [P/D Disaggregation Index](../README.md)
+- [Inference Serving Optimization](../../../study/llm-serving-optimization/README.md)

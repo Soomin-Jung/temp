@@ -171,7 +171,7 @@ GLM-5.2는 이 workload에서 decode 비용도 줄이기 위해 MTP를 강화하
 | 7 | [07-chip-design-eda-agent-relevance.md](07-chip-design-eda-agent-relevance.md) | 왜 2026 EDA/RTL agent 연구에서 GLM-5.2가 자주 backend로 등장하는가? |
 | 8 | [08-source-code-architecture-reconstruction.md](08-source-code-architecture-reconstruction.md) | config와 Transformers 코드로 forward path를 어떻게 재구성하는가? |
 | 9 | [09-systems-and-serving.md](09-systems-and-serving.md) | NVIDIA/vLLM/SGLang에서 1M context, MoE, DSA, MTP를 어떻게 서빙해야 하는가? |
-| 90 | [90-historical-deployment-context.md](90-historical-deployment-context.md) | 기존 H200 multi-node 배포 검토 기록 |
+| 90 | [90-historical-deployment-context.md](notes/historical-deployment-context.md) | 기존 H200 multi-node 배포 검토 기록 |
 | 99 | [99-papers-code-and-glossary.md](99-papers-code-and-glossary.md) | 원문·코드·용어 색인 |
 
 ---

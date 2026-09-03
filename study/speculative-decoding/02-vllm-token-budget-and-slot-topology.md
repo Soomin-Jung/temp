@@ -279,7 +279,7 @@ max_num_seqs = min(default_max_num_seqs, max_num_batched_tokens)
 
 # 5. SD 방법론별 additional drafting slot
 
-> 각 proposer가 **왜** serial/parallel/multi-head/block 구조를 사용하는지와 실제 선택 기준은 [vLLM SD Method Taxonomy & Selection Guide](2026-09-03-vllm-sd-method-taxonomy-and-selection-guide.md)를 먼저 참고한다.
+> 각 proposer가 **왜** serial/parallel/multi-head/block 구조를 사용하는지와 실제 선택 기준은 [vLLM SD Method Taxonomy & Selection Guide](01-vllm-method-taxonomy-and-selection.md)를 먼저 참고한다.
 
 
 기호:
@@ -1169,7 +1169,7 @@ MBT가 통과해도 graph shape/capture/backend 제약으로 실패할 수 있�
 
 을 별도로 확인해야 한다.
 
-보다 넓은 serving tuning 문맥은 [Scheduler Budget, Speculative Decoding & CUDA Graph](../inference-serving-optimization/01-scheduler-budget-spec-decode-cudagraph.md)를 참고한다.
+보다 넓은 serving tuning 문맥은 [Scheduler Budget, Speculative Decoding & CUDA Graph](../llm-serving-optimization/01-scheduler-token-budget.md)를 참고한다.
 
 ---
 
@@ -1590,7 +1590,7 @@ v0.28은 두 영역을 별도 runtime budget으로 관리하면서 실제 reques
 
 # 28. 관련 문서
 
-- [Speculative Decoding: 전통 SD, MTP, DFlash, DSpark의 구조적 차이](2026-08-18-speculative-decoding-mtp-dspark.md)
-- [Scheduler Budget, Speculative Decoding & CUDA Graph](../inference-serving-optimization/01-scheduler-budget-spec-decode-cudagraph.md)
+- [Speculative Decoding: 전통 SD, MTP, DFlash, DSpark의 구조적 차이](00-foundations-and-method-lineage.md)
+- [Scheduler Budget, Speculative Decoding & CUDA Graph](../llm-serving-optimization/01-scheduler-token-budget.md)
 - [DeepSeek-V4: MTP, DSpark & Speculative Decoding](../../models/deepseek-v4/05-mtp-dspark-and-speculative-decoding.md)
-- [DeepSeek-V4 DSpark checkpoint와 vLLM 구현](../../models/deepseek-v4/2026-08-18-dspark-checkpoint-and-vllm-implementation.md)
+- [DeepSeek-V4 DSpark checkpoint와 vLLM 구현](../../models/deepseek-v4/notes/2026-08-18-dspark-checkpoint-and-vllm-implementation.md)

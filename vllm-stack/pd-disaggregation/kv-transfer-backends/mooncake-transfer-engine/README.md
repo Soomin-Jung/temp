@@ -452,4 +452,4 @@ vllm/distributed/kv_transfer/kv_connector/v1/mooncake/
 - transport selection log
 - CUDA/PyTorch/glibc ABI
 
-현재 migration 기준은 [vLLM 0.28.0 Migration & KV Connector Compatibility](../../../2026-09-03-vllm-0.28-migration.md)를 우선한다.
+현재 migration 기준은 [vLLM 0.28.0 Migration & KV Connector Compatibility](../../../migrations/vllm-0.28.md)를 우선한다.

@@ -80,8 +80,8 @@ flowchart TB
 
 아래 문서는 architecture deep-dive와 별개로 실제 runtime 장애/호환성 기록으로 유지한다.
 
-- [DSpark checkpoint와 vLLM 구현 차이](2026-08-18-dspark-checkpoint-and-vllm-implementation.md)
-- [vLLM 0.27.x DeepGEMM SM90 CUDA IMA 분석](2026-08-18-vllm-0.27-deepgemm-sm90-cuda-ima.md)
+- [DSpark checkpoint와 vLLM 구현 차이](notes/2026-08-18-dspark-checkpoint-and-vllm-implementation.md)
+- [vLLM 0.27.x DeepGEMM SM90 CUDA IMA 분석](notes/2026-08-18-vllm-0.27-deepgemm-sm90-cuda-ima.md)
 
 배포 판단에서는 항상 아래 층을 분리한다.
 

@@ -231,7 +231,7 @@ cache layout failure?
 
 기존 H100 SM90 DeepGEMM IMA 사례는:
 
-- [2026-08-18-vllm-0.27-deepgemm-sm90-cuda-ima.md](2026-08-18-vllm-0.27-deepgemm-sm90-cuda-ima.md)
+- [2026-08-18-vllm-0.27-deepgemm-sm90-cuda-ima.md](notes/2026-08-18-vllm-0.27-deepgemm-sm90-cuda-ima.md)
 
 참고.
 

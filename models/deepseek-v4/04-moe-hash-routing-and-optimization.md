@@ -315,7 +315,7 @@ CUDA architecture compatibility
 
 특히 H100에서 framework version 변경 시 DeepGEMM/SM90 kernel path가 바뀌어 CUDA IMA가 발생했던 실제 기록은 이 디렉터리의 runtime 문서를 같이 본다.
 
-- [vLLM 0.27.x DeepGEMM SM90 CUDA IMA](2026-08-18-vllm-0.27-deepgemm-sm90-cuda-ima.md)
+- [vLLM 0.27.x DeepGEMM SM90 CUDA IMA](notes/2026-08-18-vllm-0.27-deepgemm-sm90-cuda-ima.md)
 
 ---
 

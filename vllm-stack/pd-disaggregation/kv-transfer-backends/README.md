@@ -38,7 +38,7 @@ v0.28.0 default Docker image는 CUDA 13.0이지만 CUDA 12.9 image도 공식 제
 
 Mooncake는 lower bound이므로 reproducible deployment에서 exact source/artifact pin이 필요하다. 특히 `0.3.12.post1` official x86 wheel release build에도 `USE_INTRA_NVLINK=ON`이 없으므로 Network B의 same-node `nvlink_intra`는 계속 source-build capability로 관리한다.
 
-상세 migration 판단은 [vLLM 0.28.0 Migration & KV Connector Compatibility](../../2026-09-03-vllm-0.28-migration.md)를 따른다.
+상세 migration 판단은 [vLLM 0.28.0 Migration & KV Connector Compatibility](../../migrations/vllm-0.28.md)를 따른다.
 
 ---
 

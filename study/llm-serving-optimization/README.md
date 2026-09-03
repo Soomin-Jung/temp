@@ -52,7 +52,7 @@ CUDA Graph를 촘촘히 잡았는데 graph memory가 KV cache를 밀어냄
 - [LLM serving bottleneck diagnosis](../gpu-architecture/07-llm-serving-bottleneck-diagnosis.md)
 - [NVLink/NVSwitch](../gpu-architecture/10-pcie-nvlink-nvswitch.md)
 - [NCCL observability labs](../gpu-architecture/13-nccl-collectives-observability-labs.md)
-- [Speculative decoding](../speculative-decoding/2026-08-18-speculative-decoding-mtp-dspark.md)
+- [Speculative decoding](../speculative-decoding/00-foundations-and-method-lineage.md)
 
 여기서는 위 개념을 실제 serving parameter와 병목 판단으로 연결한다.
 

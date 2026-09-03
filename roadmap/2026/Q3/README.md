@@ -131,15 +131,15 @@ MOC는 전체 과제의 중심이 아니라 여러 플랫폼 capability를 운�
 
 ## 상세 문서 연결
 
-- [vLLM Stack 진행 계획](../../../vllm-stack/2026-08-18-%EC%A7%84%ED%96%89%EA%B3%84%ED%9A%8D.md)
-- [P/D Disaggregation Master Plan](../../../vllm-stack/pd-disaggregation/2026-08-18-vllm-stack-pd-disaggregation-master-plan.md)
-- [Node-local P/D Cell 상세 계획](../../../vllm-stack/pd-disaggregation/2026-08-18-node-local-pd-cell-0.1.8-plan.md)
-- [Mooncake 0.3.10-post2 폐쇄망 Source Build](../../../vllm-stack/pd-disaggregation/2026-08-24-mooncake-0.3.10-post2-offline-build.md)
+- [vLLM Stack 진행 계획](../../../vllm-stack/history/2026-08-18-stack-execution-plan.md)
+- [P/D Disaggregation Master Plan](../../../vllm-stack/pd-disaggregation/history/2026-08-18-master-plan.md)
+- [Node-local P/D Cell 상세 계획](../../../vllm-stack/pd-disaggregation/node-local-pd-cell-vllm-stack-0.1.8.md)
+- [Mooncake 0.3.10-post2 폐쇄망 Source Build](../../../vllm-stack/pd-disaggregation/history/2026-08-24-mooncake-0.3.10-post2-offline-build.md)
 - [Model Serving Validation Contract](../../../vllm-stack/model-serving-validation.md)
-- [vLLM 0.28.0 Migration](../../../vllm-stack/2026-09-03-vllm-0.28-migration.md)
+- [vLLM 0.28.0 Migration](../../../vllm-stack/migrations/vllm-0.28.md)
 - [API Routing Contract](../../../vllm-stack/api-routing-contract.md)
 - [Stateful Conversation / Agentic API](../../../vllm-stack/stateful-conversation-architecture.md)
-- [Inference Serving Optimization](../../../study/inference-serving-optimization/README.md)
+- [Inference Serving Optimization](../../../study/llm-serving-optimization/README.md)
 - [MOC Capability Backlog](../../../moc/README.md)
 - [DeepSeek-V4 모델/장애 조사](../../../models/deepseek-v4/)
 - [Kimi-K3 모델 중심 학습 경로](../../../models/kimi-k3/)
