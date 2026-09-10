@@ -4,6 +4,7 @@
 
 - `study/` : 모델을 가로지르는 개념, mental model, 원리, 실습
 - `models/` : 모델 family별 architecture, training, serving 특성 및 시점성 notes
+- `vllm/` : upstream vLLM release/tag/PR의 source-level audit와 cross-version migration evidence
 - `vllm-stack/` : serving platform 구현 계약, migration, P/D, runtime integration과 records
 - `roadmap/` : 연도/분기별 목표, 의존성, 종료 기준과 program-level status
 - `docs/context/` : 현재 플랫폼 상태와 historical context
@@ -55,6 +56,18 @@
   - [다른 주요 LLM의 Attention 설계 비교](study/attention/13-other-major-models.md)
   - [Serving Engineer 관점 — Cache, State, Kernel, Prefix Cache, 분산 추론](study/attention/90-serving-engineer-view.md)
   - [논문 읽기 순서, 수식 Cheat Sheet, 용어집](study/attention/99-papers-and-glossary.md)
+
+### vLLM Upstream Version / Source Audits
+
+- [vLLM upstream audit 인덱스](vllm/README.md)
+- [v0.24.0 ~ v0.29.0 version ledger](vllm/versions/README.md)
+- [v0.26.0 -> v0.29.0 E2E migration program](vllm/migrations/v0.26.0-to-v0.29.0.md)
+- [Deployment option migration matrix](vllm/migrations/deployment-option-matrix.md)
+- [Model Runner V1 -> V2 deep dive](vllm/migrations/model-runner-v1-v2.md)
+- [Frontend / renderer / parser compatibility](vllm/migrations/frontend-parser-compatibility.md)
+- [Hybrid Mamba / GDN state migration](vllm/migrations/hybrid-mamba-gdn.md)
+- [KV Transfer / Mooncake / NIXL migration](vllm/migrations/kv-transfer-mooncake.md)
+- [Qwen / Kimi / DeepSeek / GLM model-family compatibility lanes](vllm/migrations/model-family-compatibility.md)
 
 ### vLLM Production Stack / P-D Disaggregation
 
