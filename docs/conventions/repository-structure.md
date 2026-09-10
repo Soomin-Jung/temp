@@ -1,6 +1,6 @@
 # Repository Structure and Document Lifecycle
 
-업데이트: 2026-09-03 KST
+업데이트: 2026-09-10 KST
 
 이 문서는 `temp` 저장소의 정보 구조와 문서 수명주기를 정의한다. 이 저장소는 더 이상 단순 작업 메모가 아니라 LLM serving engineering 지식을 축적하는 knowledge base로 취급한다.
 
@@ -10,7 +10,8 @@
 |---|---|---|
 | `study/` | 모델을 가로지르는 개념, mental model, 원리, 실습 | 특정 checkpoint만의 운영 기록 |
 | `models/` | 모델 family별 architecture, training, serving 특성 | 범용 vLLM 운영 원리의 반복 설명 |
-| `vllm-stack/` | serving platform의 구현 계약, migration, runtime integration | 순수 모델 이론 |
+| `vllm/` | upstream vLLM release/tag의 source-level audit와 cross-version migration evidence | 실제 플랫폼 배포 계약의 중복, 순수 모델 이론 |
+| `vllm-stack/` | serving platform의 구현 계약, migration, runtime integration | 순수 모델 이론, upstream release 사실 원장의 반복 |
 | `roadmap/` | 분기 목표, 상태, 의존성, 종료 기준 | 상세 기술 deep dive |
 | `docs/context/` | 현재 플랫폼 상태와 과거 의사결정 맥락 | 개별 기술 튜토리얼 |
 | `docs/conventions/` | 저장소 작성·검증 규칙 | 운영 사고 기록 |
@@ -19,6 +20,22 @@
 | `moc/` | MOC control-plane 설계와 capability | data-path 구현 세부 |
 | `weekly-report/` | 주간 생태계 변화 추적 | 장기 canonical 설명 |
 | `tools/` | 저장소 검증/자동화 코드 | 문서 본문 |
+
+### `vllm/`와 `vllm-stack/`의 경계
+
+두 영역은 이름이 비슷하지만 source of truth가 다르다.
+
+```text
+vllm/
+  upstream release/tag/PR/source를 기준으로
+  "vLLM 자체가 무엇을 어떻게 바꿨는가"를 기록
+
+vllm-stack/
+  upstream 사실을 실제 platform에 적용해
+  "이 프로젝트가 무엇을 채택하고 어떻게 배포하는가"를 기록
+```
+
+예를 들어 `vllm/versions/v0.29.0.md`는 MRV2 default, parser, scheduler, KV connector 같은 upstream 사실을 소유하고, 실제 production chart에서 어떤 option을 고정할지는 `vllm-stack/`의 runtime/deployment contract가 최종 소유한다.
 
 ## 2. Canonical 문서와 기록성 문서를 분리한다
 
@@ -55,6 +72,8 @@
 - `notes/`: 모델/checkpoint별 시점성 메모
 - `reviews/`: 특정 source/tag/commit을 고정해 검증한 architecture·compatibility audit. current contract의 source of truth가 아니라 canonical 문서를 뒷받침하는 evidence
 
+`vllm/versions/`의 version report는 release/tag 자체가 문서 identity이므로 별도 날짜 파일명을 붙이지 않는다. 해당 tag의 사실을 immutable baseline처럼 보존하고, release 이후 발견된 이슈는 `post-tag watchlist`처럼 명시적으로 구분해 원 release의 사실과 섞지 않는다.
+
 ## 3. 날짜를 파일명에 넣는 기준
 
 날짜를 넣는다:
@@ -88,8 +107,11 @@
 
 - `study/`: 일반 원리와 cross-model 비교
 - `models/`: 해당 모델에 원리를 적용한 구체적 shape, config, runtime 의미
-- `vllm-stack/`: 실제 serving runtime/API/connector 계약
+- `vllm/`: upstream vLLM release/tag/PR/source audit와 cross-version migration evidence
+- `vllm-stack/`: 실제 serving runtime/API/connector/deployment 계약
 - `roadmap/`: 현재 추진 여부와 의존성만
+
+예를 들어 Mamba state의 일반 원리는 `study/`, Qwen/Kimi에서의 architecture shape는 `models/`, v0.26→v0.29에서 cache policy가 어떻게 달라졌는지는 `vllm/`, 최종 배포 option과 chart 계약은 `vllm-stack/`이 소유한다.
 
 필요한 배경은 짧게 요약하고 canonical 문서로 링크한다.
 
@@ -100,6 +122,7 @@
 - roadmap은 목표와 program status를 요약한다.
 - 각 영역 README는 navigation과 영역별 결정 경계를 제공한다.
 - incident/history 문서는 현재 상태를 선언하지 않는다.
+- `vllm/`의 upstream audit 결과가 실제 운영 정책으로 채택되면 `vllm-stack/` 또는 `docs/context/platform-state.md`에 승격한다.
 
 동일한 현재 상태를 여러 문서에 복사하면 시간이 지나며 서로 어긋나므로 피한다.
 
@@ -139,7 +162,8 @@
 새 문서를 만들기 전에 확인한다.
 
 - 기존 canonical 문서의 section으로 충분하지 않은가?
-- `study`, `models`, `vllm-stack` 중 누가 이 지식의 owner인가?
+- `study`, `models`, `vllm`, `vllm-stack` 중 누가 이 지식의 owner인가?
+- upstream 사실과 실제 platform 채택 결정을 한 문서에 섞지 않았는가?
 - 이 문서는 6개월 뒤에도 같은 이름이 자연스러운가?
 - 날짜가 정말 identity인가?
 - current state와 historical evidence가 섞이지 않았는가?
