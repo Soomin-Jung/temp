@@ -1,6 +1,6 @@
 # Frontend / Renderer / Parser Compatibility Deep Dive
 
-업데이트: 2026-09-10 KST
+업데이트: 2026-09-29 KST
 
 ## 1. 목적
 
@@ -592,3 +592,47 @@ Engine이 올바른 token을 생성하는 것과 API가 올바른 reasoning/tool
 - v0.29 reasoning registry: https://github.com/vllm-project/vllm/blob/v0.29.0/vllm/reasoning/__init__.py
 - v0.26 tool registry: https://github.com/vllm-project/vllm/blob/v0.26.0/vllm/tool_parsers/__init__.py
 - v0.29 tool registry: https://github.com/vllm-project/vllm/blob/v0.29.0/vllm/tool_parsers/__init__.py
+
+
+---
+
+## 19. v0.30 frontend/API delta
+
+### Scale-out endpoint exposure
+
+v0.30에서 plain `vllm serve`의 scale-out APIs는 기본 노출되지 않는다.
+
+필요하면:
+
+```text
+--enable-scale-out
+```
+
+을 명시한다.
+
+기존 `VLLM_ENABLE_SCALE_OUT_ENDPOINTS` env 기반 gate는 제거 대상으로 본다.
+
+따라서 E2E smoke test에:
+
+```text
+plain serve -> endpoint absent
+scale-out serve -> expected render/derender/inference endpoints present
+```
+
+를 추가한다.
+
+### Responses
+
+v0.30에는 stateless `/v1/responses/render` path와 Responses validation/error handling 변경이 포함된다.
+
+Platform이 stateful Responses를 별도 Agentic API로 처리하더라도, vLLM direct Responses/render path와 route collision 또는 잘못된 exposure가 없는지 확인한다.
+
+### Parser/runtime
+
+- site-packages parser plugin loading
+- unsupported `reasoning_effort`의 client error 처리
+- reasoning token accounting
+- structured-output validation hardening
+- Anthropic `stop_sequence` delta handling
+
+때문에 raw generated tokens와 protocol response를 계속 분리해서 regression한다.
