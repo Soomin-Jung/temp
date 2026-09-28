@@ -1,10 +1,10 @@
 # KV Transfer / Mooncake / NIXL Migration Deep Dive
 
-업데이트: 2026-09-10 KST
+업데이트: 2026-09-29 KST
 
 ## 1. 목적
 
-vLLM v0.26 -> v0.29 migration에서 P/D disaggregation은 `KVTransferConfig` JSON이 parse되는지만 확인해서는 안 된다.
+vLLM v0.26 -> v0.30 migration에서 P/D disaggregation은 `KVTransferConfig` JSON이 parse되는지만 확인해서는 안 된다.
 
 실제 data path는 최소 다음 세 층으로 나뉜다.
 
@@ -34,7 +34,7 @@ vLLM v0.26 -> v0.29 migration에서 P/D disaggregation은 `KVTransferConfig` JSO
 
 ---
 
-## 2. v0.26 -> v0.29 dependency boundary
+## 2. v0.26 -> v0.30 dependency boundary
 
 v0.26 `requirements/kv_connectors.txt`:
 
@@ -52,11 +52,20 @@ nixl == 1.3.2
 mooncake-transfer-engine >= 0.3.12
 ```
 
-그리고 CUDA 13 image에서는 Mooncake의 CUDA13 variant로 swap한다.
+v0.30:
+
+```text
+lmcache >= 0.3.9
+nixl == 1.4.1
+mooncake-transfer-engine >= 0.3.12
+```
+
+v0.30 공식 기본 artifact는 CUDA 13.0이며, CUDA 13 image에서는 동일 Mooncake release의 `mooncake-transfer-engine-cuda13` variant로 swap한다. CUDA 12.9 artifact도 별도로 제공한다.
 
 Sources:
 - https://github.com/vllm-project/vllm/blob/v0.26.0/requirements/kv_connectors.txt
 - https://github.com/vllm-project/vllm/blob/v0.29.0/requirements/kv_connectors.txt
+- https://github.com/vllm-project/vllm/blob/v0.30.0/requirements/kv_connectors.txt
 
 ### 핵심
 
@@ -463,7 +472,7 @@ A가 동일 기능/correctness/performance를 만족하면 custom build의 주�
 
 ## 13. Official vs custom A/B acceptance
 
-동일 vLLM 0.29 image/base에서 Mooncake wheel만 바꾼다.
+동일 vLLM 0.30-cu129 image/base에서 Mooncake wheel만 바꾼다.
 
 ### 기능
 
@@ -856,10 +865,10 @@ compiler/CMake/CUDA version
 ## 24. 권장 migration 순서
 
 ```text
-1. vLLM 0.29 + P/D off
-2. NIXL 1.3.2 same-node P/D
-3. Mooncake 0.3.13 official + hostPID/shm existing policy
-4. Mooncake 0.3.13 custom-minimal A/B if needed
+1. vLLM 0.30-cu129 + P/D off
+2. NIXL 1.4.1 same-node P/D
+3. Mooncake exact approved version (>=0.3.12) + hostPID/shm existing policy
+4. official vs custom-minimal A/B if needed
 5. hybrid Qwen/Kimi
 6. MTP/DSpark
 7. DCP/PCP
@@ -886,7 +895,7 @@ Kubernetes IPC policy
 
 ### NIXL
 
-0.29 candidate에서는 `1.3.2`를 exact pin하고 push/pull compatibility identity를 route metadata에 포함한다.
+0.30 candidate에서는 `1.4.1`을 exact pin하고 push/pull compatibility identity와 transfer-region semantics를 route/validation metadata에 포함한다.
 
 ### Mooncake
 
@@ -906,6 +915,7 @@ hostPID/shared-memory policy는 connector version 변경과 분리해서 검증�
 
 - v0.26 connector requirements: https://github.com/vllm-project/vllm/blob/v0.26.0/requirements/kv_connectors.txt
 - v0.29 connector requirements: https://github.com/vllm-project/vllm/blob/v0.29.0/requirements/kv_connectors.txt
+- v0.30 connector requirements: https://github.com/vllm-project/vllm/blob/v0.30.0/requirements/kv_connectors.txt
 - KVTransferConfig v0.26: https://github.com/vllm-project/vllm/blob/v0.26.0/vllm/config/kv_transfer.py
 - KVTransferConfig v0.29: https://github.com/vllm-project/vllm/blob/v0.29.0/vllm/config/kv_transfer.py
 - vLLM official Mooncake wheel migration PR #51067: https://github.com/vllm-project/vllm/pull/51067
@@ -917,3 +927,65 @@ hostPID/shared-memory policy는 connector version 변경과 분리해서 검증�
 - Mooncake 0.3.12.post1 release workflow: https://github.com/kvcache-ai/Mooncake/blob/v0.3.12.post1/.github/workflows/release.yaml
 - Mooncake 0.3.13 build profiles: https://github.com/kvcache-ai/Mooncake/blob/v0.3.13/.github/workflows/_build-wheel.yaml
 - existing air-gap build guide: `../../vllm-stack/pd-disaggregation/kv-transfer-backends/mooncake-transfer-engine/source-build-airgap.md`
+
+
+---
+
+## 26. v0.30 operational delta
+
+v0.30에서는 connector schema 자체보다 **dependency/runtime boundary와 parallelism combination**이 더 중요해졌다.
+
+### NIXL
+
+```text
+0.26: 1.3.1
+0.29: 1.3.2
+0.30: 1.4.1
+```
+
+Producer/consumer image가 서로 다른 NIXL minor를 섞지 않도록 한다.
+
+### Mooncake
+
+vLLM source requirement는 여전히 `>=0.3.12`이지만 production에서는 exact pin한다.
+
+```text
+CUDA 12.x/12.9 image
+ -> mooncake-transfer-engine
+
+CUDA 13.x image
+ -> mooncake-transfer-engine-cuda13
+```
+
+package name까지 release bundle identity에 포함한다.
+
+### Hybrid P/D
+
+v0.30에는 symmetric DCP disaggregation for hybrid Mamba, partial Mamba tail handling, heterogeneous TP/PP sharing 등 조합이 추가됐다.
+
+따라서 새 기능을 한 번에 켜지 않고:
+
+```text
+plain P/D
+ -> hybrid state
+ -> DCP
+ -> PCP
+ -> speculative decode
+```
+
+순으로 추가한다.
+
+### Failure cleanup
+
+정상-path benchmark와 별도로:
+
+```text
+frontend failure
+remote KV unavailable
+decode wait
+abort
+client disconnect
+normal request overlap
+```
+
+를 넣고 `WAITING_FOR_REMOTE_KVS`, deferred request, worker task occupancy가 timeout 이후 정상 회수되는지 검증한다.
