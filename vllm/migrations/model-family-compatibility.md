@@ -1,6 +1,6 @@
 # Frontier Model Family Compatibility Lanes
 
-업데이트: 2026-09-10 KST
+업데이트: 2026-09-29 KST
 
 ## 1. 목적
 
@@ -17,10 +17,11 @@ vLLM version migration은 generic engine benchmark 하나로 인증할 수 없�
 
 따라서 공통 engine certification 위에 **model-family별 별도 compatibility lane**을 둔다.
 
-이 문서는 두 종류의 근거를 명확히 구분한다.
+이 문서는 세 종류의 근거를 명확히 구분한다.
 
-1. **v0.29 tag 포함 사항**: 실제 0.29 candidate의 behavior
-2. **post-tag/open upstream watchlist**: 0.29에 아직 고쳐지지 않았을 수 있는 알려진 위험. 절대 0.29 기능으로 혼동하지 않는다.
+1. **v0.29 lineage**: MRV2/default 전환을 포함한 이전 candidate의 architecture provenance
+2. **v0.30 tag delta**: 현재 candidate에서 추가된 model/kernel/state 변화
+3. **open upstream watchlist**: v0.30에도 아직 merge되지 않은 위험. release 기능으로 혼동하지 않는다.
 
 ---
 
@@ -900,3 +901,60 @@ model architecture
 - Qwen3.5-family KV scale loading #54624: https://github.com/vllm-project/vllm/pull/54624
 - Qwen3.8 DFlash2 FP16 #55294: https://github.com/vllm-project/vllm/pull/55294
 - hybrid GDN + MTP concurrency #55617: https://github.com/vllm-project/vllm/pull/55617
+
+
+---
+
+## 31. v0.30 model-family delta
+
+### Qwen3.5 / 3.6 / 3.8
+
+Qwen3.8-Flash-Next는 sparse indexer, PLE fusion, FP8 indexer cache, UVA/Engram, MTP path가 크게 바뀌었다.
+
+하지만 hybrid/GDN Qwen3.8-27B lane과 Flash-Next lane을 계속 분리한다.
+
+v0.30 release 이후에도 다음 PR은 **OPEN / NOT IN v0.30**:
+
+- #54624 calibrated FP8 KV scale loading
+- #55294 DFlash2 FP16 speculative decoding
+- #55617 hybrid GDN + MTP concurrency
+
+따라서 FP8 KV + MTP/DFlash 조합은 P0 model-specific gate다.
+
+### Kimi K3
+
+v0.30:
+
+- native CUDA AttnRes on SM100
+- mixed-batch KDA gather/scatter 제거
+- grouped FP8 MLA cache insertion
+- TP8 KDA overlap
+- FlashInfer KDA
+- internal prefix checkpoint + partial prefix/spec
+- symmetric DCP disaggregation
+
+때문에 0.29 benchmark와도 execution identity가 달라질 수 있다.
+
+### DeepSeek V4 / V4.1
+
+v0.30에서 DeepSeek-V4.1-Flash가 별도 architecture target으로 추가됐다.
+
+V4/V4.1은:
+
+```text
+model revision
+KV dtype
+sparse MLA backend
+MoE backend
+speculator
+Engram
+DCP/PCP
+```
+
+를 certification tuple로 고정한다.
+
+### GLM 5.x
+
+GLM-5.3-Flash가 추가되고 KDA/sparse prefill/EPLB path가 확장됐다.
+
+GLM은 계속 raw engine token correctness와 frontend parser correctness를 별도 gate로 유지한다.
