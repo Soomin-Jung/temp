@@ -1,6 +1,6 @@
 # vLLM Upstream Version & Migration Audits
 
-업데이트: 2026-09-10 KST
+업데이트: 2026-09-29 KST
 
 이 디렉터리는 **upstream vLLM 자체의 버전 변화와 source-level compatibility를 추적하는 원장**이다.
 
@@ -49,7 +49,7 @@ Release note와 source가 다르게 읽힐 경우 **source 조건을 우선**하
 ## 현재 읽는 순서
 
 1. [`versions/README.md`](versions/README.md)
-2. [`migrations/v0.26.0-to-v0.29.0.md`](migrations/v0.26.0-to-v0.29.0.md)
+2. [`migrations/v0.26.0-to-v0.30.0.md`](migrations/v0.26.0-to-v0.30.0.md)
 3. [`migrations/deployment-option-matrix.md`](migrations/deployment-option-matrix.md)
 4. [`migrations/model-runner-v1-v2.md`](migrations/model-runner-v1-v2.md)
 5. [`migrations/frontend-parser-compatibility.md`](migrations/frontend-parser-compatibility.md)
