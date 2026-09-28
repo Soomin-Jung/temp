@@ -16,7 +16,7 @@
 | v0.27.1 | 2026-08-11 | quantized DSpark Markov head hotfix | [`v0.27.1.md`](v0.27.1.md) |
 | v0.28.0 | 2026-08-26 | MRV2 E/P/D, Mamba prefix cache, conditional HW defaults | [`v0.28.0.md`](v0.28.0.md) |
 | v0.29.0 | 2026-09-09 | MRV2 all-model default, parser/connector/cache policy maturation | [`v0.29.0.md`](v0.29.0.md) |
-| v0.30.0 | 2026-09-22 | MRV2/graph/P-D hardening, CUDA 13 default artifact, NIXL 1.4.1, scale-out gate | [`v0.30.0.md`](v0.30.0.md) |
+| v0.30.0 | 2026-09-22 | MRV2/graph/P-D hardening, NIXL 1.4.1, Fast Start, scale-out gate | [`v0.30.0.md`](v0.30.0.md) |
 
 ## 공통 impact 등급
 
