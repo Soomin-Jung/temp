@@ -1,10 +1,10 @@
-# vLLM v0.26.0 -> v0.29.0 Deployment Option Matrix
+# vLLM v0.26.0 -> v0.30.0 Deployment Option Matrix
 
-업데이트: 2026-09-10 KST
+업데이트: 2026-09-29 KST
 
 ## 1. 목적
 
-이 문서는 현재 v0.26 계열에서 실제로 명시해 운영/벤치마크하는 option을 v0.29로 가져갈 때 **KEEP / PIN / ADD / REMOVE / RETEST / A/B** 판정을 내리는 실전 migration matrix다.
+이 문서는 현재 v0.26 계열에서 실제로 명시해 운영/벤치마크하는 option을 v0.30으로 가져갈 때 **KEEP / PIN / ADD / REMOVE / RETEST / A/B** 판정을 내리는 실전 migration matrix다. v0.27~0.29에서 도입된 사실은 provenance로 유지하고, v0.30 candidate에서 달라진 runtime/dependency/API contract를 추가한다.
 
 핵심 원칙은 다음이다.
 
@@ -16,7 +16,7 @@
 
 ## 2. 빠른 결론
 
-| 영역 | Option / config | v0.26 baseline intent | v0.29 핵심 변화 | 판정 |
+| 영역 | Option / config | v0.26 baseline intent | v0.30 candidate relevance | 판정 |
 |---|---|---|---|---|
 | Model | `--max-model-len` | 200K/256K long context를 의도적으로 고정 | model family의 actual supported context와 cache layout 변화 가능 | **KEEP + RETEST** |
 | Memory | `--gpu-memory-utilization` | 0.94~0.97 수준에서 KV/non-KV 균형 | MRV2 CUDA Graph memory profiling이 KV auto-sizing에 반영 | **KEEP + RETEST** |
@@ -51,11 +51,16 @@
 | Frontend | `--enable-auto-tool-choice` | tool calling enabled | structured-output/reasoning adapter coupling 강화 | **KEEP + RETEST** |
 | Frontend | `--renderer-num-workers` | tokenizer/render concurrency | renderer path 발전, endpoint별 사용 방식 차이 | **KEEP initially + CPU/profile RETEST** |
 | KV transfer | `--kv-transfer-config` | Mooncake/NIXL P/D | top-level schema 유사, lifecycle/layout는 크게 변화 | **KEEP shape + PIN dependencies + RETEST** |
-| KV transfer | Mooncake package | custom 0.3.10.post2 | vLLM >=0.3.12, Mooncake 0.3.13 x86 wheel에 INTRA_NVLINK 포함 | **MIGRATE via controlled A/B** |
-| KV transfer | NIXL | exact 1.3.1 baseline | v0.28/0.29 requirement 1.3.2 + push/pull compat hash | **PIN 1.3.2 candidate** |
+| KV transfer | Mooncake package | custom 0.3.10.post2 | v0.30 requirement >=0.3.12; CUDA major별 package variant 분리. Production은 exact pin | **PIN exact + controlled A/B** |
+| KV transfer | NIXL | exact 1.3.1 baseline | v0.30 requirement exact 1.4.1 + evolved transfer geometry/lifecycle | **PIN 1.4.1 candidate** |
 | Deprecated | `calculate_kv_scales` | legacy | v0.28 제거 | **REMOVE** |
 | Deprecated | `override_attention_dtype` | ROCm-centric legacy | v0.28 제거 | **REMOVE if present** |
-| Entrypoint | `python -m vllm.entrypoints.openai.api_server` | possible legacy launch | v0.29 deprecated | **MIGRATE to `vllm serve`** |
+| Entrypoint | `python -m vllm.entrypoints.openai.api_server` | possible legacy launch | modern canonical path는 `vllm serve`; gRPC module entrypoint도 v0.30에서 deprecated | **MIGRATE to canonical CLI** |
+| Runtime | vLLM image/CUDA | current 0.26 image | v0.30 default artifact CUDA 13.0; `v0.30.0-cu129` 제공 | **PIN cu129 first, then CUDA13 A/B** |
+| Frontend | `--enable-scale-out` | env/implicit exposure 가능 | v0.30 plain `vllm serve`에서 scale-out endpoints opt-in | **ADD only when required** |
+| Frontend | `VLLM_ENABLE_SCALE_OUT_ENDPOINTS` | legacy gate | v0.30에서 `--enable-scale-out`으로 대체 | **REMOVE** |
+| Weight load | `--load-format ipc_cache` | 없음 | v0.30 Fast Start weight-cache daemon | **OPTIONAL after compatibility** |
+| Mamba | `mamba_cache_mode=all` | possible legacy experiment | v0.30 deprecated | **AVOID / migrate to supported policy** |
 
 ---
 
@@ -636,9 +641,13 @@ Migration matrix상 결론:
 
 ```text
 0.3.10.post2 custom
- -> 0.3.13 official x86 CUDA wheel A/B
- -> 필요 시 0.3.13 custom-minimal
+ -> v0.30 candidate에서 exact Mooncake version pin
+ -> CUDA 12.9: matching CUDA12 package
+ -> CUDA 13.0: matching mooncake-transfer-engine-cuda13 variant
+ -> 필요 시 official 0.3.13+ vs custom-minimal A/B
 ```
+
+vLLM requirement의 `>=0.3.12`는 production dependency policy가 아니다. 실제 배포 bundle에서는 exact version과 wheel SHA를 고정한다.
 
 ---
 
@@ -656,9 +665,15 @@ v0.28/0.29 계열:
 nixl == 1.3.2
 ```
 
-그리고 NIXL connector compatibility hash가 push/pull transfer mode를 포함하게 된다.
+v0.30:
 
-Action: candidate는 exact `1.3.2` pin + producer/consumer transfer-mode validation.
+```text
+nixl == 1.4.1
+```
+
+NIXL connector compatibility identity와 per-region transfer geometry/lifecycle도 계속 발전했다.
+
+Action: v0.30 candidate는 exact `1.4.1` pin + producer/consumer transfer-mode/region validation.
 
 ---
 
@@ -688,7 +703,7 @@ CI에 argv compatibility smoke test를 추가한다.
 
 ## 11. 권장 compatibility profile
 
-0.29 첫 candidate는 '최신 default'가 아니라 아래처럼 **0.26 intent에 가까운 explicit profile**로 만든다.
+0.30 첫 candidate는 '최신 default'가 아니라 아래처럼 **0.26 intent에 가까운 explicit profile**로 만든다.
 
 ```text
 max-model-len                 explicit
@@ -749,3 +764,63 @@ Golden manifest와 diff하여 **unintended default drift를 CI에서 잡는 방�
 - PR #51726: https://github.com/vllm-project/vllm/pull/51726
 - PR #49390: https://github.com/vllm-project/vllm/pull/49390
 - PR #52998: https://github.com/vllm-project/vllm/pull/52998
+
+
+---
+
+## 15. v0.30-specific addendum
+
+### 15.1 Runtime artifact
+
+Compatibility phase:
+
+```text
+v0.30.0-cu129
+```
+
+Optimization phase:
+
+```text
+v0.30.0 default CUDA 13.0
+```
+
+Engine version과 CUDA major를 동시에 바꾸지 않는다.
+
+### 15.2 Removed/deprecated environment surface
+
+v0.30 breaking/deprecation cleanup:
+
+```text
+REMOVE VLLM_ENABLE_SCALE_OUT_ENDPOINTS
+REMOVE VLLM_PREFIX_CACHE_RETENTION_INTERVAL
+REMOVE VLLM_MM_HASHER_ALGORITHM
+AVOID  mamba_cache_mode=all
+```
+
+Prefix retention은 config/CLI surface를 사용한다.
+
+### 15.3 Scale-out endpoint contract
+
+```text
+plain vllm serve
+  -> scale-out endpoints disabled
+
+vllm serve --enable-scale-out
+  -> render/derender/inference scale-out endpoints enabled
+```
+
+Platform proxy/router가 이 endpoint를 사용한다면 route smoke test를 P0로 둔다.
+
+### 15.4 Fast Start is not part of compatibility baseline
+
+`--load-format ipc_cache`는 startup/restart optimization이다. Weight daemon이라는 별도 lifecycle이 생기므로 0.30 engine certification 후 독립 A/B한다.
+
+### 15.5 Dependency lock
+
+```text
+NIXL == 1.4.1
+Mooncake == <exact approved version, >=0.3.12>
+Mooncake package variant == CUDA-major matched
+```
+
+를 release bundle에 포함한다.
