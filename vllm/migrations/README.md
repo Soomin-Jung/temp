@@ -35,7 +35,7 @@ Intermediate releases 0.27/0.28/0.29는 별도 production certification target�
 
 ## Migration principle
 
-`0.29가 최신이므로 옵션을 최신 default에 맞춘다`가 아니다.
+`0.30이 최신이므로 옵션을 최신 default에 맞춘다`가 아니다.
 
 1. **Compatibility phase**: 0.26의 의도를 최대한 보존해 0.30을 실행한다.
 2. **Isolation phase**: MRV2, communicator, graph policy, cache policy 등 큰 변수를 하나씩 분리한다.
