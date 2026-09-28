@@ -1,6 +1,6 @@
 # Hybrid Attention + Mamba/GDN State Migration Deep Dive
 
-업데이트: 2026-09-10 KST
+업데이트: 2026-09-29 KST
 
 ## 1. 목적
 
@@ -734,3 +734,58 @@ v0.29는 이 영역에서 0.26보다 훨씬 성숙했지만 그만큼:
 - Mooncake sparse NULL fix PR #51362: https://github.com/vllm-project/vllm/pull/51362
 - Mooncake truncation-order PR #53663: https://github.com/vllm-project/vllm/pull/53663
 - NIXL truncation-order PR #53523: https://github.com/vllm-project/vllm/pull/53523
+
+
+---
+
+## 26. v0.30 hybrid-state delta
+
+v0.30은 hybrid state를 단일-engine cache 문제보다 **P/D + DCP + speculative lifecycle** 문제로 더 확장한다.
+
+Relevant:
+
+- symmetric DCP disaggregation for hybrid Mamba (#55531)
+- producer partial Mamba tail handling
+- internal prefix checkpoints + partial prefix caching + speculative decode
+- EAGLE resend를 위한 replay-boundary retention
+- align-mode state retirement fixes
+- resumed P/D request state/padding fixes
+- `mamba_cache_mode=all` deprecation
+
+### Current policy
+
+Qwen3.5+/3.6/3.8 및 Kimi 계열 신규 candidate는:
+
+```text
+mamba_cache_mode=all
+```
+
+을 기준점으로 삼지 않는다.
+
+대신:
+
+```text
+prefix cache off
+ -> align / model-supported policy
+ -> retention=0
+ -> spec decode
+ -> P/D
+ -> DCP
+```
+
+순으로 state ownership을 한 축씩 추가한다.
+
+### Failure-oriented validation
+
+Hybrid P/D에서는 정상 응답뿐 아니라:
+
+```text
+remote KV wait
+abort
+producer failure
+decode restart
+partial prefix
+normal request overlap
+```
+
+에서 recurrent state가 stale/poisoned 상태로 재사용되지 않는지 확인한다.
