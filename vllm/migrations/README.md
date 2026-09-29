@@ -1,6 +1,6 @@
 # vLLM Cross-Version Migration Audits
 
-업데이트: 2026-09-10 KST
+업데이트: 2026-09-29 KST
 
 `versions/`가 tag별 사실 원장이라면 이 디렉터리는 **실제 serving platform migration decision**을 소유한다.
 
@@ -15,16 +15,17 @@ vLLM v0.26.0
 Candidate:
 
 ```text
-vLLM v0.29.0
+vLLM v0.30.0
 ```
 
-Intermediate releases 0.27/0.28은 별도 production certification target이라기보다 regression bisect point와 feature provenance로 사용한다.
+Intermediate releases 0.27/0.28/0.29는 별도 production certification target이라기보다 regression bisect point와 feature provenance로 사용한다.
 
 ## Documents
 
 | 문서 | 목적 |
 |---|---|
-| [`v0.26.0-to-v0.29.0.md`](v0.26.0-to-v0.29.0.md) | 전체 migration architecture, rollout/rollback gate |
+| [`v0.26.0-to-v0.30.0.md`](v0.26.0-to-v0.30.0.md) | **Current** migration architecture, dependency boundary, rollout/rollback gate |
+| [`v0.26.0-to-v0.29.0.md`](v0.26.0-to-v0.29.0.md) | Prior candidate program; 0.29 provenance/bisect reference |
 | [`deployment-option-matrix.md`](deployment-option-matrix.md) | 실제 CLI/env/config의 KEEP/ADD/REMOVE/RETEST 판단 |
 | [`model-runner-v1-v2.md`](model-runner-v1-v2.md) | MRV1→MRV2 default inversion과 execution-path 검증 |
 | [`frontend-parser-compatibility.md`](frontend-parser-compatibility.md) | Python/Rust frontend, renderer, reasoning/tool/stream parser |
@@ -34,11 +35,11 @@ Intermediate releases 0.27/0.28은 별도 production certification target이라�
 
 ## Migration principle
 
-`0.29가 최신이므로 옵션을 최신 default에 맞춘다`가 아니다.
+`0.30이 최신이므로 옵션을 최신 default에 맞춘다`가 아니다.
 
-1. **Compatibility phase**: 0.26의 의도를 최대한 보존해 0.29를 실행한다.
+1. **Compatibility phase**: 0.26의 의도를 최대한 보존해 0.30을 실행한다.
 2. **Isolation phase**: MRV2, communicator, graph policy, cache policy 등 큰 변수를 하나씩 분리한다.
-3. **Optimization phase**: 0.29의 새 default/optimization을 명시적으로 채택한다.
+3. **Optimization phase**: 0.30의 새 default/optimization을 명시적으로 채택한다.
 4. **Platform phase**: router/frontend/observability/chart까지 E2E contract를 업데이트한다.
 
 ## Action labels

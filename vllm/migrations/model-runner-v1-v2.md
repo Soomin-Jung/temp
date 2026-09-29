@@ -1,10 +1,10 @@
 # Model Runner V1 -> V2 Migration Deep Dive
 
-업데이트: 2026-09-10 KST
+업데이트: 2026-09-29 KST
 
 ## 1. 왜 MRV1/MRV2를 별도 migration 축으로 봐야 하는가
 
-vLLM 0.26 -> 0.29 migration에서 `Model Runner V2`는 단순 내부 refactor가 아니다.
+vLLM 0.26 -> 0.30 migration에서 `Model Runner V2`는 단순 내부 refactor가 아니다.
 
 Model Runner는 실제로 다음 execution surface를 소유하거나 강하게 결합한다.
 
@@ -478,3 +478,40 @@ v0.29에서 MRV2는 더 이상 실험적 alternate path가 아니라 **primary e
 - MRV2 CUDA Graph memory profiling PR #53306: https://github.com/vllm-project/vllm/pull/53306
 - Qwen3.5 hybrid registration PR #50210: https://github.com/vllm-project/vllm/pull/50210
 - v0.29 release: https://github.com/vllm-project/vllm/releases/tag/v0.29.0
+
+
+---
+
+## v0.30 — V2 operational hardening
+
+v0.30은 selection policy를 다시 바꾸기보다 v0.29의 V2-default path를 확장한다.
+
+Relevant:
+
+- dual-batch overlap in eager mode
+- FULL CUDA Graph microbatch path
+- MTP under pipeline parallelism
+- EAGLE3/DFlash/DSpark draft path under PP
+- adaptive verification
+- graph capture 중 GC freeze
+- kernel warmup / graph robustness
+- unavailable piecewise graph를 silent corruption 대신 error로 처리
+- non-compiled model의 FULL_DECODE_ONLY fallback
+
+### Migration implication
+
+0.26 -> 0.30 비교에서 `MRV2` 하나만 적는 것으로 부족하다.
+
+```text
+runner
+graph mode
+DBO on/off
+speculator
+PP topology
+warmup/capture policy
+memory profile result
+```
+
+를 같은 benchmark identity에 포함한다.
+
+특히 startup/capture 개선과 steady-state throughput 개선을 섞지 않는다.
