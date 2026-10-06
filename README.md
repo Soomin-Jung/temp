@@ -25,6 +25,13 @@
 
 ## 주요 문서
 
+### Technical Platform Leadership
+
+- [기술의 깊이에서 플랫폼의 책임으로](study/platform-leadership/README.md)
+  - [2026-10-07 깨달음의 기록](study/platform-leadership/notes/2026-10-07-from-engineering-to-platform-responsibility.md)
+  - [사용자와 조직에 필요한 AI 생태계](study/platform-leadership/02-building-an-essential-ai-ecosystem.md)
+  - [다음 단계와 준비물](study/platform-leadership/04-next-steps-and-decision-workbook.md)
+
 ### Git / GitHub Collaboration & Automation
 
 - [Git & GitHub: 현업 협업과 자동화 학습 지도](study/git-github/README.md)

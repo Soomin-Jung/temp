@@ -4,6 +4,17 @@
 
 ## 학습 모듈
 
+### Technical Platform Leadership
+
+- [기술의 깊이에서 플랫폼의 책임으로](platform-leadership/README.md)
+  - [깨달음의 기록](platform-leadership/notes/2026-10-07-from-engineering-to-platform-responsibility.md)
+  - [사고의 전환과 역할](platform-leadership/01-thinking-and-role-expansion.md)
+  - [필요한 생태계의 설계](platform-leadership/02-building-an-essential-ai-ecosystem.md)
+  - [거버넌스·경제성·성과](platform-leadership/03-governance-economics-and-measurement.md)
+  - [다음 단계와 준비물](platform-leadership/04-next-steps-and-decision-workbook.md)
+  - [리더의 실행과 성장](platform-leadership/05-leadership-and-personal-growth.md)
+  - [용어와 판단 기준](platform-leadership/99-glossary-and-reading-guide.md)
+
 ### Git & GitHub
 
 - [Git & GitHub: 현업 협업과 자동화 학습 지도](git-github/README.md)
