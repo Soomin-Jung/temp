@@ -13,7 +13,7 @@
 - `docs/tooling/` : 개발·운영 도구 사용과 troubleshooting
 - `moc/` : MOC control-plane 설계와 capability
 - `weekly-report/` : vLLM/모델/serving 생태계 주간 변화 추적
-- `tools/` : 저장소 검증·자동화 도구
+- `tools/` : 저장소 검증·자동화 도구와 독립 실행 도구 패키지
 
 세부 ownership과 문서 수명주기는 [Repository Structure and Document Lifecycle](docs/conventions/repository-structure.md)을 따른다.
 
@@ -143,6 +143,10 @@
 
 - [주간 보고서 인덱스와 검증 정책](weekly-report/README.md)
 - [주간 보고서 템플릿](weekly-report/_TEMPLATE.md)
+
+### 개발 도구 통합
+
+- [JEV Decide MCP — self-hosted /v1/decide 클라이언트 통합](tools/jev-decide-mcp/README.md)
 
 ### 문서 품질
 
