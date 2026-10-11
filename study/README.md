@@ -4,6 +4,12 @@
 
 ## 학습 모듈
 
+### Core Forge
+
+- [Core Forge — Root-to-System Learning Roadmap](core-forge/README.md)
+  - 기초 수학에서 미적분·선형대수·확률·딥러닝·Transformer·Serving·CUDA/GPU·분산추론까지의 장기 길잡이 지도
+  - 상위 개념에서 막혔을 때 어떤 근원 개념으로 내려가야 하는지와, 각 기초 개념이 실제 LLM 시스템 어디로 연결되는지를 함께 정리
+
 ### Technical Platform Leadership
 
 - [기술의 깊이에서 플랫폼의 책임으로](platform-leadership/README.md)
