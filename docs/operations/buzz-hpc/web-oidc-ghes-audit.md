@@ -13,6 +13,16 @@
 6. **OIDC 자체 로그인 완제품은 아니다**. Relay NIP-FI Issuer/JWKS Assertion 검증은 구현되어 있지만 사용자 로그인, Assertion issuer/Identity Adapter, 브라우저 Nostr 신원 연결은 별도 제공이 필요하다. NIP-FI 자체에서 일반 OIDC ID Token은 거부한다.
 7. **기본 Helm Chart에는 Agent Runtime Deployment, GHES Connector, Identity Adapter가 없다.** 별도 Kubernetes 워커/Service/Secret 구성이 필요하다.
 
+## 후속 결정: Browser-only 대신 X 세션 + Local Agent
+
+기존 검토는 **브라우저에서 모든 개발/Agent 관리를 수행하려는 요구**를 평가한 결과이다. 대안으로 **Linux X 세션에서 공식 Desktop을 실행**하면 Browser UI 및 Desktop을 대체할 Control Plane을 직접 개발할 필요가 줄어든다.
+
+- Desktop 및 Local `buzz-acp`/Coding Agent는 **사용자의 Linux X 세션 호스트**에서 실행한다. 버전별 Desktop AppImage만 NFS 공용 설치하고 사용자별 `~/.buzz`/XDG 데이터, OS Keyring, Git workspace를 분리한다.
+- Kubernetes에는 기존 Helm 구성인 **Buzz Relay + Postgres + Redis + S3**를 배포한다. 사용자가 Pod를 만들거나 Kubernetes RBAC을 획득할 필요는 없다.
+- Local Agent는 사내 vLLM/LiteLLM API를 직접 호출하고 **사용자별 git/gh 인증**으로 GHES에 접근할 수 있다. 단, Buzz의 네이티브 GHES 프로젝트 UI, 전체 사내 SSO는 여전히 제공되지 않는다.
+- 이 대안의 선결 조건은 Linux 호스트 배포판, glibc/GLib/FUSE, NFS exec, GUI 세션 Keyring 및 X 서버의 사내 네트워크 접근이다.
+- 실무 절차: **[Local Agent + NFS Desktop 배포 가이드](local-agent-nfs-desktop.md)**. 이는 원격 Kubernetes Agent Pod 아키텍처를 권장 기본값에서 제외한다는 뜻이지, 해당 옵션이 불가능하다는 뜻은 아니다.
+
 ## 인증·접속 계층
 
 | 계층 | 기능 | 담당 |

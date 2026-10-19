@@ -4,6 +4,13 @@
 상태: **소스·차트 정적 검토 완료 / HPC 실제 설치 미검증**  
 대상: [block/buzz](https://github.com/block/buzz) commit [3debf18f1448334aa7bc202d328d93bb9651e168](https://github.com/block/buzz/tree/3debf18f1448334aa7bc202d328d93bb9651e168), chart `deploy/charts/buzz` 0.1.11.
 
+## 권장 HPC 사용 경로: Linux X 세션 + Local Agent
+
+- **[NFS 공용 Buzz Desktop 설치·`source env.sh; buzz` 실행 가이드](local-agent-nfs-desktop.md)** — Linux X 서버에서 Local Agent 실행, 사내 vLLM·GHES 연결, 사용자별 키·상태 격리 및 OS/glibc/FUSE/NFS 점검.
+- **기본값은 Local Agent**이며, 사용자가 Kubernetes Pod를 생성할 필요가 없다. 공식 Helm 차트는 Relay/저장소 계층을 설치하며, Remote Agent용 Kubernetes Provider는 선택 경로다.
+- 이 가이드는 Desktop이 아닌 웹 브라우저로 모든 기능을 사용한다는 이전 요구사항과 **별개의 운영 옵션**이다. 기업 OIDC SSO·GHES 네이티브 UI의 제약은 동일하게 남는다.
+- **호환성 차단 조건**: 실제 X 서버에서 Buzz Linux AppImage의 glibc, GLib, FUSE, NFS `exec` 지원을 먼저 확인한다. Desktop 릴리스와 이 문서의 Relay 소스 검토 커밋이 서로 다를 수 있다.
+
 ## 도메인 및 GitHub Enterprise 연동
 
 - [Buzz Relay 내부 도메인과 Ingress](domain-and-ingress.md)
