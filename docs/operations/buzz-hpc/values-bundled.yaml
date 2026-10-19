@@ -1,0 +1,88 @@
+# Source: block/buzz commit 3debf18f... / chart 0.1.11
+# Purpose: single Helm release / evaluation ONLY, not HA production.
+# REQUIRED at installation: --set-string ownerPubkey=... --set-string image.tag=...
+# relayUrl below must resolve via a separately configured internal ingress/proxy.
+quickstart: true
+relayUrl: wss://buzz.hpc.example.com
+ownerPubkey: ""
+
+image:
+  repository: ghcr.io/block/buzz
+  tag: ""  # DO NOT rely on Chart.AppVersion=0.1.0; pass a verified tag
+  pullPolicy: IfNotPresent
+
+replicaCount: 1
+autoscaling:
+  enabled: false
+pairingRelay:
+  enabled: false
+podDisruptionBudget:
+  enabled: false
+
+relay:
+  requireAuthToken: true
+  requireRelayMembership: true
+  huddleAudioAvailable: false
+  extraEnv:
+    - name: BUZZ_PUSH_ENABLED
+      value: "false"
+    - name: BUZZ_GIT_CONFORMANCE_PROBE
+      value: "true"
+
+postgresql:
+  enabled: true
+  auth:
+    database: buzz
+    username: buzz
+    # existingSecret is intentionally NOT overridden:
+    # the upstream chart uses a templated release Secret for the bundled mode.
+  persistence:
+    enabled: true
+    size: 20Gi
+    # storageClass: "hpc-block"  # optional
+
+redis:
+  enabled: true
+  architecture: standalone
+  persistence:
+    enabled: true
+    size: 8Gi
+    # storageClass: "hpc-block"  # optional
+
+minio:
+  enabled: true
+  # upstream default Silo/mc digests are kept until explicitly mirrored.
+  persistence:
+    enabled: true
+    size: 20Gi  # uses default StorageClass in this chart
+
+s3:
+  endpoint: ""  # chart derives http://buzz-minio.buzz.svc.cluster.local:9000
+  bucket: buzz-media
+  region: us-east-1
+  addressingStyle: path
+
+secrets:
+  existingSecret: ""   # REQUIRED for bundled Silo; chart rejects nonempty value
+
+persistence:
+  git:
+    enabled: false   # object store is source of truth; emptyDir for scratch
+    size: 10Gi
+
+git:
+  packCacheVolumeSize: 7Gi
+
+migrate:
+  autoMigrate: true
+
+ingress:
+  enabled: false # enable ONLY after ingress controller, DNS, TLS are ready
+
+serviceMonitor:
+  enabled: false
+storageAccounting:
+  enabled: false
+operatorJobs:
+  deletionDrain:
+    enabled: false
