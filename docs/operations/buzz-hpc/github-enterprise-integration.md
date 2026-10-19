@@ -26,3 +26,33 @@
 - [ProjectWorkspaceTabs.tsx](https://github.com/block/buzz/blob/3debf18f1448334aa7bc202d328d93bb9651e168/desktop/src/features/projects/ui/ProjectWorkspaceTabs.tsx): 외부 코드는 Buzz에 미러되어 있지 않다는 UI.
 
 따라서 **외부 저장소 링크 등록 가능과 네이티브 GHES 작업 가능을 구분**해야 한다. 특히 호스트 허용만 수정해서는 Private Repository 자격증명이 제공되지 않는다.
+
+## 권장안 A — 기존 GHES를 유지하고 Agent Runtime에서 Git 연동
+
+Buzz는 Collaboration/Agent 대화 채널로 사용하고, GHES를 기존 Git/PR/Issue의 System of Record로 유지한다. 실제 Git 클라이언트가 **사용자 PC에서 동작하는지, HPC의 Agent Pod에서 동작하는지**에 따라 각각 GHES DNS/443 접근 권한이 필요하다. Buzz Relay Pod에만 Egress를 허용해도 해결되지 않는다.
+
+```text
+Buzz Client ↔ Buzz Relay (Nostr/WS + 외부 Repo 메타데이터)
+                   |
+                   └─ Agent Runtime (독립 Desktop Process 또는 Pod)
+                         └─ git / gh / GHES 전용 MCP·REST Adapter
+                               └─ Internal GitHub Enterprise Server
+```
+
+GHES에 접근 가능한 Agent 실행 환경 또는 개발자 PC에서 먼저 확인한다.
+
+```bash
+export GH_HOST="ghe.example.internal" # 샘플 hostname
+gh auth login --hostname "$GH_HOST"   # 개발자 PC 대화형 검증
+gh api --hostname "$GH_HOST" repos/ORG/REPO --jq .full_name
+git ls-remote "https://$GH_HOST/ORG/REPO.git" HEAD
+```
+
+운영 Agent에는 대화형 로그인 대신 전용 자격증명(예: GitHub App Installation Token, 제한된 PAT)을 **해당 Agent만 접근할 수 있는 Secret**으로 공급한다. Git 인증정보를 Buzz Relay의 Kubernetes Secret이나 Git URL/로그에 넣지 않는다. 사내 TLS CA 신뢰도 Client와 Agent 런타임 각각 검증한다.
+
+GHES REST API 기본 주소는 `https://HOST/api/v3`이다. `gh auth setup-git --hostname HOST`로 해당 Host용 Git Credential Helper를 구성할 수 있다. 지원하는 MCP 서버가 있다면 GHES Host와 인증 구현을 해당 서버 소스 기준으로 따로 검증한다. **현재 Buzz Helm이 GHES 또는 MCP 서버를 자동 설치하지는 않는다.**
+
+- [GHES REST API](https://docs.github.com/en/enterprise-server@3.19/rest/using-the-rest-api/getting-started-with-the-rest-api)
+- [GHES Git HTTPS 인증](https://docs.github.com/en/enterprise-server@3.20/get-started/git-basics/about-remote-repositories)
+- [GitHub CLI Enterprise auth](https://cli.github.com/manual/gh_auth_login)
+- [GH CLI Git Credential Helper](https://cli.github.com/manual/gh_auth_setup-git)
