@@ -10,6 +10,8 @@
 - [GitHub Enterprise Server 연동 검토](github-enterprise-integration.md)
 - [Ingress values 예시](values-ingress.example.yaml)
 
+- [Web-only, GHES 서버 자동화, OIDC 지원 범위](web-oidc-ghes-audit.md) — 공식 구현과 별도 개발 범위의 기술 감사
+
 ## 1. 배포 결정
 
 Buzz 공식 Helm 차트의 **Quickstart / evaluation 구성**을 이용하여 Buzz Relay, PostgreSQL, Redis, S3 호환 Silo를 **한 Helm Release**에 설치한다. `quickstart: true`는 프로파일 표시용으로, 실제 설치 여부는 `postgresql.enabled`, `redis.enabled`, `minio.enabled`를 각각 `true`로 설정해야 한다. Silo는 MinIO API 호환 오브젝트 스토리지로, 공식 차트는 여전히 `minio`라는 키와 Service 이름을 사용한다.
