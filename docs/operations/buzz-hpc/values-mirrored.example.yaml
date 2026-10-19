@@ -1,0 +1,28 @@
+# Optional override: helm ... -f values-bundled.yaml -f values-mirrored.example.yaml
+# Replace registry.hpc.example.com with a reachable INTERNAL registry.
+# No digest is carried across implicitly; pin validated internal digests for production.
+image:
+  repository: registry.hpc.example.com/ghcr/block/buzz
+  tag: ""  # still supply --set-string image.tag=<verified-internal-tag>
+  pullPolicy: IfNotPresent
+
+postgresql:
+  image:
+    registry: registry.hpc.example.com
+    repository: dockerhub/library/postgres
+    tag: "18.4"
+    imagePullPolicy: IfNotPresent
+
+redis:
+  image:
+    registry: registry.hpc.example.com
+    repository: dockerhub/library/redis
+    tag: "8.8.0"
+    pullPolicy: IfNotPresent
+
+minio:
+  image: registry.hpc.example.com/dockerhub/pgsty/silo:RELEASE.2026-09-16T00-00-00Z
+  mcImage: registry.hpc.example.com/dockerhub/pgsty/mc:RELEASE.2026-09-16T00-00-00Z
+
+# For auth-protected registries: configure per-chart imagePullSecrets where
+# supported and/or namespace ServiceAccount / node containerd credentials.

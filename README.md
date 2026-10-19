@@ -10,6 +10,7 @@
 - `docs/context/` : 현재 플랫폼 상태와 historical context
 - `docs/conventions/` : 저장소 구조, Markdown, 작성·검증 규칙
 - `docs/operations/` : 플랫폼 공통 운영 reference
+  - [Buzz HPC: PostgreSQL + Redis + Silo 포함 Helm 배포](docs/operations/buzz-hpc/README.md)
 - `docs/tooling/` : 개발·운영 도구 사용과 troubleshooting
 - `moc/` : MOC control-plane 설계와 capability
 - `weekly-report/` : vLLM/모델/serving 생태계 주간 변화 추적
