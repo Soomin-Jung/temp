@@ -1,0 +1,58 @@
+# prometheus-community/prometheus Helm values (v28+)
+# PURPOSE: approval stage 1, H200 DCGM only.
+# NOT production-ready until source host, label inventory, network/auth
+# and disclosure policy have been validated (see README.md).
+alertmanager:
+  enabled: false
+kube-state-metrics:
+  enabled: false
+prometheus-node-exporter:
+  enabled: false
+prometheus-pushgateway:
+  enabled: false
+
+rbac:
+  create: false
+
+# Since Helm chart v28, default scrapeConfigs are supplied separately.
+# Null disables ALL default Kubernetes self-scrape/discovery jobs here.
+scrapeConfigs: null
+
+server:
+  automountServiceAccountToken: false
+  retention: 14d
+  ingress:
+    enabled: false
+  service:
+    type: ClusterIP
+  persistentVolume:
+    enabled: true
+    size: 20Gi
+  global:
+    scrape_interval: 60s
+    evaluation_interval: 60s
+
+serverFiles:
+  prometheus.yml:
+    scrape_configs:
+      - job_name: federate-h200-dcgm
+        scrape_interval: 60s
+        scrape_timeout: 30s
+        metrics_path: /federate
+        honor_labels: true
+        params:
+          'match[]':
+            - '{job="nvidia-dcgm-metrics",modelName=~".*H200.*",__name__=~"DCGM_FI_DEV_(GPU_UTIL|FB_USED|FB_FREE|POWER_USAGE|GPU_TEMP)"}'
+        static_configs:
+          - targets:
+              # REPLACE: internal Service address of existing HPC Prometheus.
+              - 'REPLACE_SOURCE_PROMETHEUS.monitoring.svc.cluster.local:9090'
+            labels:
+              # Applies to auto-generated up/target metrics.
+              instance: federation-source
+        metric_relabel_configs:
+          # Fail-closed second check on original series labels.
+          - action: keep
+            source_labels: [job, namespace, modelName, __name__]
+            separator: ';'
+            regex: 'nvidia-dcgm-metrics;kube-system;.*H200.*;DCGM_FI_DEV_(GPU_UTIL|FB_USED|FB_FREE|POWER_USAGE|GPU_TEMP)'

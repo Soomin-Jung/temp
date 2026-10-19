@@ -1,0 +1,34 @@
+# Native prometheus.yml example (NOT Helm values):
+# one federation scrape job with multiple match[] selectors.
+# REPLACE source address and APPROVED_MODEL before use.
+# Not active in stage 1 (H200-only disclosure).
+global:
+  scrape_interval: 60s
+
+scrape_configs:
+  - job_name: federate-approved-mixed
+    scrape_interval: 30s
+    scrape_timeout: 20s
+    metrics_path: /federate
+    honor_labels: true
+
+    params:
+      'match[]':
+        - '{job="nvidia-dcgm-metrics",modelName=~".*H200.*",__name__=~"DCGM_FI_DEV_(GPU_UTIL|FB_USED|FB_FREE|POWER_USAGE|GPU_TEMP)"}'
+        - '{job="kubernetes-vllm-instances",namespace="inference",model="APPROVED_MODEL",__name__=~"vllm:(num_requests_running|num_requests_waiting|prompt_tokens_total|generation_tokens_total)"}'
+        - '{job="kubernetes-vllm-pd-engines",namespace="inference",model="APPROVED_MODEL",__name__=~"vllm:(num_requests_running|num_requests_waiting|prompt_tokens_total|generation_tokens_total)"}'
+
+    static_configs:
+      - targets:
+          - 'REPLACE_SOURCE_PROMETHEUS.monitoring.svc.cluster.local:9090'
+        labels:
+          instance: federation-source
+
+    metric_relabel_configs:
+      # OR of authorized DCGM + authorized vLLM, as ONE keep regex.
+      # source label sequence: job ; namespace ; modelName ; model ; __name__
+      # DCGM has modelName, vLLM has model; absent labels become empty.
+      - action: keep
+        source_labels: [job, namespace, modelName, model, __name__]
+        separator: ';'
+        regex: 'nvidia-dcgm-metrics;kube-system;.*H200.*;[^;]*;DCGM_FI_DEV_(GPU_UTIL|FB_USED|FB_FREE|POWER_USAGE|GPU_TEMP)|kubernetes-vllm-(instances|pd-engines);inference;[^;]*;APPROVED_MODEL;vllm:(num_requests_running|num_requests_waiting|prompt_tokens_total|generation_tokens_total)'
