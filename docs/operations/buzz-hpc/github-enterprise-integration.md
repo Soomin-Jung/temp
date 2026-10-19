@@ -56,3 +56,27 @@ GHES REST API 기본 주소는 `https://HOST/api/v3`이다. `gh auth setup-git -
 - [GHES Git HTTPS 인증](https://docs.github.com/en/enterprise-server@3.20/get-started/git-basics/about-remote-repositories)
 - [GitHub CLI Enterprise auth](https://cli.github.com/manual/gh_auth_login)
 - [GH CLI Git Credential Helper](https://cli.github.com/manual/gh_auth_setup-git)
+
+## 대안 B — Buzz Desktop 네이티브 GHES 통합 개발
+
+아래 항목은 **이미 제공되는 옵션이 아니라 추가 구현 대상**이다.
+
+1. 하드코딩된 `github.com` 검증을 회사의 승인된 GHES Host allowlist로 확장. 허용 Scheme/Host/Port/Path와 Redirect 정책 및 임의 외부 URL 접근 위험까지 검사.
+2. Buzz의 Git 실행 설정은 `GIT_CONFIG_GLOBAL=/dev/null`, 글로벌 Credential Helper 초기화 및 Nostr Git Helper를 사용한다. 이 로직과 별개로 **GHES 호스트 전용 인증 경로**를 설계해야 한다. Nostr 사용자 키를 GHES용 Git 프로세스에 넘기지 않는 보안 분리가 중요하다.
+3. Desktop Clone/Fetch/Pull/Push, Git File/Commit/Branch UI 및 인증 오류 상태를 변경·검증.
+4. GHES 자체 PR/Issue와 Buzz Nostr PR/Issue는 별개이다. 양방향 동기화 요구 시 GHES REST API/Webhook Adapter, 사용자 권한 매핑, 중복 이벤트 방지 로직 필요.
+5. Desktop은 Tauri 네이티브 앱이다. Relay Helm 배포만 변경해도 Desktop 소스 수정이 사용자에게 적용되지 않는다. **폐쇄망 Desktop 바이너리 배포·업데이트**도 구축해야 한다.
+
+## 검증 계획
+
+| 검증 | 예상 또는 합격 기준 |
+| --- | --- |
+| 프로젝트에 GHES URL 등록 | Announcement의 clone 태그·외부 Git Host 표시 |
+| 기본 Buzz Desktop에서 GHES Clone | 현 소스 기준 URL 검증 실패 예상; 설치된 실제 Desktop 버전에서 재확인 |
+| 사용자 PC 또는 Agent Pod에서 GHES git ls-remote | 내부 DNS/사내 CA/인증 성공 |
+| 같은 실행 환경에서 GHES REST Repo API | 사용자 또는 App Token 범위 내 성공 |
+| Agent가 PR 생성 | GHES 권한 정책과 별도 Git/gh 도구 기반 검증 |
+| Buzz PR과 GHES PR의 자동 동기화 | 기본 제공으로 간주하지 않음. 별도 Adapter 없으면 미지원 |
+| Public github.com 네트워크 Egress 차단 | GHES를 사용하는 필수 실행 경로에 외부 통신이 남지 않아야 함 |
+
+기본 권장: **Relay는 공식 Helm으로 배포하고 GHES는 Agent 도구부터 연동한다.** 네이티브 Desktop Git 통합이 필수인지 확인한 뒤 별도 소스 커스터마이징 과제로 분리한다.
