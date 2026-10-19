@@ -67,7 +67,7 @@ export BUZZ_OWNER_PUBKEY='<실제 소유자의 64자리 소문자 hex>'
 export BUZZ_RELAY_IMAGE_TAG='<GHCR에서 확인한 Buzz relay 이미지 태그>'
 export BUZZ_RELAY_URL='wss://buzz.hpc.example.com'
 
-test "\${#BUZZ_OWNER_PUBKEY}" -eq 64
+test "${#BUZZ_OWNER_PUBKEY}" -eq 64
 printf '%s' "$BUZZ_OWNER_PUBKEY" | grep -Eq '^[0-9a-f]{64}$'
 test -n "$BUZZ_RELAY_IMAGE_TAG"
 
