@@ -75,10 +75,11 @@ helm template buzz ./buzz-0.1.11.tgz \
   -n buzz -f values-bundled.yaml \
   --set-string ownerPubkey="$BUZZ_OWNER_PUBKEY" \
   --set-string relayUrl="$BUZZ_RELAY_URL" \
-  --set-string image.tag="$BUZZ_RELAY_IMAGE_TAG" > rendered.yaml
+  --set-string image.tag="$BUZZ_RELAY_IMAGE_TAG" \
+  | grep 'image:' | sort -u
 
-# 예상 이미지가 원본 registry인지, 사이드카가 추가됐는지 최종 검수
-grep 'image:' rendered.yaml | sort -u
+# 주의: helm template 전체 출력에는 자동 생성된 Secret 데이터가 들어간다.
+# 전체 manifest를 파일/CI 로그로 남기지 말 것.
 
 helm upgrade --install buzz ./buzz-0.1.11.tgz \
   -n buzz --create-namespace \
