@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# Launch the centrally staged Buzz Desktop AppImage in this user's X session.
+# This file is intentionally named buzz-desktop; 'buzz' is the agent CLI.
+set -euo pipefail
+umask 077
+
+: "${BUZZ_NFS_ROOT:?source the site env.sh first}"
+: "${BUZZ_RELAY_URL:?source the site env.sh first}"
+
+if [[ -z "${DISPLAY:-}" && -z "${WAYLAND_DISPLAY:-}" ]]; then
+  printf 'Buzz: no graphical session detected (DISPLAY/WAYLAND_DISPLAY unset).\n' >&2
+  exit 2
+fi
+
+# The environment key overrides the human's persisted OS-keyring identity.
+# Reject ambient secrets here to avoid accidental shared or changing identities.
+if [[ -n "${BUZZ_PRIVATE_KEY:-}" || -n "${BUZZ_SHARE_IDENTITY:-}" ]]; then
+  printf 'Buzz: remove BUZZ_PRIVATE_KEY/BUZZ_SHARE_IDENTITY from the environment; use per-user keyring identity.\n' >&2
+  exit 2
+fi
+
+app="${BUZZ_NFS_ROOT}/current/Buzz.AppImage"
+if [[ ! -x "$app" ]]; then
+  printf 'Buzz: %s is missing or not executable. Check NFS mount and installation.\n' "$app" >&2
+  exit 2
+fi
+
+# Let AppImage mount itself using the host's FUSE support. Avoid per-login
+# extraction. Release compatibility (glibc, GLib, FUSE) is verified by admin.
+exec "$app" "$@"
