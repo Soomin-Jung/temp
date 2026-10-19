@@ -1,0 +1,18 @@
+# OPTIONAL Ingress overlay. Internal DNS/TLS/Ingress Controller must exist.
+relayUrl: wss://buzz.example.internal
+mediaBaseUrl: https://buzz.example.internal/media
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+  hosts:
+    - host: buzz.example.internal
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: buzz-internal-tls
+      hosts:
+        - buzz.example.internal
