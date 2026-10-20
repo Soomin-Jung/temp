@@ -47,7 +47,7 @@ From: ubuntu:24.04
     npm install --global --prefix /opt/acp --no-audit --no-fund \
         @agentclientprotocol/codex-acp@2.2.2 \
         @agentclientprotocol/claude-agent-acp@0.94.0 \
-        @anthropic-ai/claude-code@2.1.270
+        @anthropic-ai/claude-code@2.1.303
 
     for binary in codex-acp claude-agent-acp codex claude; do
         command -v "$binary" >/dev/null || { echo "Missing ACP/CLI: $binary" >&2; exit 1; }
