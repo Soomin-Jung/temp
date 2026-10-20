@@ -1,5 +1,7 @@
 # Buzz HPC — Linux X 세션 + NFS 공용 Desktop + Local Agent 운영안
 
+> **2026-10-20 후속 변경:** 아래의 AppImage 직접 실행 설치 예시는 호스트 `libffi.so.8` 부재로 운영 기본안에서 제외됐다. 현재 배포 절차는 **[Singularity `Buzz.def` / SIF 패키징 가이드](singularity/README.md)**를 따라야 한다. 기존 `nfs-client/buzz-desktop` 실행 래퍼도 `Buzz.sif` 방식으로 바뀌었다. 아래 AppImage 내용은 최초 설계 이력과 검증 체크리스트 참고용이며 그대로 실행하지 않는다.
+
 검토일: 2026-10-19 KST. **설계 및 공식 소스 정적 검토; 사내 Linux X 세션/NFS/사내 CA/GHES 실기동 검증 전.**  
 검토 범위: `block/buzz` 2026-10-19 공개 main의 Desktop/Agent 소스, 공식 AppImage 문서. 기존 [Relay 설치 가이드](README.md)는 별도의 고정 커밋(`3debf18f...`) 기준이므로 **Desktop 릴리스와 Relay API 호환성은 선택한 두 버전으로 별도 검증한다.**
 

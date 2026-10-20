@@ -4,6 +4,13 @@
 상태: **소스·차트 정적 검토 완료 / HPC 실제 설치 미검증**  
 대상: [block/buzz](https://github.com/block/buzz) commit [3debf18f1448334aa7bc202d328d93bb9651e168](https://github.com/block/buzz/tree/3debf18f1448334aa7bc202d328d93bb9651e168), chart `deploy/charts/buzz` 0.1.11.
 
+## 2026-10-20 업데이트: NFS Buzz Desktop은 Singularity SIF로 실행
+
+- **[Singularity Definition / SIF 빌드·NFS 배포 가이드](singularity/README.md)** / [Buzz.def](singularity/Buzz.def).
+- 실사용 Linux X 호스트에서 `libffi.so.8` 부재로 AppImage가 실패하여, **Ubuntu 24.04 + `libffi8` + 공식 Buzz `.deb`를 SIF로 재패키징하는 방식을 새 기본안으로 변경**.
+- 사용자 명령은 그대로 `source /nfs/apps/buzz/env.sh; buzz`. `nfs-client/buzz-desktop`은 이제 `singularity/apptainer run --cleanenv`을 호출한다.
+- 과거 [AppImage 직접 실행안](local-agent-nfs-desktop.md)의 AppImage 설치·FUSE 절차는 더 이상 기본안이 아니다. 기존 가이드의 Local Agent/GHES/Keyring 운영 원칙은 유효하다.
+
 ## 권장 HPC 사용 경로: Linux X 세션 + Local Agent
 
 - **[NFS 공용 Buzz Desktop 설치·`source env.sh; buzz` 실행 가이드](local-agent-nfs-desktop.md)** — Linux X 서버에서 Local Agent 실행, 사내 vLLM·GHES 연결, 사용자별 키·상태 격리 및 OS/glibc/FUSE/NFS 점검.
