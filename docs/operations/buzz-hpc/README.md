@@ -4,6 +4,14 @@
 상태: **소스·차트 정적 검토 완료 / HPC 실제 설치 미검증**  
 대상: [block/buzz](https://github.com/block/buzz) commit [3debf18f1448334aa7bc202d328d93bb9651e168](https://github.com/block/buzz/tree/3debf18f1448334aa7bc202d328d93bb9651e168), chart `deploy/charts/buzz` 0.1.11.
 
+## 2026-10-20: Buzz Desktop ACP 런타임 및 DTGPT 연동
+
+- **[Codex/Claude ACP 사용자 설정 + OpenAI-compatible API Key 실패 분석 + Desktop 로그](singularity/dtgpt-acp-configuration.md)**
+- [SIF Definition](singularity/Buzz.def)에 Node 24, `claude-agent-acp`, `codex-acp`, Codex CLI, `en_US.UTF-8` locale를 설치.
+- `source env.sh; BUZZ_DESKTOP_LOG_TO_FILE=1 buzz`로 실행 시 기본 Relay URL과 사용자별 stdout/stderr 로그 위치 출력. **저장된 Workspace Relay가 우선할 수 있음**.
+- 최초 "Connect with an API key" 단계는 **GET `OPENAI_COMPAT_BASE_URL/models`**로 모델 목록을 조회한다. Base URL 미설정 시 `https://api.openai.com/v1`이며, `openai` 선택 시 GPT/o 모델 ID 필터 때문에 사내 Qwen을 제거할 수 있다. 사내 Qwen이면 `openai-compat`를 선택.
+- Relay 배포 담당은 별도 팀원이므로 이 변경은 **NFS Desktop 이미지·사용자 설정**에 한정.
+
 ## 2026-10-20 업데이트: NFS Buzz Desktop은 Singularity SIF로 실행
 
 - **[Singularity Definition / SIF 빌드·NFS 배포 가이드](singularity/README.md)** / [Buzz.def](singularity/Buzz.def).
@@ -16,7 +24,7 @@
 - **[NFS 공용 Buzz Desktop 설치·`source env.sh; buzz` 실행 가이드](local-agent-nfs-desktop.md)** — Linux X 서버에서 Local Agent 실행, 사내 vLLM·GHES 연결, 사용자별 키·상태 격리 및 OS/glibc/FUSE/NFS 점검.
 - **기본값은 Local Agent**이며, 사용자가 Kubernetes Pod를 생성할 필요가 없다. 공식 Helm 차트는 Relay/저장소 계층을 설치하며, Remote Agent용 Kubernetes Provider는 선택 경로다.
 - 이 가이드는 Desktop이 아닌 웹 브라우저로 모든 기능을 사용한다는 이전 요구사항과 **별개의 운영 옵션**이다. 기업 OIDC SSO·GHES 네이티브 UI의 제약은 동일하게 남는다.
-- **호환성 차단 조건**: 실제 X 서버에서 Buzz Linux AppImage의 glibc, GLib, FUSE, NFS `exec` 지원을 먼저 확인한다. Desktop 릴리스와 이 문서의 Relay 소스 검토 커밋이 서로 다를 수 있다.
+- **호환성 차단 조건**: SIF의 X11·D-Bus·HOME 바인드, 런타임 실행 정책과 사내 CA를 검증한다. **AppImage 호스트 의존성 점검은 과거 직접 실행 경로에만 해당**한다. Desktop과 Relay 버전 호환성을 별도 확인한다.
 
 ## 도메인 및 GitHub Enterprise 연동
 
