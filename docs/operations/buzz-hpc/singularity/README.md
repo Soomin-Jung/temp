@@ -2,6 +2,13 @@
 
 **검토일:** 2026-10-20 · 소스/스크립트 정적 검토 및 가짜 Apptainer 실행 테스트 완료. **SIF 빌드·실제 HPC X11 실행은 미검증.**
 
+## Codex/Claude ACP 및 UTF-8 업데이트 (2026-10-20)
+
+- 최신 `Buzz.def`는 Node.js 24, `@agentclientprotocol/claude-agent-acp`, `@agentclientprotocol/codex-acp`, `@openai/codex`, `en_US.UTF-8` locale을 포함.
+- **[DTGPT 환경변수·Codex config.toml·Claude settings.json 및 API Key 오류/로그 진단](dtgpt-acp-configuration.md)** 참조.
+- 사용자가 `BUZZ_DESKTOP_LOG_TO_FILE=1 buzz`로 실행하면 Launcher와 GUI stdout/stderr를 `~/.local/state/buzz/`에 저장할 수 있음.
+- Codex는 Responses API, Claude는 Anthropic Messages API가 필요하며, DTGPT의 단순 OpenAI Chat Completions 호환성만으로 모두 가능하지 않음.
+
 ## 변경 이유
 
 모든 사용자 X 세션 호스트에 `libffi.so.8`이 있지 않고, 호스트 패키지를 관리할 수 없다. 따라서 공식 `.AppImage`를 호스트에서 실행하지 않는다. 대신 **공식 Buzz `.deb`를 Ubuntu 24.04 + libffi8 + WebKitGTK 환경에 설치한 뒤 읽기 전용 `Buzz.sif`로 배포**한다.
@@ -21,7 +28,7 @@ apptainer build Buzz.sif Buzz.def
 # 또는 singularity build Buzz.sif Buzz.def
 
 apptainer exec --cleanenv Buzz.sif /bin/bash -c 'ldconfig -p | grep libffi.so.8'
-apptainer exec --cleanenv Buzz.sif /bin/bash -c 'command -v buzz-desktop && ! ldd /usr/bin/buzz-desktop | grep "not found"'
+apptainer exec --cleanenv Buzz.sif /bin/bash -c 'command -v buzz-desktop && ! ldd /usr/bin/buzz-desktop | grep "not found"'\napptainer exec --cleanenv Buzz.sif /bin/bash -c 'locale; node --version; codex --version; codex-acp --version; claude-agent-acp --version'
 sha256sum Buzz.sif
 ```
 
