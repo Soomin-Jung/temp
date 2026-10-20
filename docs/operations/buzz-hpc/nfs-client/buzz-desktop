@@ -36,6 +36,11 @@ forward=(
   OPENAI_COMPAT_API_KEY OPENAI_COMPAT_BASE_URL OPENAI_COMPAT_MODEL OPENAI_COMPAT_API
   HTTPS_PROXY HTTP_PROXY NO_PROXY
   GH_HOST GH_TOKEN GITHUB_TOKEN
+  CLAUDE_CONFIG_DIR ANTHROPIC_BASE_URL ANTHROPIC_AUTH_TOKEN
+  ANTHROPIC_API_KEY ANTHROPIC_MODEL ANTHROPIC_DEFAULT_SONNET_MODEL
+  ANTHROPIC_DEFAULT_OPUS_MODEL ANTHROPIC_DEFAULT_HAIKU_MODEL
+  CODEX_HOME CODEX_API_KEY OPENAI_API_KEY MODEL_PROVIDER
+  NO_BROWSER RUST_LOG RUST_BACKTRACE
 )
 for name in "${forward[@]}"; do
   if [[ -v "$name" ]]; then
@@ -60,4 +65,26 @@ fi
 
 # Default Singularity/Apptainer binds include HOME, CWD and /tmp.
 # Additional project directories require an approved bind policy.
+# Display the launcher default. Buzz can override this from saved workspace state.
+printf 'Buzz: engine=%s, SIF=%s\n' "$engine" "$sif" >&2
+printf 'Buzz: launch relay=%s (saved Buzz workspace may override)\n' "$BUZZ_RELAY_URL" >&2
+if [[ -n "${OPENAI_COMPAT_BASE_URL:-}" ]]; then
+  printf 'Buzz: buzz-agent model endpoint=%s\n' "$OPENAI_COMPAT_BASE_URL" >&2
+fi
+if [[ -n "${ANTHROPIC_BASE_URL:-}" ]]; then
+  printf 'Buzz: Claude endpoint=%s\n' "$ANTHROPIC_BASE_URL" >&2
+fi
+
+# Desktop release builds often emit little to stdout/stderr. The optional
+# user-private log captures what they do emit without writing to the SIF/NFS.
+# Never enable shell set -x: that would disclose API keys in exported env.
+if [[ "${BUZZ_DESKTOP_LOG_TO_FILE:-0}" == "1" ]]; then
+  logdir="${XDG_STATE_HOME:-$HOME/.local/state}/buzz"
+  mkdir -p -m 0700 "$logdir"
+  logfile="$logdir/desktop-$(date +%Y%m%d-%H%M%S).log"
+  printf 'Buzz: collecting launcher/stdout/stderr at %s\n' "$logfile" >&2
+  "$engine" run --cleanenv "${binds[@]}" "$sif" "$@" 2>&1 | tee -a "$logfile"
+  exit "${PIPESTATUS[0]}"
+fi
+
 exec "$engine" run --cleanenv "${binds[@]}" "$sif" "$@"
