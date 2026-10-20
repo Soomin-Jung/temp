@@ -12,9 +12,9 @@
 
 ## 1. 빌드된 SIF에 포함되는 런타임
 
-[Definition](Buzz.def)에 Ubuntu 24.04, libffi8, WebKitGTK, Node 24.18.0, npm, Codex ACP 2.2.2, Claude ACP 0.94.0, Claude CLI 2.1.303, IBus/ibus-hangul, `ko_KR.UTF-8` 및 `en_US.UTF-8` Locale, 한글 폰트를 추가한다.
+[Definition](Buzz.def)에 Ubuntu 24.04, libffi8, WebKitGTK, Node 24.18.0, npm, Codex ACP 2.2.2, Codex CLI 0.160.1, Claude ACP 0.94.0, Claude CLI 2.1.303, IBus/ibus-hangul, `ko_KR.UTF-8` 및 `en_US.UTF-8` Locale, 한글 폰트를 추가한다.
 
-`@agentclientprotocol/codex-acp`는 호환되는 `@openai/codex` CLI를 transitive dependency로 포함한다. 설치된 CLI가 PATH의 `/opt/acp/bin/codex`로 노출됨을 SIF `%test`에서 확인한다. 빌드 서버 npm 레지스트리에서만 패키지를 설치하며 사용자가 GUI에서 ACP 선택할 때 `npx` 다운로드를 수행하지 않는다.
+`@agentclientprotocol/codex-acp`는 호환되는 `@openai/codex` CLI를 transitive dependency로 포함한다. Codex CLI도 ACP와 일치하는 버전으로 전역 설치하고 PATH의 `/opt/acp/bin/codex`로 노출됨을 SIF `%test`에서 확인한다. 빌드 서버 npm 레지스트리에서만 패키지를 설치하며 사용자가 GUI에서 ACP 선택할 때 `npx` 다운로드를 수행하지 않는다.
 
 ```bash
 singularity exec --cleanenv Buzz.sif bash -lc '
