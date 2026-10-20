@@ -21,7 +21,7 @@ From: ubuntu:24.04
     apt-get update
     apt-get install -y --no-install-recommends \
         ca-certificates bash curl git openssh-client python3 jq ripgrep \
-        xdg-utils locales \
+        xdg-utils locales xz-utils \
         libffi8 libgtk-3-0 libwebkit2gtk-4.1-0 libayatana-appindicator3-1 \
         libsecret-1-0 libdbus-1-3 libnss3 libgl1 libegl1 libgbm1 \
         gstreamer1.0-plugins-base gstreamer1.0-plugins-good \
@@ -33,6 +33,9 @@ From: ubuntu:24.04
     sed -i 's/^# *en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen
     sed -i 's/^# *ko_KR.UTF-8 UTF-8/ko_KR.UTF-8 UTF-8/' /etc/locale.gen
     locale-gen en_US.UTF-8 ko_KR.UTF-8
+
+    # /run/user bind destination for per-user XDG_RUNTIME_DIR on HPC systems.
+    install -d -m 0755 /run/user
 
     # Stage pinned official Node 24 binary (no host Node/npm dependency).
     install -d -m 0755 /opt/node /opt/acp
