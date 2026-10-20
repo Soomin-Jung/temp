@@ -117,7 +117,7 @@ success requires 2xx and JSON {data:[{id:"..."}]} with nonempty compatible model
 ```bash
 # `source env.sh` 후 호스트나 SIF 내부에서 실행
 echo "DTGPT model listing URL = ${OPENAI_COMPAT_BASE_URL%/}/models"
-curl -sS -i -H "Authorization: Bearer ${OPENAI_COMPAT_API_KEY}" \\
+curl -sS -i -H "Authorization: Bearer ${OPENAI_COMPAT_API_KEY}" \
     "${OPENAI_COMPAT_BASE_URL%/}/models"
 ```
 
@@ -164,7 +164,7 @@ Agent를 아직 만들지 않은 onboarding 단계라면 이 로그 디렉터리
 
 ```bash
 # 기본 모델 탐색 / 인증 실패는 정해진 모델 URL을 curl로 재현
-curl -vk "${OPENAI_COMPAT_BASE_URL%/}/models" \\
+curl -vk "${OPENAI_COMPAT_BASE_URL%/}/models" \
   -H "Authorization: Bearer ${OPENAI_COMPAT_API_KEY}"  # -k는 진단용으로만
 ```
 
