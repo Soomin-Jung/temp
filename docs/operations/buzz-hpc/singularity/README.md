@@ -44,7 +44,7 @@ sha256sum Buzz.sif
 
 ### ACP npm package installation
 
-현재 Pin: Node `24.18.0`, `@agentclientprotocol/codex-acp@2.2.2`, `@agentclientprotocol/claude-agent-acp@0.94.0`, `@anthropic-ai/claude-code@2.1.303` (공식 Claude ACP SDK의 Claude Code 버전과 맞춤). `codex-acp`가 호환 `@openai/codex`를 dependency로 동봉하므로 별도 전역 CLI 재설치를 하지 않는다. `@agentclientprotocol/claude-agent-acp`는 Node >=22가 필요하다.
+현재 Pin: Node `24.18.0`, `@agentclientprotocol/codex-acp@2.2.2`, `@agentclientprotocol/claude-agent-acp@0.94.0`, `@openai/codex@0.160.1`, `@anthropic-ai/claude-code@2.1.303` (공식 Claude ACP SDK의 Claude Code 버전과 맞춤). `codex-acp`가 호환 `@openai/codex`를 dependency로 동봉하므로 별도 전역 CLI 재설치를 하지 않는다. `@agentclientprotocol/claude-agent-acp`는 Node >=22가 필요하다.
 
 `%post`의 npm install은 **빌드 서버에서만** 레지스트리에 접근한다. 인터넷 차단 시 승인된 사내 npm registry/proxy를 지정하고 필요한 optional native binary package까지 미러링해야 한다. `latest`를 사용하지 않지만 transitive dependency 및 apt 저장소는 추가적으로 lock/snapshot이 필요하다. 런타임 SIF는 추가 npm install을 하지 않는다.
 
