@@ -7,6 +7,7 @@
 ## 2026-10-20 업데이트: NFS Buzz Desktop은 Singularity SIF로 실행
 
 - **[Singularity Definition / SIF 빌드·NFS 배포 가이드](singularity/README.md)** / [Buzz.def](singularity/Buzz.def).
+- **[DTGPT OpenAI/Anthropic API 연결·Codex/Claude ACP·BuilderLab 우회·한글 IME·로그](singularity/dtgpt-acp-setup.md)** — 실제 사용자 Onboarding/Troubleshooting.
 - 실사용 Linux X 호스트에서 `libffi.so.8` 부재로 AppImage가 실패하여, **Ubuntu 24.04 + `libffi8` + 공식 Buzz `.deb`를 SIF로 재패키징하는 방식을 새 기본안으로 변경**.
 - 사용자 명령은 그대로 `source /nfs/apps/buzz/env.sh; buzz`. `nfs-client/buzz-desktop`은 이제 `singularity/apptainer run --cleanenv`을 호출한다.
 - 과거 [AppImage 직접 실행안](local-agent-nfs-desktop.md)의 AppImage 설치·FUSE 절차는 더 이상 기본안이 아니다. 기존 가이드의 Local Agent/GHES/Keyring 운영 원칙은 유효하다.
