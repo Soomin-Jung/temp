@@ -42,10 +42,12 @@ From: ubuntu:24.04
     npm --version
 
     # ACP adapters must be installed at image-build time, NOT npx at user login.
-    # codex-acp bundles a matched @openai/codex dependency.
+    # codex-acp bundles a matched @openai/codex dependency; install the same
+    # Codex version globally too so Buzz auth/readiness can find `codex`.
     # claude-agent-acp uses Claude Agent SDK; CLI is installed for Buzz auth probe.
     npm install --global --prefix /opt/acp --no-audit --no-fund \
         @agentclientprotocol/codex-acp@2.2.2 \
+        @openai/codex@0.160.1 \
         @agentclientprotocol/claude-agent-acp@0.94.0 \
         @anthropic-ai/claude-code@2.1.303
 
@@ -78,10 +80,30 @@ From: ubuntu:24.04
 %runscript
     set -eu
     # Honor an inherited UTF-8 locale if actually generated in this image.
-    if ! LC_ALL="${LANG:-}" locale charmap 2>/dev/null | grep -qi '^UTF-8$'; then
-        export LANG=en_US.UTF-8
+    candidate="${LC_ALL:-${LANG:-en_US.UTF-8}}"
+    if ! LC_ALL="$candidate" locale charmap 2>/dev/null | grep -qi '^UTF-8
+    # Only start ibus-daemon when explicitly requested; reusing a host daemon
+    # through the bound session D-Bus is preferable. Avoid duplicate daemons.
+    if [ "${BUZZ_START_IBUS:-0}" = "1" ]; then
+        ibus-daemon -drx >/dev/null 2>&1 || true
     fi
-    export LC_ALL="$LANG"
+    exec /usr/bin/buzz-desktop "$@"
+
+%test
+    test -x /usr/bin/buzz-desktop
+    test -e /usr/lib/x86_64-linux-gnu/libffi.so.8
+    ! ldd /usr/bin/buzz-desktop | grep -q 'not found'
+    /opt/node/bin/node --version | grep -Fx 'v24.18.0'
+    test -x /opt/acp/bin/codex-acp
+    test -x /opt/acp/bin/claude-agent-acp
+    test -x /opt/acp/bin/claude
+    test -x /opt/acp/bin/codex
+    LC_ALL=ko_KR.UTF-8 locale charmap | grep -qi '^UTF-8$'
+; then
+        candidate=en_US.UTF-8
+    fi
+    export LANG="$candidate"
+    export LC_ALL="$candidate"
     # Only start ibus-daemon when explicitly requested; reusing a host daemon
     # through the bound session D-Bus is preferable. Avoid duplicate daemons.
     if [ "${BUZZ_START_IBUS:-0}" = "1" ]; then
