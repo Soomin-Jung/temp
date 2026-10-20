@@ -1,30 +1,63 @@
 #!/usr/bin/env bash
-# Launch the centrally staged Buzz Desktop AppImage in this user's X session.
-# This file is intentionally named buzz-desktop; 'buzz' is the agent CLI.
+# Buzz Linux X-session / NFS launcher. Does not execute an AppImage.
 set -euo pipefail
 umask 077
 
 : "${BUZZ_NFS_ROOT:?source the site env.sh first}"
 : "${BUZZ_RELAY_URL:?source the site env.sh first}"
 
-if [[ -z "${DISPLAY:-}" && -z "${WAYLAND_DISPLAY:-}" ]]; then
-  printf 'Buzz: no graphical session detected (DISPLAY/WAYLAND_DISPLAY unset).\n' >&2
+if [[ -z "${DISPLAY:-}" ]]; then
+  echo 'Buzz: DISPLAY is empty; X11 session or X11 forwarding is required.' >&2
+  exit 2
+fi
+if [[ -n "${BUZZ_PRIVATE_KEY:-}" ]]; then
+  echo 'Buzz: unset BUZZ_PRIVATE_KEY; use per-user Desktop identity.' >&2
   exit 2
 fi
 
-# The environment key overrides the human's persisted OS-keyring identity.
-# Reject ambient secrets here to avoid accidental shared or changing identities.
-if [[ -n "${BUZZ_PRIVATE_KEY:-}" || -n "${BUZZ_SHARE_IDENTITY:-}" ]]; then
-  printf 'Buzz: remove BUZZ_PRIVATE_KEY/BUZZ_SHARE_IDENTITY from the environment; use per-user keyring identity.\n' >&2
+if command -v apptainer >/dev/null 2>&1; then
+  engine=apptainer
+elif command -v singularity >/dev/null 2>&1; then
+  engine=singularity
+else
+  echo 'Buzz: neither apptainer nor singularity found.' >&2
   exit 2
 fi
 
-app="${BUZZ_NFS_ROOT}/current/Buzz.AppImage"
-if [[ ! -x "$app" ]]; then
-  printf 'Buzz: %s is missing or not executable. Check NFS mount and installation.\n' "$app" >&2
-  exit 2
+sif="${BUZZ_NFS_ROOT}/current/Buzz.sif"
+[[ -r "$sif" ]] || { echo "Buzz: cannot read $sif" >&2; exit 2; }
+
+# Inject selected session values after --cleanenv. User secrets belong
+# outside the shared env.sh and SIF.
+forward=(
+  DISPLAY XAUTHORITY XDG_RUNTIME_DIR DBUS_SESSION_BUS_ADDRESS
+  GDK_BACKEND BUZZ_RELAY_URL BUZZ_RELAY_HTTP
+  BUZZ_AGENT_PROVIDER BUZZ_AGENT_MODEL
+  OPENAI_COMPAT_API_KEY OPENAI_COMPAT_BASE_URL OPENAI_COMPAT_MODEL OPENAI_COMPAT_API
+  HTTPS_PROXY HTTP_PROXY NO_PROXY
+  GH_HOST GH_TOKEN GITHUB_TOKEN
+)
+for name in "${forward[@]}"; do
+  if [[ -v "$name" ]]; then
+    export "APPTAINERENV_${name}=${!name}"
+    export "SINGULARITYENV_${name}=${!name}"
+  fi
+done
+
+binds=()
+if [[ -d /tmp/.X11-unix ]]; then
+  binds+=(--bind /tmp/.X11-unix:/tmp/.X11-unix)
+fi
+if [[ -n "${XDG_RUNTIME_DIR:-}" && -d "$XDG_RUNTIME_DIR" ]]; then
+  binds+=(--bind "${XDG_RUNTIME_DIR}:${XDG_RUNTIME_DIR}")
+fi
+if [[ -n "${XAUTHORITY:-}" && -f "$XAUTHORITY" ]]; then
+  case "$XAUTHORITY" in
+    "$HOME"/*|/tmp/*|"${XDG_RUNTIME_DIR:-/run/nonexistent}"/*) ;;
+    *) binds+=(--bind "$XAUTHORITY:$XAUTHORITY:ro") ;;
+  esac
 fi
 
-# Let AppImage mount itself using the host's FUSE support. Avoid per-login
-# extraction. Release compatibility (glibc, GLib, FUSE) is verified by admin.
-exec "$app" "$@"
+# Default Singularity/Apptainer binds include HOME, CWD and /tmp.
+# Additional project directories require an approved bind policy.
+exec "$engine" run --cleanenv "${binds[@]}" "$sif" "$@"
