@@ -1,17 +1,16 @@
 #!/usr/bin/env bash
-# Buzz Linux X-session / NFS launcher. Does not execute an AppImage.
+# NFS shared Buzz Desktop SIF. User-only logs; no credentials in shared files.
 set -euo pipefail
 umask 077
-
-: "${BUZZ_NFS_ROOT:?source the site env.sh first}"
-: "${BUZZ_RELAY_URL:?source the site env.sh first}"
+: "${BUZZ_NFS_ROOT:?source /nfs/apps/buzz/env.sh first}"
+: "${BUZZ_RELAY_URL:?BUZZ_RELAY_URL must point to the internal relay}"
 
 if [[ -z "${DISPLAY:-}" ]]; then
-  echo 'Buzz: DISPLAY is empty; X11 session or X11 forwarding is required.' >&2
+  echo "Buzz: DISPLAY is empty; an X11 session is required." >&2
   exit 2
 fi
 if [[ -n "${BUZZ_PRIVATE_KEY:-}" ]]; then
-  echo 'Buzz: unset BUZZ_PRIVATE_KEY; use per-user Desktop identity.' >&2
+  echo "Buzz: BUZZ_PRIVATE_KEY should not be inherited; use the per-user OS keyring." >&2
   exit 2
 fi
 
@@ -20,21 +19,39 @@ if command -v apptainer >/dev/null 2>&1; then
 elif command -v singularity >/dev/null 2>&1; then
   engine=singularity
 else
-  echo 'Buzz: neither apptainer nor singularity found.' >&2
+  echo "Buzz: Singularity/Apptainer runtime missing." >&2
   exit 2
 fi
 
 sif="${BUZZ_NFS_ROOT}/current/Buzz.sif"
-[[ -r "$sif" ]] || { echo "Buzz: cannot read $sif" >&2; exit 2; }
+[[ -r "$sif" ]] || { echo "Buzz: cannot read SIF: $sif" >&2; exit 2; }
 
-# Inject selected session values after --cleanenv. User secrets belong
-# outside the shared env.sh and SIF.
+# This log belongs to the executing user (never NFS shared app installation).
+log_root="${XDG_STATE_HOME:-$HOME/.local/state}/buzz"
+mkdir -p "$log_root/codex-acp"
+chmod 700 "$log_root" "$log_root/codex-acp"
+log_file="$log_root/desktop.log"
+touch "$log_file"
+chmod 600 "$log_file"
+
+export APP_SERVER_LOGS="$log_root/codex-acp"
+# A shared env.sh must NEVER include per-user keys or bearer tokens.
+# Prefer sourcing per-user secrets from an approved store before running.
 forward=(
   DISPLAY XAUTHORITY XDG_RUNTIME_DIR DBUS_SESSION_BUS_ADDRESS
-  GDK_BACKEND BUZZ_RELAY_URL BUZZ_RELAY_HTTP
+  LANG LC_ALL LC_CTYPE LANGUAGE
+  GDK_BACKEND GTK_IM_MODULE QT_IM_MODULE XMODIFIERS
+  IBUS_ADDRESS BUZZ_START_IBUS
+  BUZZ_RELAY_URL BUZZ_RELAY_HTTP
   BUZZ_AGENT_PROVIDER BUZZ_AGENT_MODEL
   OPENAI_COMPAT_API_KEY OPENAI_COMPAT_BASE_URL OPENAI_COMPAT_MODEL OPENAI_COMPAT_API
-  HTTPS_PROXY HTTP_PROXY NO_PROXY
+  ANTHROPIC_BASE_URL ANTHROPIC_API_KEY ANTHROPIC_AUTH_TOKEN
+  ANTHROPIC_MODEL ANTHROPIC_DEFAULT_SONNET_MODEL
+  ANTHROPIC_DEFAULT_OPUS_MODEL ANTHROPIC_DEFAULT_HAIKU_MODEL
+  CODEX_API_KEY OPENAI_API_KEY MODEL_PROVIDER CODEX_HOME CODEX_CONFIG
+  CLAUDE_CONFIG_DIR APP_SERVER_LOGS NO_BROWSER RUST_LOG
+  SSL_CERT_FILE NODE_EXTRA_CA_CERTS
+  HTTP_PROXY HTTPS_PROXY NO_PROXY
   GH_HOST GH_TOKEN GITHUB_TOKEN
 )
 for name in "${forward[@]}"; do
@@ -49,7 +66,7 @@ if [[ -d /tmp/.X11-unix ]]; then
   binds+=(--bind /tmp/.X11-unix:/tmp/.X11-unix)
 fi
 if [[ -n "${XDG_RUNTIME_DIR:-}" && -d "$XDG_RUNTIME_DIR" ]]; then
-  binds+=(--bind "${XDG_RUNTIME_DIR}:${XDG_RUNTIME_DIR}")
+  binds+=(--bind "$XDG_RUNTIME_DIR:$XDG_RUNTIME_DIR")
 fi
 if [[ -n "${XAUTHORITY:-}" && -f "$XAUTHORITY" ]]; then
   case "$XAUTHORITY" in
@@ -58,6 +75,24 @@ if [[ -n "${XAUTHORITY:-}" && -f "$XAUTHORITY" ]]; then
   esac
 fi
 
-# Default Singularity/Apptainer binds include HOME, CWD and /tmp.
-# Additional project directories require an approved bind policy.
-exec "$engine" run --cleanenv "${binds[@]}" "$sif" "$@"
+# Optional approved absolute directories for worktrees outside HOME and CWD.
+# Example: BUZZ_EXTRA_BINDS=/workspace/$USER,/scratch/$USER
+if [[ -n "${BUZZ_EXTRA_BINDS:-}" ]]; then
+  IFS=',' read -r -a requested <<< "$BUZZ_EXTRA_BINDS"
+  for dir in "${requested[@]}"; do
+    [[ "$dir" = /* && -d "$dir" ]] || { echo "Buzz: invalid bind directory: $dir" >&2; exit 2; }
+    binds+=(--bind "$dir:$dir")
+  done
+fi
+
+# Logged URLs contain no secret unless the operator placed one in a URL.
+printf '[%s] uid=%s display=%s relay=%s openai_compat_base=%s anthropic_base=%s\n' \
+  "$(date -Is)" "$(id -u)" "$DISPLAY" "$BUZZ_RELAY_URL" \
+  "${OPENAI_COMPAT_BASE_URL:-unset}" "${ANTHROPIC_BASE_URL:-unset}" >> "$log_file"
+printf '[buzz] launch output: %s\n' "$log_file" >&2
+
+if [[ "${BUZZ_LOG_FOREGROUND:-0}" = "1" ]]; then
+  exec "$engine" run --cleanenv "${binds[@]}" "$sif" "$@"
+else
+  exec "$engine" run --cleanenv "${binds[@]}" "$sif" "$@" >> "$log_file" 2>&1
+fi
