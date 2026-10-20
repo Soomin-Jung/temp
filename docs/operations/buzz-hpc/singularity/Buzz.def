@@ -4,12 +4,11 @@ From: ubuntu:24.04
 %labels
     Application "Buzz Desktop"
     Distribution "Ubuntu 24.04 (Noble)"
-    Packaging "Official Buzz .deb repackaged for Singularity/Apptainer"
-    IntendedUse "HPC Linux X session; local coding agents; NFS-shared SIF"
+    Purpose "HPC X-session Buzz Desktop with bundled Codex/Claude ACP agents"
+    PackageSource "Verified official Buzz amd64 deb"
 
 %files
-    # Stage the verified official x86_64 package as ./Buzz.deb
-    # in the directory where apptainer/singularity build runs.
+    # From the build directory; verify SHA-256 before staging.
     Buzz.deb /tmp/Buzz.deb
 
 %post
@@ -17,48 +16,69 @@ From: ubuntu:24.04
     export DEBIAN_FRONTEND=noninteractive
     export TZ=Etc/UTC
 
-    # All GUI/FFI dependencies are resolved in the SIF, not on X hosts.
+    # GUI, FFI, English UTF-8, fonts and agent command-line dependencies.
     apt-get update
     apt-get install -y --no-install-recommends \
-        ca-certificates \
-        bash \
-        curl \
-        git \
-        openssh-client \
-        python3 \
-        jq \
-        ripgrep \
-        xdg-utils \
-        libffi8 \
-        libgtk-3-0 \
-        libwebkit2gtk-4.1-0 \
-        libayatana-appindicator3-1 \
-        libsecret-1-0 \
-        libdbus-1-3 \
-        libnss3 \
-        libgl1 \
-        libegl1 \
-        libgbm1 \
-        gstreamer1.0-plugins-base \
-        gstreamer1.0-plugins-good \
-        fonts-dejavu-core \
-        fonts-noto-color-emoji \
+        ca-certificates bash curl git openssh-client python3 jq ripgrep \
+        locales gnupg xdg-utils \
+        libffi8 libgtk-3-0 libwebkit2gtk-4.1-0 libayatana-appindicator3-1 \
+        libsecret-1-0 libdbus-1-3 libnss3 libgl1 libegl1 libgbm1 \
+        gstreamer1.0-plugins-base gstreamer1.0-plugins-good \
+        fonts-dejavu-core fonts-noto-cjk fonts-noto-color-emoji \
         /tmp/Buzz.deb
 
-    test -x /usr/bin/buzz-desktop || { echo 'Expected /usr/bin/buzz-desktop in official .deb' >&2; exit 1; }
-    ldconfig -p | grep -q 'libffi.so.8' || { echo 'libffi.so.8 absent in SIF' >&2; exit 1; }
+    echo 'en_US.UTF-8 UTF-8' > /etc/locale.gen
+    locale-gen en_US.UTF-8
+    update-locale LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8
+
+    # Signed NodeSource Node.js 24.x repository, installed at SIF build time.
+    # Mirror the .deb packages / GPG key for air-gapped enterprise builders.
+    curl --fail --silent --show-error --location \
+        https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key \
+        | gpg --dearmor -o /usr/share/keyrings/nodesource.gpg
+    echo 'deb [signed-by=/usr/share/keyrings/nodesource.gpg] https://deb.nodesource.com/node_24.x nodistro main' \
+        > /etc/apt/sources.list.d/nodesource.list
+    apt-get update
+    apt-get install -y --no-install-recommends nodejs
+
+    # Pin approved released packages. Codex ACP already depends on Codex CLI,
+    # but installing Codex explicitly makes the `codex` command available as well.
+    # Never install npm packages into HOME (multi-user read-only SIF).
+    npm install -g --prefix /opt/buzz-agent-npm --no-audit --no-fund \
+        @agentclientprotocol/claude-agent-acp@0.83.0 \
+        @agentclientprotocol/codex-acp@2.1.1 \
+        @openai/codex@0.159.1
+
+    test -x /usr/bin/buzz-desktop
+    test -x /opt/buzz-agent-npm/bin/claude-agent-acp
+    test -x /opt/buzz-agent-npm/bin/codex-acp
+    test -x /opt/buzz-agent-npm/bin/codex
+    ldconfig -p | grep -q 'libffi.so.8'
     if ldd /usr/bin/buzz-desktop | grep -q 'not found'; then
         ldd /usr/bin/buzz-desktop >&2
         exit 1
     fi
 
+    # Build-time verification (no network login, API keys or user config).
+    /usr/bin/node --version
+    /usr/bin/npm --version
+    /opt/buzz-agent-npm/bin/codex --version
+    /opt/buzz-agent-npm/bin/codex-acp --version
+    /opt/buzz-agent-npm/bin/claude-agent-acp --version
+    /usr/bin/locale -a | grep -qi 'en_US.utf8'
+
     rm -f /tmp/Buzz.deb
     rm -rf /var/lib/apt/lists/*
 
 %environment
-    export LANG="${LANG:-C.UTF-8}"
-    export GDK_BACKEND="${GDK_BACKEND:-x11}"
-    # Do not use host LD_LIBRARY_PATH or invoke an AppImage.
+    export LANG=en_US.UTF-8
+    export LC_ALL=en_US.UTF-8
+    export LANGUAGE=en_US:en
+    export GDK_BACKEND=x11
+    export PATH="/opt/buzz-agent-npm/bin:/usr/local/bin:/usr/bin:/bin:${PATH:-}"
+    # User credentials/settings are NOT baked:
+    # ${HOME}/.claude/settings.json and ${HOME}/.codex/config.toml
+    # remain per-user via Singularity's HOME bind.
 
 %runscript
     exec /usr/bin/buzz-desktop "$@"
@@ -66,4 +86,7 @@ From: ubuntu:24.04
 %test
     test -x /usr/bin/buzz-desktop
     test -e /usr/lib/x86_64-linux-gnu/libffi.so.8
+    command -v node && command -v npm
+    command -v claude-agent-acp && command -v codex-acp && command -v codex
+    test "$(locale charmap)" = UTF-8
     ! ldd /usr/bin/buzz-desktop | grep -q 'not found'
