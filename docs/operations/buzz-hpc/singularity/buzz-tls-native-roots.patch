@@ -1,0 +1,12 @@
+diff --git a/Cargo.toml b/Cargo.toml
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -134,1 +134,1 @@
+-tokio-tungstenite = { version = "0.29", features = ["rustls-tls-webpki-roots"] }
++tokio-tungstenite = { version = "0.29", features = ["rustls-tls-webpki-roots", "rustls-tls-native-roots"] }
+diff --git a/desktop/src-tauri/Cargo.toml b/desktop/src-tauri/Cargo.toml
+--- a/desktop/src-tauri/Cargo.toml
++++ b/desktop/src-tauri/Cargo.toml
+@@ -92,1 +92,1 @@
+-tokio-tungstenite = { version = "0.29", features = ["rustls-tls-webpki-roots"] }
++tokio-tungstenite = { version = "0.29", features = ["rustls-tls-webpki-roots", "rustls-tls-native-roots"] }
