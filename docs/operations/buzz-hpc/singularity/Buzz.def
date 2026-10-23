@@ -79,8 +79,19 @@ From: ubuntu:24.04
 
 %environment
     export PATH="/opt/node/bin:/opt/acp/bin:/usr/local/bin:/usr/bin:/bin:${PATH:-}"
-    # No LC_ALL override here: the per-user X11 launcher forwards a valid
-    # locale; %runscript
+    export LANG="${LANG:-en_US.UTF-8}"
+    export GDK_BACKEND="${GDK_BACKEND:-x11}"
+    export GTK_IM_MODULE="${GTK_IM_MODULE:-ibus}"
+    export QT_IM_MODULE="${QT_IM_MODULE:-ibus}"
+    export XMODIFIERS="${XMODIFIERS:-@im=ibus}"
+    # Preserve the complete public+private CA bundle.
+    # Required by rustls-native-certs after the upstream source patch.
+    export SSL_CERT_FILE="/etc/ssl/certs/ca-certificates.crt"
+    export CURL_CA_BUNDLE="/etc/ssl/certs/ca-certificates.crt"
+    export GIT_SSL_CAINFO="/etc/ssl/certs/ca-certificates.crt"
+    export NODE_EXTRA_CA_CERTS="/usr/local/share/ca-certificates/company-root-ca.crt"
+
+%runscript
     set -eu
     candidate="${LC_ALL:-${LANG:-en_US.UTF-8}}"
     if ! LC_ALL="$candidate" locale charmap 2>/dev/null | grep -qi '^UTF-8$'; then
