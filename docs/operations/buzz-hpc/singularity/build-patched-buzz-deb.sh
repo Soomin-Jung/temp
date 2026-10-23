@@ -21,9 +21,6 @@ out="$(realpath -m "$2")"
   exit 2
 }
 
-src_version="$(node -p "require('./desktop/package.json').version")"
-echo "Buzz source version: $src_version"
-echo "Buzz source commit: $(git rev-parse HEAD)"
 
 # Match the SIF's Ubuntu 24.04 base, and the exact source release tag
 # (checkout is the caller's responsibility; do not automatically jump to main).
@@ -45,6 +42,10 @@ if [[ -f ./bin/activate-hermit ]]; then
   # shellcheck disable=SC1091
   source ./bin/activate-hermit
 fi
+
+src_version="$(node -p "require('./desktop/package.json').version")"
+echo "Buzz source version: $src_version"
+echo "Buzz source commit: $(git rev-parse HEAD)"
 
 echo "Toolchain versions:"
 rustc --version
