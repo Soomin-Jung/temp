@@ -4,6 +4,12 @@
 상태: **소스·차트 정적 검토 완료 / HPC 실제 설치 미검증**  
 대상: [block/buzz](https://github.com/block/buzz) commit [3debf18f1448334aa7bc202d328d93bb9651e168](https://github.com/block/buzz/tree/3debf18f1448334aa7bc202d328d93bb9651e168), chart `deploy/charts/buzz` 0.1.11.
 
+## 2026-10-23: 사내 CA / Buzz Desktop WSS UnknownIssuer
+
+- [사내 TLS / Root CA 등록 + Rust WebSocket native-roots 재빌드](singularity/private-ca-relay-tls.md).
+- [사내 CA 포함 Singularity Definition](singularity/Buzz.def) 및 [최소 Cargo feature patch](singularity/buzz-tls-native-roots.patch).
+- **공식 Buzz Desktop `.deb`는 WebPKI roots-only 설정으로 빌드됐을 수 있어 SIF에 CA만 추가해도 `UnknownIssuer`가 지속될 수 있음.** patched Desktop .deb로 SIF를 빌드할 것. TLS 검증 비활성화 금지.
+
 ## 2026-10-20 업데이트: NFS Buzz Desktop은 Singularity SIF로 실행
 
 - **[Singularity Definition / SIF 빌드·NFS 배포 가이드](singularity/README.md)** / [Buzz.def](singularity/Buzz.def).
