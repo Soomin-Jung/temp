@@ -5,6 +5,7 @@
 ## 핵심 문서
 
 - **[사내 Relay WSS UnknownIssuer 해결 (Root CA + Rust TLS 재빌드)](private-ca-relay-tls.md)**
+- **[Ubuntu 24.04 소스 기반 .deb 생성 전체 절차](source-build-native-ca.md)** / [자동 빌드 스크립트](build-patched-buzz-deb.sh)
 - [Buzz.def — Ubuntu 24.04, Node 24, ACP, UTF-8/IBus, CA](Buzz.def)
 - [최소 Rust TLS 패치](buzz-tls-native-roots.patch)
 - [DTGPT/ACP/커뮤니티/로그/한국어](dtgpt-acp-setup.md)
