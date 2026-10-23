@@ -72,6 +72,9 @@ singularity exec Buzz.sif sh -c '
 
 ## B. Rust WebSocket RootStore 수정(중요: Desktop 재빌드 필요)
 
+> **바로 따라할 실행 가이드**: [동일 릴리스 checkout → Cargo patch → sidecar build → Tauri .deb → SIF 재빌드](source-build-native-ca.md). [자동화 빌드 스크립트](build-patched-buzz-deb.sh)도 제공한다.
+
+
 [최소 변경 패치](buzz-tls-native-roots.patch)를 기존 Buzz Desktop과 **동일한 git tag / source revision**에 적용한다. 패치 내용은 두 `Cargo.toml`에 `rustls-tls-native-roots` feature만 추가한다.
 
 ```toml
