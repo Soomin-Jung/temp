@@ -7,6 +7,7 @@
 ## 2026-10-23: 사내 CA / Buzz Desktop WSS UnknownIssuer
 
 - [사내 TLS / Root CA 등록 + Rust WebSocket native-roots 재빌드](singularity/private-ca-relay-tls.md).
+- **[Buzz .deb를 소스에서 다시 빌드하는 실행 가이드](singularity/source-build-native-ca.md)** / [빌드 스크립트](singularity/build-patched-buzz-deb.sh).
 - [사내 CA 포함 Singularity Definition](singularity/Buzz.def) 및 [최소 Cargo feature patch](singularity/buzz-tls-native-roots.patch).
 - **공식 Buzz Desktop `.deb`는 WebPKI roots-only 설정으로 빌드됐을 수 있어 SIF에 CA만 추가해도 `UnknownIssuer`가 지속될 수 있음.** patched Desktop .deb로 SIF를 빌드할 것. TLS 검증 비활성화 금지.
 
