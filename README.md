@@ -52,6 +52,7 @@
 
 ### Attention Architecture / LLM Sequence Modeling
 
+- [LLM 추론 서빙 교류회 발표 교재](study/attention/14-serving-tech-seminar-kv-cache-hardware.md)
 - [Attention Architecture Study Guide](study/attention/README.md)
   - [수학적 기반과 Transformer Block](study/attention/00-foundations.md)
   - [Full Softmax Attention — MHA, MQA, GQA와 KV Cache](study/attention/01-full-attention.md)
