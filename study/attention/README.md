@@ -225,3 +225,8 @@ Attention 이름이 많아지는 이유는 서로 다른 최적화 축이 섞여
 - recurrent state를 사용하는 모델에서 prefix caching과 speculative rollback이 왜 더 복잡해지는가?
 
 이 질문에 수식과 serving 관점 모두로 답할 수 있다면, attention 메커니즘을 모델 이름이 아니라 구조로 이해한 상태에 가깝다.
+
+
+## 2026-10-30 최신 Serving·KV Cache 비교 검증 노트
+
+- [GPU hardware 병목·Attention별 KV Cache 구조·Kimi-K3/GLM-5.3/DeepSeek V4·V4.1-Flash 비교](notes/2026-10-30-serving-hardware-kv-cache-comparison.md) — CPU/GPU, bandwidth/capacity, BF16 계산, latent/recurrent/compressed cache, IB/NVLink/P-D 전송을 구분한 발표 재사용용 검증 자료. 민감한 실제 운영 수치가 아니라 공개 가정 예제를 사용.
