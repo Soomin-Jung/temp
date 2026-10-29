@@ -339,9 +339,10 @@ FP8 KV dtype이고 실제 kernel이 그 형식을 지원한다면 raw KV byte/el
 
 논리적인 GPU당 사용량은 다음처럼 분리한다:
 
-\[
-M_{GPU}=M_{weights/shard}+M_{KV/shard}+M_{GDN/state}+M_{activation}+M_{CUDA\ Graph}+M_{workspace}+M_{allocator}+M_{framework}
-\]
+```text
+M_GPU = M_weights + M_KV + M_state + M_activation
+      + M_graph + M_workspace + M_allocator + M_framework
+```
 
 **예시 — BF16 weights 약 54 GB, TP=2, KV 완전 균등 shard 가정:**
 - Weights: rank당 대략 27 GB(이론상; 일부 replicated tensor/embedding/vision은 별도)
