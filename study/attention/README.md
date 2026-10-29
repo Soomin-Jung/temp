@@ -24,6 +24,12 @@
 
 ---
 
+## 발표 준비용 통합 교재
+
+- [LLM 추론 서빙의 Attention과 KV Cache](14-serving-tech-seminar-kv-cache-hardware.md)
+  - GPU 연산·메모리·통신, MHA/MQA/GQA/MLA, FlashAttention/PagedAttention, KV 용량 산식, TP/IB/P-D, Mamba·GDN·KDA, DeepSeek CSA/HCA, 발표 대상 모델 구조를 하나의 흐름으로 정리한다.
+  - 발표용 요약, 수식 해설, 운영 예시, 원 논문/공식 자료 읽기 순서가 포함되어 있다.
+
 ## 2. 권장 학습 순서
 
 처음부터 순서대로 읽는 것을 권장한다.
