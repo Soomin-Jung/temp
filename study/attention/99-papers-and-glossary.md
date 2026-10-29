@@ -303,7 +303,24 @@ https://arxiv.org/abs/2402.19427
 
 ---
 
-# 9. 핵심 수식 Cheat Sheet
+# 8.1 2026 공개 모델 구조 자료
+
+### DeepSeek-V4.1-Flash
+
+https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash
+
+- Causal Encoder-Decoder, CSA2, FP4 main KV, SWA Bounded Replay의 모델별 구성을 확인한다.
+- `bytes/token` 수치는 해당 checkpoint와 cache format 전용으로 읽는다.
+
+### GLM-5.3과 GLM-5.3-Flash
+
+https://github.com/zai-org/GLM-5  
+https://huggingface.co/zai-org/GLM-5.3-Flash
+
+- 표준 GLM-5.3은 GLM-5.2 base를 유지하고 post-training 개선을 적용한다.
+- GLM-5.3-Flash는 별도 base의 sparse+linear hybrid로, 공개 config와 model card에서 KDA/DSA 구성을 확인한다.
+
+## 9. 핵심 수식 Cheat Sheet
 
 ## 9.1 Full Softmax Attention
 
