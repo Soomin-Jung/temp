@@ -28,10 +28,10 @@ Qwen3-Reranker-4B의 원본 생성형 yes/no scoring과 vLLM v0.24.0 pooling/cla
 ```jinja2
 <|im_start|>assistant
 <think>
-</think>{{ "\\n\\n" }}
+</think>{{ "\n\n" }}
 ```
 
-위 코드 블록에서 의도한 Jinja 문자열은 **`{{ "\n\n" }}`** (백슬래시 n 두 번)이다. 실제 파일에서는 렌더링 결과가 `</think>\n\n`으로 끝나야 한다. 단순히 파일 끝에 Enter를 추가하는 것과 동일하다고 가정하지 않는다.
+위 코드 블록은 Jinja 문자열 리터럴에 백슬래시-n 두 개를 사용하여 실제 렌더링 결과에 개행 두 개를 출력한다. 실제 파일에서는 렌더링 결과가 `</think>\n\n`으로 끝나야 한다. 단순히 파일 끝에 Enter를 추가하는 것과 동일하다고 가정하지 않는다.
 
 검증 체크:
 1. `repr(rendered_prompt[-40:])`로 끝 문자열 확인
