@@ -386,15 +386,15 @@ query position `t`가 최근 window `W` positions만 참조하는 causal attenti
 
 ### 용어와 흐름
 
-DeepSeek V4 기술보고서와 공개 구현에서 **Compressed Sparse Attention (CSA)**라는 명칭을 사용한다. 개념적으로 sequence에서 압축된 token/window representation을 만들고, indexer가 현재 query에 유용한 compressed entries 또는 원본 정보의 후보를 top-k로 고른 뒤 sparse attention 경로에서 선택한 내용을 읽는다. “전체 원본 token을 모든 query가 동일하게 읽는다”는 full attention과 차이가 있다. 정확한 압축 stride, indexer, top-k 및 cache 구조는 checkpoint/report/구현 버전을 함께 표기해야 한다. [R17, R18]
+DeepSeek V4 기술보고서와 공개 구현에서 **Compressed Sparse Attention (CSA)**라는 명칭을 사용한다. 공개 구현 설명에서는 먼저 raw 최근 window의 sliding K/V 경로를 두고, 별도 compressor가 만든 sequence-level compressed entries에 대해 indexer가 query별 top-k를 선택하는 구조로 설명한다. 즉 오래된 원본 token마다 전체 raw K/V를 유지해 무작위로 복구한다고 단순화하면 안 된다. 오래된 문맥의 주 attention 경로는 압축 entry이고, 원본 raw token K/V는 local window 범위에서 유지된다. “모든 과거 원본 token을 매 query마다 읽는” full attention과 다르다. 정확한 압축 stride, indexer, top-k 및 cache 구조는 checkpoint/report/구현 버전을 함께 표기해야 한다. [R17, R18]
 
-개념식은 다음과 같이 쓸 수 있다. 원 입력 `h₁…h_T`에서 압축 단위 `m`마다 `c_j = Compress(h_{(j−1)m+1:jm})`를 만들고, query `q_t`가 index score `s_{t,j}=Index(q_t,c_j)`에서 후보 집합 `I_t=TopK_j(s_{t,j})`를 고른다. 본 attention은 `I_t`와 local/raw branch에서 선택된 key/value에 대해 softmax weighted sum을 계산한다. 이는 개념식이며 DeepSeek 내부 projection의 exact formula를 대체하지 않는다.
+개념식은 다음과 같이 쓸 수 있다. 원 입력 `h₁…h_T`에서 압축 단위 `m`마다 `c_j = Compress(h_{(j−1)m+1:jm})`를 만들고, query `q_t`가 index score `s_{t,j}=Index(q_t,c_j)`에서 후보 집합 `I_t=TopK_j(s_{t,j})`를 고른다. 본 attention은 `I_t`에 해당하는 compressed key/value와 최근 raw local-window K/V를 함께 대상으로 softmax weighted sum을 계산한다. 이 식은 CSA의 정보 흐름을 단순화한 개념식이며 DeepSeek 내부 projection의 exact formula를 대체하지 않는다.
 
-저장·계산 절감은 압축률, 선택 K, local tail 크기, indexer 비용, batch/query 수, 데이터 재사용에 따라 달라진다. Top-K는 무료가 아니다. indexer projection/score, 후보 metadata, gather의 비연속 access, 원본 정보 retrieval이 추가 비용이다. [R17]
+DeepSeek-V4 공개 Transformers config 문서에 나온 V4-Pro 기본값 사례는 CSA compression rate `m=4`, index top-k `k=1024`, HCA compression rate `m′=128`이다. 이 값은 해당 문서의 Pro default에 대한 것이며 모든 V4 checkpoint나 Flash 변형에 공통인 상수가 아니다. 저장·계산 절감은 압축률, 선택 K, local tail 크기, indexer 비용, batch/query 수, 데이터 재사용에 따라 달라진다. Top-K는 무료가 아니다. indexer projection/score, 후보 metadata, gather의 비연속 access가 추가 비용이다. [R17, R18]
 
 ## 9.3 HCA: Heavily Compressed Attention
 
-DeepSeek-V4 자료의 용어는 **Heavily Compressed Attention (HCA)**다. 공개 Transformers 문서는 HCA layer가 모든 available compressed entries를 볼 수 있고 CSA처럼 per-query top-k indexer를 쓰지 않는 cache branch를 설명한다. V4 config에서 HCA 압축률, CSA의 압축률/top-k는 모델별 설정값으로 읽어야 한다. “단순 hierarchical attention”이라고 번역해 계층적 tree algorithm으로 단정할 근거는 없다. HCA는 더 강한 압축된 representation에 주의를 주는 방식으로, 명칭의 `Heavily Compressed`가 나타내듯 CSA의 query-wise selection과 구조·비용이 다르다. [R17, R18]
+DeepSeek-V4 자료의 용어는 **Heavily Compressed Attention (HCA)**다. 공개 Transformers 문서는 HCA가 최근 raw sliding-window K/V와 함께 compressor가 만든 compressed entries를 attention 대상으로 두며, 이 구현에서 HCA layer는 available compressed entries를 볼 수 있고 CSA처럼 per-query top-k indexer를 쓰지 않는 cache path를 설명한다. 즉 local/raw branch는 recent window이고 global-long-range branch는 heavily compressed representation이다. V4 config에서 HCA 압축률, CSA의 압축률/top-k는 모델별 설정값으로 읽어야 한다. “단순 hierarchical attention”이라고 번역해 별도의 tree algorithm으로 단정할 근거는 없다. HCA는 더 강한 압축 representation을 사용해 CSA의 query-wise selection과 다른 저장·계산 trade-off를 만든다. [R17, R18]
 
 ## 9.4 Full vs SWA vs CSA vs HCA
 
@@ -402,8 +402,8 @@ DeepSeek-V4 자료의 용어는 **Heavily Compressed Attention (HCA)**다. 공�
 |---|---|---|---|---|---|---|
 | Full attention | token별 K,V | 모든 과거 token | `O(T)`/layer | 없음, 전체 조회 | `T`, heads, dimension | reference 정보 보존, 계산·메모리 증가 |
 | SWA | 최근 token K,V | 최근 `W`개 | `O(min(T,W))` | window | `W`, local layer 수 | 오래된 원문 직접 접근 제한 |
-| CSA | compressed entry 및 필요한 branch/cache | 압축 후보 중 query별 선택 + local/raw | 압축률·top-k·tail에 의존 | indexer/top-k | compression `m`, top-k `k`, tail, index cost | 선택 실패·압축으로 세부 정보 손실 가능 |
-| HCA | 강하게 압축된 entry | 사용 가능한 압축 entries | 높은 압축에 따른 축소 | 별도 CSA식 top-k와 구분 | compression ratio, layer schedule | 표현 압축 trade-off; 보고서 성능 범위에 한정 |
+| CSA | raw local window + compressed entries + indexer metadata | query별 선택 compressed entries + 최근 raw K/V | 압축률·top-k·tail에 의존 | compressed entries top-k | compression `m`, top-k `k`, tail, index cost | 선택 실패·압축으로 세부 정보 손실 가능 |
+| HCA | raw local window + heavily compressed entries | 최근 raw K/V + available compressed entries | 높은 압축에 따른 축소 | 공개 구현 설명상 CSA식 query top-k indexer 없음 | compression ratio, layer schedule | 표현 압축 trade-off; 보고서 성능 범위에 한정 |
 
 V4 공개 자료에 제시된 CSA/HCA compression rates나 KV 절감 비율은 해당 보고서의 모델/checkpoint 및 cache 정의에 속한다. 이를 CSA/HCA 일반식의 보장 성능처럼 인용하면 안 된다. 최신 Transformers 구현 설명은 config와 cache를 이해하는 보조자료지만, 논문이 공식 원문인 경우 원 보고서의 표기와 차이가 있으면 원 보고서를 우선하고 구현 차이를 병기한다. [R17, R18]
 
