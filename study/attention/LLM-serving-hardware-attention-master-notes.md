@@ -1159,8 +1159,7 @@ Layer types 64개, 48/16 구성, full Q24/KV4/d256, GDN K16/V48/d128, conv kerne
 **[15] Hugging Face Transformers Qwen3.5 compatible modeling implementation.** [원문 링크](https://github.com/huggingface/transformers/blob/main/src/transformers/models/qwen3_5/modeling_qwen3_5.py)  
 Qwen3.8 config가 지정한 호환 architecture의 recurrence와 head repeat 경로를 확인한다. Recurrent shape와 conv 상태의 reference 구현 근거이며 runtime 실측 메모리의 보장은 아니다.
 
-**[16] vLLM MambaStateShapeCalculator와 Qwen GDN 구현.** [원문 링크](https://github.com/vllm-project/vllm/blob/main/vllm/model_executor/layers/mamba/mamba_utils.py)  
-[원문 링크](https://github.com/vllm-project/vllm/blob/main/vllm/model_executor/layers/mamba/gdn/qwen_gdn_linear_attn.py)  
+**[16] vLLM MambaStateShapeCalculator와 Qwen GDN 구현.** [State shape 코드](https://github.com/vllm-project/vllm/blob/main/vllm/model_executor/layers/mamba/mamba_utils.py) · [Qwen GDN 코드](https://github.com/vllm-project/vllm/blob/main/vllm/model_executor/layers/mamba/gdn/qwen_gdn_linear_attn.py)  
 GDN conv 채널 계산, kernel 길이에서 1을 뺀 tail, V-head state와 TP 분할을 확인하는 공식 코드다. Main은 변하므로 적용 버전을 고정한다.
 
 ## 19.3 Sparse와 Compression과 하드웨어
@@ -1171,23 +1170,18 @@ GDN conv 채널 계산, kernel 길이에서 1을 뺀 tail, V-head state와 TP �
 **[18] Hugging Face Transformers DeepSeek V4 documentation.** [원문 링크](https://huggingface.co/docs/transformers/model_doc/deepseek_v4)  
 Local raw mask와 compressor branch, HCA와 CSA cache, 대표 config의 compression rates와 top-k를 설명하는 공식 구현 자료다. 보고서와 implementation 범위를 구분한다.
 
-**[19] NVIDIA CUDA Programming Guide와 GPUDirect RDMA Documentation.** [원문 링크](https://docs.nvidia.com/cuda/cuda-programming-guide/)  
-[원문 링크](https://docs.nvidia.com/cuda/gpudirect-rdma/)  
+**[19] NVIDIA CUDA Programming Guide와 GPUDirect RDMA Documentation.** [CUDA Guide](https://docs.nvidia.com/cuda/cuda-programming-guide/) · [GPUDirect RDMA](https://docs.nvidia.com/cuda/gpudirect-rdma/)  
 SM과 warp, memory hierarchy, matrix operation, CUDA Graph 및 GPU/NIC 데이터 경로의 공식 근거다.
 
 **[20] NVIDIA NCCL User Guide.** [원문 링크](https://docs.nvidia.com/deeplearning/nccl/user-guide/docs/)  
 Collective의 의미와 실행 구성을 확인한다. 본문의 ring byte와 latency 식은 명시한 ring 가정에서 따로 유도한 것이다.
 
-**[21] NVIDIA H100 H200 L40S 제품 자료와 HGX Reference Architecture.** [원문 링크](https://www.nvidia.com/en-us/data-center/h100/)  
-[원문 링크](https://www.nvidia.com/en-us/data-center/h200/)  
-[원문 링크](https://www.nvidia.com/en-us/data-center/l40s/)  
-[원문 링크](https://docs.nvidia.com/enterprise-reference-architectures/hgx-ai-factory-h100-h200-b200/latest/components.html)  
+**[21] NVIDIA H100 H200 L40S 제품 자료와 HGX Reference Architecture.** [H100](https://www.nvidia.com/en-us/data-center/h100/) · [H200](https://www.nvidia.com/en-us/data-center/h200/) · [L40S](https://www.nvidia.com/en-us/data-center/l40s/) · [HGX 구성](https://docs.nvidia.com/enterprise-reference-architectures/hgx-ai-factory-h100-h200-b200/latest/components.html)  
 SKU와 form factor별 capacity와 bandwidth, node 구성의 근거다. Aggregate와 방향 정의를 자료 원문에서 확인한다.
 
 ## 19.4 Serving 실행과 수치 정밀도
 
-**[22] vLLM CUDA Graph design와 v0.30.0 configuration documentation.** [원문 링크](https://docs.vllm.ai/en/latest/design/cuda_graphs/)  
-[원문 링크](https://docs.vllm.ai/en/v0.30.0/api/vllm/config/)  
+**[22] vLLM CUDA Graph design와 v0.30.0 configuration documentation.** [Graph design](https://docs.vllm.ai/en/latest/design/cuda_graphs/) · [v0.30 config](https://docs.vllm.ai/en/v0.30.0/api/vllm/config/)  
 Graph mode와 prefill/decode coverage를 확인한다. 최신 design 설명을 과거 배포 버전에 자동 적용하지 않는다.
 
 **[23] vLLM Quantized KV Cache documentation.** [원문 링크](https://docs.vllm.ai/en/latest/features/quantization/quantized_kvcache/)  
@@ -1223,8 +1217,7 @@ E4M3와 E5M2의 표현 범위와 정밀도 특성을 다룬다. 모든 KV precis
 **[33] vLLM Automatic Prefix Caching documentation.** [원문 링크](https://docs.vllm.ai/en/latest/features/automatic_prefix_caching/)  
 동일 prefix의 block 재사용과 기본 autoregressive cache의 차이를 확인한다.
 
-**[34] Mooncake Transfer Engine과 NVIDIA NIXL 공식 저장소.** [원문 링크](https://github.com/kvcache-ai/Mooncake)  
-[원문 링크](https://github.com/ai-dynamo/nixl)  
+**[34] Mooncake Transfer Engine과 NVIDIA NIXL 공식 저장소.** [Mooncake](https://github.com/kvcache-ai/Mooncake) · [NIXL](https://github.com/ai-dynamo/nixl)  
 별도 참고 장의 상태 이동 구성요소를 확인하는 자료다.
 
 # 20 용어집과 발표자 확인 항목
