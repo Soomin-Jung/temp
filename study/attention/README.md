@@ -41,6 +41,8 @@
 | 8 | [13-other-major-models.md](13-other-major-models.md) | Llama, Gemma, Mistral, MiniMax, gpt-oss는 어떤 선택을 했는가? |
 | 9 | [90-serving-engineer-view.md](90-serving-engineer-view.md) | 모델 attention이 실제 추론 인프라에 어떤 비용으로 나타나는가? |
 | 10 | [99-papers-and-glossary.md](99-papers-and-glossary.md) | 원 논문과 용어를 어디서 다시 확인하는가? |
+| 11 | [LLM Serving Hardware & Attention Master Notes](LLM-serving-hardware-attention-master-notes.md) | GPU compute/communication, prefill/decode, KV/recurrent state, architecture and operating calculations |
+
 
 ---
 
