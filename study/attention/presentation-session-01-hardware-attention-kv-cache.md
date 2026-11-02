@@ -4,7 +4,7 @@
 **과정:** Hardware / Attention / KV Cache (1/3)  
 **시간 목표:** 설명 약 74분, Q&A 약 15분 (총 89분), 축약 시 약 50분+10분  
 **대상:** GPU Serving을 운영하지만 GEMM·Attention·TP 행렬 분할을 수학적 원리까지 배우려는 팀원  
-**핵심 교재:** [행렬 입문 00a](00a-matrix-gemm-to-qkv-from-zero.md) → [분산·비용 유도 00b](00b-tp-and-llm-inference-cost-from-first-principles.md) → [전체 참고 마스터](LLM-serving-hardware-attention-master-notes.md)
+**핵심 교재:** [행렬 입문 00a](00a-matrix-gemm-to-qkv-from-zero.md) → [GPU 메모리·타일의 실물 크기 00c](00c-gpu-memory-weight-kv-tiling-from-zero.md) → [분산·비용 유도 00b](00b-tp-and-llm-inference-cost-from-first-principles.md) → [전체 참고 마스터](LLM-serving-hardware-attention-master-notes.md)
 
 > **발표의 최종 목표:** 처음의 “Qwen3.8 27B를 배포해 주세요”라는 요청에 대해, Weight·FFN/Attention FLOP·KV·통신 메시지의 크기를 계산한 다음 H200의 FLOP/s·HBM GB·HBM GB/s·GPU Link GB/s와 연결할 수 있게 한다.
 
@@ -72,13 +72,15 @@
 
 **발표자가 풀 말:** 연산 명령 수와 FLOP은 같지 않다. FLOP과 FLOP/s의 단위도 다르다. 연산량과 시간의 구분을 강조한다.
 
-**전환:** 이런 행렬 블록 연산을 높은 처리량으로 실행하는 물리 자원이 Tensor Core다.
+**전환:** 이런 행렬 블록 연산을 높은 처리량으로 실행하는 물리 자원이 Tensor Core다. 그런데 한 행렬이 SM 안에 들어가지 않으면 어떻게 계산할까? 다음 슬라이드에서 실제 크기를 보여준다.
 
-### 슬라이드 7 (3분) — CUDA Core와 Tensor Core
+### 슬라이드 7 (3분) — CUDA Core와 Tensor Core + HBM→SM 타일 연산
 
 **화면:** CUDA Core 일반 산술, Tensor Core 타일 MMA **D=AB+C** 비교. SM 내부 위치는 공식 GPU 그림에서 하이라이트. “특화”이지 “모든 연산을 수행”이 아님.
 
 **발표자가 풀 말:** GEMM Shape, dtype, kernel의 선택에 따라 Tensor Core 이용 여부·효율이 달라진다. Softmax·Norm·Activation은 모두 GEMM이라고 부르지 않는다.
+
+**반드시 포함할 하드웨어 데이터 경로 확대(별도 슬라이드 추가 없이 슬라이드 7의 오른쪽 그림):** HBM의 Qwen FFN Up Weight `[5120,17408]` = **BF16 170 MiB** → L2 → SM Shared/Register에서 예시 `[128,128]` Weight Tile = **32 KiB**와 `[64,128]` Input Tile = **16 KiB**로 계산. Accumulator `[64,128]`는 FP32 가정에서 **32 KiB**(주로 Register). 실제 Kernel의 Tile Size나 Shared Memory 배치를 고정해 주장하지 않는다. **H100 SXM의 온칩 비교 예시:** L2 약 50 MB, SM Shared Memory 최대 228 KB, Register File 256 KB; H200의 정확한 커널 할당량이라는 뜻은 아니다. 학습 심화 링크: [00c](00c-gpu-memory-weight-kv-tiling-from-zero.md).
 
 **전환:** LLM에서 이 GEMM은 어디서 반복될까?
 
@@ -139,6 +141,8 @@
 **화면:** Prefill X:[T,d] 거대한 GEMM 및 Attention causal token pair, Decode X:[B,d] skinny GEMM + Cache read T. **FFN O(T), Full Attention Prefill O(T²), Decode 새 Token Attention O(T)**.
 
 **발표자가 풀 말:** Prefill은 전체 Prompt의 많은 위치를 계산한다. 첫 생성 Token은 마지막 Prompt 위치의 Logits에서 선택할 수 있다. 이후 Decode는 생성한 Token을 다음 입력으로 사용한다. “Prefill은 항상 Compute-bound / Decode는 무조건 Memory-bound”라고 단정하지 않고 Batch, Length, Kernel, Link에 따른 경향을 설명한다.
+
+**기억시킬 메모리 연결:** 172K·16 Full Layers·KV4·BF16의 10.498 GiB는 **모든 Layer/Head/Token의 Raw KV 합계**다. 한 Head·한 Layer만 떼면 약 167.969 MiB, 64 Token의 K/V Tile은 **64 KiB**이다. SM은 전체 KV를 담지 않고 맡은 Tile을 읽고 계산을 누적한다. **Tiling은 총 History Read를 공짜로 제거하지 않으므로 Decode의 HBM Bandwidth 병목으로 연결된다.** 예시는 [00c](00c-gpu-memory-weight-kv-tiling-from-zero.md) 참조.
 
 **전환:** 지금까진 GPU 한 장의 모델이다. GPU 수를 늘리면 계산 비용은 어떻게 이동할까?
 
