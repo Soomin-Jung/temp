@@ -1,7 +1,7 @@
 ---
 title: "LLM 서빙과 Attention 메모리 종합 마스터 노트"
 subtitle: "Qwen3.8 27B 밀집 모델로 이해하는 계산 메모리 통신"
-date: "자료 확인 기준 2026년 11월 1일"
+date: "자료 확인 기준 2026년 11월 2일"
 lang: ko-KR
 ---
 
@@ -37,6 +37,7 @@ Qwen3.8-27B의 64개 층 중 full attention은 16개다. BF16 full KV는 **64 Ki
 
 | 장 | 주제 |
 |---:|---|
+| 0 | 발표 설계와 설명의 연결 |
 | 1 | 배포 요구를 하드웨어 질문으로 바꾸기 |
 | 2 | 행렬 곱과 Projection의 기초 |
 | 3 | GPU와 데이터 이동의 구조 |
@@ -57,6 +58,99 @@ Qwen3.8-27B의 64개 층 중 full attention은 16개다. BF16 full KV는 **64 Ki
 | 18 | 별도 참고 P D Disaggregation |
 | 19 | 주석이 포함된 원문 참고자료 |
 | 20 | 용어집과 발표자 확인 항목 |
+
+# 0 발표 설계와 설명의 연결
+
+## 0.1 제안한 구성의 평가
+
+고객의 배포 요청으로 시작하는 도입은 적절하다. 청중이 먼저 “왜 이 공부가 필요한가”를 이해하고, GPU와 모델을 배포 의사결정의 근거로 읽게 된다. 다만 속도와 처리량을 완전히 양자택일로 제시하면 과도한 단순화다. 먼저 TTFT, ITL, SLO를 만족하는 처리량과 자원 비용의 우선순위 및 허용 범위를 정한다. Batch를 늘려 처리량과 장치 효율을 함께 높일 수 있는 구간도 있고, 그 이후에는 지연이 악화될 수 있다.
+
+원안의 마지막에 모인 GEMM, CUDA Graph, 연산량 계산은 서로 다른 층위다. GEMM은 처음부터 등장하는 계산 언어이므로 CPU/GPU 다음에 소개한다. CUDA Graph는 그 계산의 제출·실행 최적화이므로 원리를 배운 뒤 다룬다. 수치 계산은 초반의 작은 예와 마지막의 전체 회계로 두 번 제시하면, 마지막 장이 새 용어를 한꺼번에 배우는 장이 되지 않는다.
+
+분산 배포는 GPU 외부 통신 다음에 개괄하고, Prefill/Decode 이후에 다시 해석한다. 첫 등장에서는 “쪼개면 통신이 생긴다”까지만 설명하고, 뒤에서 왜 작은 decode message가 latency에 민감한지 수식으로 회수한다. 계보는 한 장의 지도로 먼저 보여주되, 연도 암기보다 각 기술이 줄이는 축을 표시한다.
+
+표기는 MHA, Conv State, CUDA Core로 통일한다. MLA는 full-history softmax 계열에 놓을 수 있지만 cache 표현과 실행 경로가 MHA/GQA와 같지는 않다. Mamba는 selective SSM이며 DeltaNet을 거쳐 직선으로 진화한 후속 버전이 아니다. 이 구분을 지키면 계보 그림이 기술적 오해를 만들지 않는다. [1–12]
+
+## 0.2 권장 발표 순서와 마스터 노트의 대응
+
+아래는 발표용 큰 묶음 15개다. 한 행을 반드시 슬라이드 한 장에 넣으라는 뜻은 아니다. 특히 수식 비교와 상태 갱신은 여러 장에 나누어 설명한다. 본문은 상세 학습을 위한 참조 구조이며 발표 때는 이 표의 순서로 읽는다.
+
+| 순서 | 발표의 질문 | 상세 학습 위치 |
+|---:|---|---|
+| 1 | 고객의 “빠르게”는 어떤 SLO인가 | 1장과 16장 |
+| 2 | 우리가 바꿀 수 있는 것은 무엇인가 | 1.3절 |
+| 3 | CPU와 GPU가 어떻게 협업하는가 | 2장과 3장 |
+| 4 | GEMM과 projection은 무엇을 계산하는가 | 2.1–2.5절 |
+| 5 | GPU 스펙과 내부 계층을 어떻게 읽는가 | 3.1–3.3절과 3.6절 |
+| 6 | GPU 밖으로 무엇이 이동하는가 | 3.4–3.5절 |
+| 7 | TP와 PP와 replica는 무엇을 나누는가 | 15장 |
+| 8 | Prefill과 decode에서 상태는 어떻게 바뀌는가 | 4장과 12.8절 |
+| 9 | Attention과 KV cache의 기본 비용은 무엇인가 | 5장과 6장 |
+| 10 | 어떤 병목 때문에 구조가 갈라졌는가 | 17장과 0.3절 |
+| 11 | MHA MQA GQA MLA는 무엇을 공유하는가 | 7장과 8장 |
+| 12 | SWA CSA HCA는 과거를 어떻게 줄이는가 | 9장 |
+| 13 | State로 과거를 요약한다는 뜻은 무엇인가 | 10–12장 |
+| 14 | 같은 수식을 더 효율적으로 실행할 방법은 무엇인가 | 13.1–13.5절 |
+| 15 | 170K 요청과 동시성을 어떤 구성으로 수용할 것인가 | 13.6–13.10절과 14–16장 |
+
+청중이 Attention을 처음 듣는다면 9번의 기본식을 먼저 충분히 설명한다. 계보는 그 뒤에 둔다. 제한 시간이 짧으면 CSA/HCA의 indexer 수식과 Mamba-2의 상세 유도는 교재 참조로 남기고, Full/GQA와 recurrent의 저장·조회 차이 및 실제 Qwen 회계는 발표 본문에 남긴다. 이는 학습 난이도를 조절하는 제안이며 기술 내용의 중요도 순위를 뜻하지 않는다.
+
+## 0.3 슬라이드별 발표자가 풀어낼 논리
+
+### 고객의 요구를 성능 계약으로 바꾸기
+
+화면에는 고객의 “Qwen 27B를 배포해 주세요”와 엔지니어의 “첫 응답, token 간격, 동시 요청 중 어떤 조건을 만족해야 하나요”를 놓는다. 발표자는 같은 모델도 1K 입력 한 건과 170K 입력 16건은 전혀 다른 자원 문제라고 설명한다. NVLink/IB 유무는 요구를 만족할 수 있는 실행 경로를 바꾸지만 그 자체가 목표는 아니다.
+
+다음 장으로 넘길 때는 “목표가 정해졌다면 무엇을 바꿔서 맞출 수 있을까”라고 연결한다. “자원이 유한하면 모든 성능을 무한히 높일 수 없다”는 말은 유지하되, 최적점이 하나로 고정돼 있다고 말하지 않는다. Workload와 SLO가 바뀌면 최적점도 달라진다.
+
+### 통제 가능한 영역과 구조가 정한 영역
+
+화면에는 1.3절의 세 범주를 보여준다. Head 수와 layer pattern은 주어진 checkpoint의 학습 결과이고, TP와 batch와 KV dtype은 지원되는 범위에서 배포자가 선택한다. KV FP8은 수식의 저장 byte를 바꾸지만 GQA를 MLA로 바꾸지 않는다. 품질 검증이 필요한 옵션을 “통제 가능하므로 무위험”이라고 말하지 않는다.
+
+다음 장은 “옵션은 결국 CPU가 어떤 GPU 작업을 언제 제출하고 어디에 데이터를 놓는지를 정한다”로 연결한다.
+
+### CPU GPU와 GEMM
+
+행렬 곱 하나를 실행 단위로 사용한다. CPU는 요청·스케줄·제출을 관리하고 GPU는 큰 tensor 계산을 병렬 수행한다. CPU가 모든 수식을 먼저 계산해 GPU에 결과를 보내는 구조가 아니다. GPU kernel이 device memory의 tensor를 읽고 계산하며, host와 device가 실행 순서를 협력한다. [19,35]
+
+GEMM에서는 dot product를 여러 출력 원소에 반복한다. 두 입력 차원이 맞는 이유, FMA를 2 FLOP으로 세는 이유, batch/token 행을 늘릴 때 같은 weight를 재사용하는 이유를 작은 행렬 예제로 설명한다. “Tensor Core가 빠르다” 전에 “어떤 행렬을 왜 곱하는가”를 이해시킨다.
+
+### GPU 스펙과 내부 계층
+
+화면에 H200 SXM의 용량, HBM bandwidth, dtype별 Tensor Core 수치와 sparsity 각주를 같이 놓는다. 가장 큰 TFLOPS 한 개를 읽어 모델 속도로 환산하지 않는다. 이후 SM, warp, register/shared, L2, HBM을 보여주고 데이터를 가져와야 곱셈을 할 수 있다는 실행 순서를 연결한다. [19,21,35]
+
+발표자의 핵심 문장은 “연산기를 더 빨리 만들어도 데이터를 공급하지 못하면 기다린다”다. GPU utilization 100%와 peak 계산 성능은 다르다. On-chip memory를 과도하게 점유해 occupancy가 줄어드는 trade-off도 함께 짚는다.
+
+### 외부 통신과 분산 배포
+
+화면에는 GPU 내부 HBM 경로, node 내부 NVLink/PCIe, node 사이 NIC/fabric 경로를 구분한다. NVSwitch는 저장 공간을 합쳐 하나의 HBM으로 만드는 장치가 아니라 GPU 간 경로를 연결하는 fabric이다. GPU별 memory ownership과 원격 접근 비용은 남는다. [19–21]
+
+TP에서는 같은 layer의 tensor를 나누므로 결과를 합치는 비용이 생긴다. Replica는 서로 다른 요청을 나누므로 같은 요청의 layer마다 collective를 할 필요가 없다. “GPU를 두 장 썼다”라는 말만으로 두 구성을 비교할 수 없는 이유를 설명한다. PP는 layer 구간을 나누지만 한 sequence의 다음 layer 의존성은 그대로다.
+
+### Prefill Decode와 KV
+
+화면에는 prompt 처리 뒤 첫 출력이 선택되는 지점과 다음 one-token step을 구분한다. 과거 KV가 같은 causal prefix에 대해 변하지 않으므로 저장해 재사용한다. KV가 없으면 과거 layer 계산을 되풀이해야 한다. Cache가 있어도 현재 query가 과거를 읽는 비용은 남는다. [1,5,6]
+
+발표자는 cache를 “정답을 저장한 것”보다 “다음 계산에서 다시 사용할 중간 표현”으로 설명한다. Weight는 요청 간 공유하지만 KV/state는 각 sequence의 이력이다. 이 차이가 동시성에 따른 메모리 증가의 근원이다.
+
+### 기본 Attention과 발전 지도
+
+Q와 K의 내적으로 점수를 만들고 softmax로 정규화한 뒤 V를 가중합하는 두 위치 예제를 먼저 푼다. 그 다음 지도에는 head 공유, token별 latent, 위치 제한, sequence 압축, recurrent state, kernel과 allocator를 별도 축으로 표시한다. 하나의 새 방식이 모든 이전 방식을 대체했다고 말하지 않는다.
+
+MHA/MQA/GQA/MLA를 비교할 때는 동일한 기호와 동일 길이로 cache bytes를 계산한다. MQA/GQA가 query head 계산까지 KV head 비율만큼 없애는 것은 아니며 MLA의 latent도 모든 과거 위치에 대해 저장할 수 있다. 품질 순위를 구조 이름만으로 단정하지 않는다. [2–4]
+
+### 긴 문맥과 상태 요약
+
+SWA는 “최근 W개에 접근”, CSA는 “압축된 history 중 선택”, HCA는 “더 강하게 압축한 history 전체 조회”라는 접근 대상을 먼저 고정한다. Indexer가 원본 전체 KV를 공짜로 복구한다고 설명하지 않는다. 저장 항목 수와 읽는 항목 수를 각각 세어야 한다. [17,18]
+
+Recurrent에서는 과거의 목록을 제한된 행렬에 누적한다. Delta rule은 현재 key로 예측한 value의 오류를 보정한다. Conv state는 최근 입력 tail이고 recurrent matrix와 용도가 다르다. Qwen의 16개 KV 저장소와 48개 matrix state 및 48개 conv tail을 요청 하나의 상태로 연결한다. [7–16]
+
+### 실행 최적화와 고객에게 돌아오는 결론
+
+FlashAttention은 같은 softmax 수식의 IO, PagedAttention은 저장 block 관리, CUDA Graph는 launch와 dependency 제출을 바꾼다. 세 기술을 attention 구조의 후속 모델처럼 한 줄에 놓지 않는다. [5,6,19,22]
+
+마지막 화면에는 170K+2K 요청의 raw state, FFN/projection/full attention FLOPs, HBM 읽기 가정과 통신량을 따로 놓는다. 발표자는 “이 구성이라면 반드시 몇 token/s”라는 미검증 답 대신, 충족해야 할 용량 조건과 유력 병목, TP/replica 후보 및 필요한 실측을 근거로 답한다. 16.4절의 답변 예시로 처음 고객 질문을 회수한다.
+
 
 # 1 배포 요구를 하드웨어 질문으로 바꾸기
 
@@ -81,6 +175,23 @@ Qwen3.8-27B의 64개 층 중 full attention은 16개다. BF16 full KV는 **64 Ki
 계산을 볼 때는 “몇 FLOP인가”, 저장을 볼 때는 “몇 byte가 언제까지 살아 있는가”, 이동을 볼 때는 “어느 경로로 몇 byte를 몇 번 옮기는가”를 묻는다. 이 셋을 분리하면 고성능 GPU에서도 느린 이유와, 메모리는 남는데 동시성을 늘리기 어려운 이유를 설명할 수 있다.
 
 기본 사례는 입력 170,000 token과 출력 2,000 token이다. 편의상 최대 cache 길이를 172,000으로 잡는다. 이는 길이 예산을 위한 보수적 계산이며, 마지막 출력 token을 다시 모델에 입력하지 않고 종료하는 일반 경로에서는 실제 cache 위치가 하나 적을 수 있다. 이 차이는 4장에서 실행 순서와 연결한다.
+
+## 1.3 배포자가 통제하는 것과 모델이 정한 것
+
+“모델 아키텍처는 통제 불가능하다”는 말은 **주어진 checkpoint를 같은 모델로 배포한다는 조건**에서 이해한다. 모델 선정이나 재학습까지 업무 범위에 들어가면 구조를 바꾸는 결정도 가능하지만, 실행 옵션을 바꾸는 일과는 비용·검증 범위가 다르다.
+
+| 범주 | 예시 | 변경의 의미 |
+|---|---|---|
+| 주어진 checkpoint의 구조 | layer 수와 종류, Q/KV head, latent/state 차원, FFN 폭 | weight shape와 학습된 표현을 정의 |
+| 지원 범위의 실행 선택 | TP/PP, replica, batching, chunk 크기, attention backend, Graph mode | 같은 모델을 배치하고 실행하는 방법 |
+| 품질·호환성 검증이 필요한 선택 | weight/KV dtype, context 확장, offload, cache eviction | 수치·접근 범위 또는 data path를 변경 |
+
+KV dtype을 FP8로 바꾸면 저장 원소의 byte와 오차가 바뀐다. GQA의 KV head 수를 임의로 4에서 1로 줄이면 원래 checkpoint의 K/V projection 의미까지 바뀌므로 같은 종류의 옵션 조정이 아니다. FlashAttention과 CUDA Graph는 지원되는 수식을 효율적으로 실행하며, GDN을 softmax attention으로 치환하는 기능이 아니다. [2–6,13,22–24]
+
+재현 가능한 비교를 하려면 고정할 값과 바꿀 값을 먼저 적는다. Checkpoint와 tokenizer, workload를 고정한 뒤 TP만 바꾸는 실험과, KV dtype·chunk·동시성까지 한꺼번에 바꾼 실험은 다른 근거를 제공한다. 실행 옵션도 kernel 지원과 layout 제약을 받으므로 “통제 가능”은 “어떤 조합이든 가능”이라는 뜻이 아니다.
+
+NVLink가 없으면 multi-GPU를 못 쓰는 것은 아니다. PCIe 경로를 사용할 수 있으나 통신 비용이 다르다. IB가 없어도 TCP나 지원되는 RoCE 등으로 multi-node를 구성할 수 있으나, 실제 collective 경로와 지연·대역폭을 다시 확인해야 한다. 링크 이름 하나로 가능/불가능을 이분하지 않는다. [19–21]
+
 
 # 2 행렬 곱과 Projection의 기초
 
@@ -146,6 +257,29 @@ $\odot$는 원소별 곱이다. 이 FFN gate와 attention output gate, recurrent
 
 Weight는 여러 요청이 같은 모델을 실행하며 공유한다. KV/state는 요청마다 다르다. Activation과 workspace는 처리 중인 batch와 prefill chunk에 따라 peak가 달라진다. 그래서 모델 parameter 수에 dtype byte를 곱한 값만으로 동시성을 계산할 수 없다.
 
+## 2.5 같은 GEMM인데 Prefill과 Decode가 다른 이유
+
+$X\in\mathbb R^{N\times d}$와 $W\in\mathbb R^{d\times m}$의 곱에서 $N$은 이번 호출에서 처리하는 token 행 수다. Decode에서 활성 sequence 8개가 각각 한 token이면 $N=8$이고, prefill chunk의 8192 token이면 $N=8192$다. $N$을 전체 context 길이 $T$와 구별해야 한다. Decode에서도 cache의 $T$는 매우 클 수 있다.
+
+곱셈 하나에서 입력과 weight와 출력을 각각 한 번만 HBM에서 읽거나 쓴다는 이상화로, 동일 원소 크기 $b$일 때:
+
+$$
+F=2Ndm,\qquad D_{\mathrm{ideal}}=b(Nd+dm+Nm).
+$$
+
+$$
+I_{\mathrm{ideal}}=\frac{2Ndm}{b(Nd+dm+Nm)}.
+$$
+
+$N$이 작고 weight 항 $dm$이 지배하면 $I\simeq2N/b$다. BF16의 $b=2$에서는 약 $N$ FLOP/byte다. Weight를 읽어 같은 batch의 여러 token에 쓸수록 byte당 연산이 늘어난다. 이는 실제 HBM traffic 보장이 아니라 재사용을 설명하는 최소 이동 모형이다. Tile 재로드, cache, layout, activation fusion은 실제 traffic을 바꾼다. [35]
+
+예를 들어 Qwen의 한 FFN projection을 $d=5120,m=17408,b=2$로 보면 weight는 178,257,920 byte다. $N=1$에서는 계산 약 0.178 GFLOP, 입력·출력 포함 최소 이동 약 178.3 MB, intensity는 약 1이다. $N=8192$에서는 계산 약 1.460 TFLOP, 최소 이동 약 547.4 MB, intensity는 약 2668 FLOP/byte다. 같은 weight라도 호출 shape가 달라 GPU의 다른 제약을 만난다.
+
+작은 decode batch의 “GEMM”은 수학적으로 matrix multiply여도 skinny GEMM/GEMV에 가깝게 실행될 수 있다. Tensor Core 사용 여부는 kernel과 shape·dtype에 달려 있다. Tensor Core에 실리는 명령만 세어도 데이터 이동과 reduction, scheduling 비용은 사라지지 않는다. FLOPs가 적어서 반드시 지연이 작은 것도 아니다.
+
+SwiGLU FFN은 $d\to m$ 두 번과 $m\to d$ 한 번의 큰 선형변환을 사용한다. 따라서 주요 연산은 token당 $6dm$이다. FFN을 “신경망 한 번”이라고만 세면 이 세 행렬과 중간 activation 수명을 놓친다. 두 행렬의 출력이 모두 필요할 수 있고 fusion 정책에 따라 peak 메모리도 달라진다. [36]
+
+
 # 3 GPU와 데이터 이동의 구조
 
 CPU는 요청 수신과 tokenization, 스케줄링, GPU 작업 제출과 결과 전달을 주로 맡는다. GPU는 많은 token과 feature의 행렬 연산을 병렬 실행한다. 이는 일반적인 serving 배치이며 sampling 등 일부 작업의 실행 위치는 엔진마다 다르다. CPU의 제어 흐름 처리와 GPU의 대량 병렬 계산은 협력 관계다. GPU가 빨라도 host가 다음 작업을 제때 제출하지 못하면 전체 실행이 기다릴 수 있다. [19,22,28]
@@ -200,6 +334,21 @@ NVLink는 GPU 사이의 고속 연결이고 NVSwitch는 여러 NVLink 경로를 
 | L40S | 48 GB GDDR6 | 약 864 GB/s | NVLink 미지원과 PCIe 경로 |
 
 위 값은 공식 제품 자료의 해당 form factor 예시이며 실효 bandwidth가 아니다. GPU당 수치와 8-GPU node aggregate, 단방향과 양방향 합산을 구분한다. 예를 들어 NVLink 900 GB/s라는 aggregate 제품값을 그대로 한 pair의 단방향 payload bandwidth로 대입하지 않는다. 제품의 정확한 SKU와 실제 topology를 먼저 확인한다. [21]
+
+## 3.6 실제 스펙 표를 읽고 실행 가설을 만들기
+
+스펙은 SKU와 form factor, dtype, dense/sparse 조건, GPU당/시스템 합산, 단방향/양방향 정의의 순서로 읽는다. 모델 weight가 BF16이라고 모든 kernel이 같은 BF16 Tensor Core peak로 실행되지는 않는다. FP32 accumulation, normalization, softmax와 state update의 경로는 따로 본다. [19,21,35]
+
+H200 공식 제품 표는 SXM과 NVL을 구분하고, BF16 Tensor Core 1,979 TFLOPS와 1,671 TFLOPS에 “With sparsity” 각주를 붙인다. 이 숫자를 일반 dense BF16 GEMM의 보장 처리량으로 그대로 넣으면 안 된다. 모델이 dense라는 표현과 하드웨어의 구조적 sparsity 지원 조건도 다른 개념이다. 표의 가장 큰 숫자보다 각주가 계산의 적용 범위를 결정한다. [21]
+
+HBM 141 GB는 보관할 수 있는 양이고 4.8 TB/s는 명목 데이터 이동률이다. 예를 들어 raw BF16 weight를 54 GB로 가정하면 한 번 읽는 이상 하한은 $54/4800=0.01125$ s다. 실제로 모든 step에서 정확히 한 번만 읽는다는 보장은 없고 batch와 L2 재사용, sharding과 kernel 경로가 바뀐다. 이 값으로 모델 tokens/s를 확정하지 않는다.
+
+NVLink 900 GB/s와 PCIe Gen5 128 GB/s라는 제품 표기도 집계·방향·port 조건을 확인한 뒤 사용한다. NIC의 400 Gb/s는 bit 단위이며 단순 byte 환산은 50 GB/s다. 링크의 line rate와 GPU buffer 사이의 실제 end-to-end payload throughput은 다르다. [19–21]
+
+GPU 내부에서도 bandwidth라는 한 숫자로 모든 경로를 대체하지 않는다. Register와 shared memory는 HBM보다 작고 가깝지만 점유량이 커지면 동시에 실행할 warp/block이 줄 수 있다. Cache hit가 늘어 HBM traffic이 줄어드는 경우와, warp가 부족해 latency를 숨기지 못하는 경우를 같이 고려한다. 큰 batch는 weight reuse를 돕지만 activation과 workspace 및 대기 시간을 늘릴 수 있다.
+
+프로파일에서 SM active, tensor instruction 활성, HBM throughput, kernel duration, GPU 간 collective duration을 연결해서 본다. GPU-Util은 실행 중인 시간의 신호일 수 있고 Tensor Core 포화도를 뜻하지 않는다. NVLink가 있다는 사실 역시 collective와 compute가 잘 overlap된다는 보장이 아니다. [19,20,35]
+
 
 # 4 밀집 모델의 Prefill과 Decode 실행
 
@@ -293,6 +442,15 @@ $$
 $$
 
 Gate의 activation과 적용 위치는 구조별로 다르다. Qwen의 공식 구현은 projection과 output gate 경로를 별도로 다룬다. 이름에 gated가 붙었다고 과거 KV가 fixed state로 대체되는 것은 아니다. **Qwen의 full/Gated Attention 층은 여전히 token별 K/V를 보관**하고, Gated DeltaNet 층은 다른 recurrence를 사용한다. [13,15,30]
+
+## 5.6 Attention과 FFN이 정보를 바꾸는 서로 다른 방식
+
+Full attention은 현재 token의 query로 다른 위치의 K/V를 읽어 위치 사이 정보를 섞는다. Dense FFN은 각 위치의 feature를 학습된 비선형 함수로 변환한다. FFN의 가중치는 위치 사이에서 공유하지만, 기본 FFN 자체가 다른 위치의 hidden vector를 직접 읽는 연산은 아니다. 다만 FFN 입력에는 앞선 attention이 모은 문맥이 이미 들어 있다. [1,36]
+
+이 구분은 왜 두 부분의 비용 식이 다른지를 설명한다. FFN은 같은 폭의 token을 하나 더 처리할 때 비슷한 연산을 반복한다. Full attention의 새 query는 history 길이가 늘수록 더 많은 위치와 관계를 계산한다. 그래서 “Attention 대 FFN의 연산 비중”은 모델 이름 하나로 고정할 수 없다. Projection까지 attention에 넣었는지, prefill 전체인지 decode 한 step인지도 먼저 정한다.
+
+GQA는 과거 위치 수가 아니라 KV의 head 축을 줄인다. Softmax의 출력은 여전히 query head마다 다르므로, shared KV를 반복 load하지 않는 효율적인 구현과 query별 계산량 감소는 구별해야 한다. Head 공유, window 제한, sequence 압축과 recurrent memory는 각각 다른 정보를 남기고 버리는 규칙이다.
+
 
 # 6 KV Cache의 유도와 저장 정밀도
 
@@ -605,6 +763,17 @@ $$
 
 품질의 손실 지점도 다르다. SWA는 직접 접근할 수 있는 거리, sparse selection은 선택 실패, compression은 여러 원본을 합치는 손실, recurrence는 제한 상태에 누적되는 간섭이 핵심이다. 실제 과제별 평가 없이 하나의 정확도 순서를 정하지 않는다.
 
+## 9.8 저장 항목과 조회 항목을 별도로 세는 예제
+
+일반식을 이해하기 위한 **가상 설계**로 $T=172000,W=512$를 두자. Non-overlap 압축이 4 token당 한 항목이면 닫힌 compressed entry는 43000개다. CSA식 경로가 이 중 top-1024를 선택한다면 main attention이 읽는 항목은 최근 raw 512개와 선택 compressed 1024개로 최대 약 1536개다. 하지만 43000개 후보를 점수화하는 indexer 비용이 추가될 수 있다.
+
+같은 길이를 128 token당 한 항목으로 강하게 압축하면 닫힌 항목은 1343개이고 아직 닫히지 않은 입력이 96개 남는다. HCA식 경로는 그 압축 항목 전체와 local raw 512개를 조회할 수 있다. 압축 entry의 표현 차원과 dtype가 같다고 보장되지 않으므로 43000 대 1343만으로 전체 cache byte 비율을 정할 수는 없다.
+
+이 예는 공식 모델의 raw memory 수치를 재현한 결과가 아니다. V4 문서의 압축·선택이라는 아이디어를 단순화한 계산 연습이다. 실제 compressor overlap, boundary, causal availability와 tail, indexer cache 및 local/global mask를 공식 구현과 대조해야 한다. Closed entry 수와 마지막 미완성 window의 상태를 함께 계산한다. [17,18]
+
+Sparse와 compression의 품질 문제도 분리한다. 선택에 실패하면 이미 저장된 중요한 항목을 읽지 못한다. 압축이 세부 정보를 합쳐 버렸다면 그 항목을 선택해도 원본 세부를 되살릴 수 없을 수 있다. 이는 서로 다른 실패 원인이며 top-k만 키워 해결되는 범위가 같지 않다.
+
+
 # 10 Linear Attention을 Recurrent State로 유도하기
 
 ## 10.1 Softmax 대신 결합 가능한 유사도
@@ -737,6 +906,17 @@ $$
 
 Recurrence가 있다고 GPU에서 prompt token을 하나씩 Python loop로 실행해야 하는 것은 아니다. Chunk 내 계산을 행렬 연산으로 바꾸고 chunk 사이에 state를 전달하는 알고리즘이 있다. Scan/parallel formulation은 동일한 recurrence의 효율적 실행 경로다. Decode는 현재 token 하나와 이전 state를 입력으로 바로 갱신하는 경로가 적합하다. Floating-point 연산 순서가 달라 오차가 생길 수 있으므로 backend 간 동등성은 허용오차와 실제 출력으로 확인한다. [8–10,15]
 
+## 11.8 State가 고정 크기여도 계산이 사라지지 않는 이유
+
+$S\in\mathbb R^{d_k\times d_v}$에는 $d_kd_v$개 수가 있다. 새 key의 value 예측 $S^\top k$와 query read $S^\top q$는 각각 대략 $2d_kd_v$ FLOP이다. 감쇠와 rank-one correction은 이 원소들을 다시 갱신한다. 따라서 token당 update는 context 길이에 대해 bounded여도 state dimension에 대해서는 비용을 가진다. [8–10,15]
+
+GDN의 core 식을 문자 그대로 계산하면 감쇠 약 $d_kd_v$, 예측 약 $2d_kd_v$, outer-product 보정 약 $2d_kd_v$, 최종 read 약 $2d_kd_v$로 합이 약 $7d_kd_v$다. 작은 vector 연산은 생략한 설명용 계산 순서다. Fusion이나 algebraic 재배열, Q scale와 chunk kernel은 실제 instruction/FLOP 수를 바꿀 수 있다. 이를 모든 구현의 exact count라고 부르지 않는다.
+
+Qwen 사례의 $H_v=48,d_k=d_v=128$이면 한 GDN 층에서 약 5.51 MFLOP, 48개 층 합으로 약 0.264 GFLOP의 core update/read 근사다. Projection과 FFN은 포함하지 않은 값이다. 반면 recurrent raw state 144 MiB를 매 step 한 번 읽고 한 번 쓴다고 가정하면 최소 수준의 상태 이동 모형은 288 MiB다. Cache와 fusion에 따라 실제 HBM traffic은 달라진다.
+
+따라서 full attention의 긴 KV scan을 고정 state 접근으로 바꾸는 효과는 있지만, recurrent kernel이 항상 compute-bound이거나 FP8 KV 설정이 state의 byte까지 절반으로 만든다고 말할 수 없다. Prefill chunk에서 중간 상태를 물질화하는 양도 persistent decode state와 별도로 계산한다.
+
+
 # 12 Qwen3.8 27B의 층과 상태를 직접 계산하기
 
 ## 12.1 정확한 모델과 설정 범위
@@ -852,6 +1032,17 @@ KV만 FP8로 바꾸면 약 5.3924 GiB다. 고정 state 항은 그대로 남는�
 
 Recurrent state는 긴 이력을 제한 크기로 처리하지만 원본 위치의 개별 조회와 동일하지 않다. Full attention 층은 token별 정보를 직접 재참조하는 경로를 제공한다. Hybrid는 이 두 정보 처리 특성을 섞어 비용과 표현력을 조정한다. 3:1 비율이 모든 모델과 과제에 최적이라는 정리는 없다. 실제 학습과 장문 과제 평가로 검증되는 설계다.
 
+## 12.8 출력 token과 상태 갱신의 시점을 맞추기
+
+Decode 한 step에 넣은 token $x_t$가 64층을 통과하는 동안 16개 full 층의 KV에 현재 위치가 추가되고, 48개 GDN 층의 matrix state와 48개 conv tail이 갱신된다. 마지막 logits로 선택한 token은 $x_{t+1}$이다. 방금 선택된 $x_{t+1}$ 자체의 상태 반영은 이를 다음 step 입력으로 넣을 때 일어난다. 이 시점을 구분해야 “출력 token 하나마다 cache 한 칸”이라는 근사의 off-by-one을 이해할 수 있다. [13–16]
+
+예를 들어 길이 3의 prompt를 prefill하면 각 full 층에는 3개 위치의 K/V가 있고 각 GDN 층에는 세 위치를 반영한 마지막 state가 있다. 이때 마지막 prompt logits로 첫 출력 $y_1$을 고른다. $y_1$을 넣어 두 번째 출력 $y_2$를 고르면 full cache 길이는 4가 된다. $y_2$를 고르고 종료하면 일반적으로 $y_2$ 자신의 KV는 아직 없다.
+
+“16개 KV와 48개 state”는 논리적인 layer별 상태 묶음 수다. KV tensor는 head와 token과 feature 축을 포함하고, recurrent state 역시 여러 head의 행렬을 담는다. Tensor가 rank별로 shard되거나 하나의 큰 pool에 합쳐져도 layer별 정보가 서로 독립적이라는 의미는 유지된다. Allocator 객체나 실제 CUDA tensor 개수와 이 논리적 개수를 같다고 보지 않는다.
+
+FFN도 64개 층 각각에서 계산하지만 일반적인 추론에서 FFN의 모든 중간 출력을 과거 token별 persistent cache로 남기지는 않는다. KV/state는 다음 token의 계산이 필요로 하기 때문에 수명이 길다. “모든 layer를 통과한다”와 “모든 activation을 계속 보관한다”는 다른 말이다.
+
+
 # 13 FlashAttention과 PagedAttention과 CUDA Graph
 
 ## 13.1 구조와 실행과 할당을 분리하기
@@ -912,6 +1103,117 @@ Decode는 한 token step이 반복되므로 고정 buffer와 batch bucket, padde
 Prefill은 길이가 다양하므로 길이 bucket과 chunked prefill, piecewise capture, 지원되는 full graph 경로를 사용할 수 있다. Bucket과 graph 수를 늘리면 capture warmup, graph pool과 padding 비용이 증가한다. Recurrent state와 block table pointer 관리도 안정적이어야 한다.
 
 vLLM의 FULL, PIECEWISE, FULL_AND_PIECEWISE 같은 구체 모드와 backend coverage는 버전별로 달라진다. 본문은 공식 design 문서의 개념을 설명하며, 실제 vLLM 0.30.0 환경에서는 동일 버전 config와 선택된 attention/GDN backend를 확인한다. Shape가 맞더라도 capture 제한이 있는 작업은 별도 경로로 실행될 수 있다. [22]
+
+## 13.6 연산량을 세는 공통 단위
+
+FLOP은 계산의 횟수이고 FLOP/s는 속도다. 이후 수치는 forward inference의 주요 곱셈·덧셈을 2 FLOP/FMA로 세며, BF16이라고 곱셈 횟수가 자동으로 FP8의 두 배가 되지는 않는다. Dtype은 처리 가능한 peak와 저장 byte, 수치 오차를 바꾼다. [35]
+
+기호는 $N$이 이번 호출의 token 행 수, $T$가 full attention이 참조하는 위치 수, $d$가 residual hidden dimension, $m$이 FFN intermediate dimension이다. $a_q=H_qd_h$, $a_{kv}=H_{kv}d_h$는 각각 Q와 KV projection 폭이다. Layer별 FLOP 식을 먼저 적고 해당 종류의 layer 수를 곱한다. Hybrid 모델에서 모든 layer에 full attention 본체 식을 넣으면 안 된다.
+
+기본 SwiGLU FFN의 세 projection은:
+
+$$
+F_{\mathrm{FFN}}\simeq6Ndm.
+$$
+
+Output gate가 없는 일반 GQA의 Q/K/V/O projection 합은:
+
+$$
+F_{\mathrm{proj}}\simeq2Nd(2a_q+2a_{kv}).
+$$
+
+두 식은 activation/normalization 등의 부가 연산을 제외한 직접 유도다. MHA에서 $a_q=a_{kv}=d$이면 projection은 $8Nd^2$다. Gate용 projection 폭이 추가되는 구조는 그 행렬을 따로 합산한다. [1,3,35,36]
+
+Decode의 full attention 본체 두 matmul은 한 layer에서:
+
+$$
+F_{\mathrm{full,decode}}\simeq4BH_qd_hT.
+$$
+
+여기서는 sequence마다 한 query이므로 $N=B$다. Causal prefill 길이 $T$의 유효 pair는 $T(T+1)/2$이므로:
+
+$$
+F_{\mathrm{full,prefill}}\simeq2BH_qd_hT(T+1).
+$$
+
+Softmax와 mask, tile padding을 제외한 pair 계산 근사다. Chunked prefill이 prefix를 함께 읽는 경우는 해당 query별 허용 key 수의 합을 사용한다. 각 chunk에 전체 prompt의 $T^2$를 반복 적용하지 않는다. [1,5]
+
+## 13.7 Qwen3.8 27B의 실제 Projection과 FFN
+
+공식 config와 reference 구현 [13,15]의 $d=5120,m=17408,a_q=6144,a_{kv}=1024$를 대입한다. 아래는 $N=1$, bias를 제외한 선형층의 이론적 곱셈·덧셈 수다. Host scheduling이나 GPU trace에서 측정한 값이 아니다.
+
+한 full 층은 Q와 output gate를 함께 만들기 때문에 q_proj output 폭이 $2a_q=12288$다. K/V는 각각 1024, output projection의 input 폭은 6144다. 따라서:
+
+$$
+F_{\mathrm{full,proj}}=2d(3a_q+2a_{kv})
+=209715200\ \mathrm{FLOP}.
+$$
+
+한 GDN 층은 packed QKV 폭 10240, output gate $z$ 폭 6144, decay와 beta용 $a,b$ projection 각각 48, output projection input 폭 6144다. 따라서:
+
+$$
+F_{\mathrm{GDN,proj}}=2d(10240+6144+48+48+6144)
+=231669760\ \mathrm{FLOP}.
+$$
+
+한 층의 dense SwiGLU FFN은:
+
+$$
+F_{\mathrm{FFN,layer}}=6\times5120\times17408
+=534773760\ \mathrm{FLOP}.
+$$
+
+| 주요 선형 연산 | 층 수 | 층당 token당 GFLOP | 전체 token당 GFLOP |
+|---|---:|---:|---:|
+| Full attention projection과 output gate | 16 | 0.2097152 | 3.3554432 |
+| GDN projection과 output gate | 48 | 0.23166976 | 11.12014848 |
+| Dense FFN | 64 | 0.53477376 | 34.22552064 |
+| 위 주요 선형층 합 | 64층 전체 | 해당 없음 | 48.70111232 |
+
+GDN의 convolution과 state update/read, full attention의 QK/AV, 각 normalization, RoPE, activation, elementwise gate, residual은 이 표에서 제외했다. 따라서 이 합을 exact model forward FLOPs라고 부르지 않는다. 서로 다른 projection이 fused되어도 수학적 행렬 곱의 주요 원소 연산은 이렇게 분해할 수 있다.
+
+마지막 LM head는 vocabulary 248320 전체를 계산하는 단순 경로에서 $2\times5120\times248320=2.5427968$ GFLOP/query다. Prefill에서 마지막 위치의 logits만 필요한 경로라면 이 LM head 비용을 prompt의 모든 token 수에 기계적으로 곱하지 않는다. 실제 logits 처리 범위와 sampling kernel을 확인한다. [13,15]
+
+## 13.8 Attention과 FFN 비중이 길이에 따라 달라지는 이유
+
+16개 full 층의 decode QK/AV 합은 $393216T$ FLOP이다. Projection과 FFN의 token당 주요 FLOPs는 길이에 거의 무관하지만 full-history 조회는 길이에 비례한다. 다음 표는 **앞 절의 선형층 합에 full attention 본체만 더한 부분 회계**다. GDN core/conv와 LM head 등은 제외했으며, 시간 비중이나 모델 전체의 정확한 비중이 아니다.
+
+| Decode 조회 위치 T | Full QK와 AV 합 GFLOP | FFN 비중 | Mixing projection과 Full QK AV 비중 |
+|---:|---:|---:|---:|
+| 1024 | 0.403 | 69.7% | 30.3% |
+| 8192 | 3.221 | 65.9% | 34.1% |
+| 32768 | 12.885 | 55.6% | 44.4% |
+| 172000 | 67.633 | 29.4% | 70.6% |
+
+![Qwen의 주요 FLOPs가 문맥에 따라 달라지는 예](master-notes-figures/compute_split.svg){width=6.2in}
+
+그림 5. 표의 부분 회계에 해당하는 input token당 주요 FLOPs다. 파란 항만 full attention의 history 길이에 비례한다. Recurrent core와 logits 및 부가 연산은 제외했다. 그래프 높이는 실행 시간이 아니다.
+
+172K에서 위 선형층 48.701 GFLOP와 full 본체 67.633 GFLOP 및 LM head 2.543 GFLOP를 더하면 약 118.877 GFLOP다. 여기에 11.8절의 설명용 GDN core 약 0.264 GFLOP와 conv·비선형 등의 비용이 더해진다. 같은 모델을 모든 층 full attention으로 가정한 수치와 구분한다.
+
+길이 170000 prompt 하나의 causal prefill을 전체 유효 pair로 세면 주요 FFN은 약 5818.339 TFLOP, Full/GDN projection은 약 2460.851 TFLOP, 16개 full 층의 QK/AV는 약 5682.005 TFLOP다. 이 부분 합은 약 13961.194 TFLOP, 즉 13.961 PFLOP다. 이는 한 번의 prompt 처리량이며 초당 처리 능력이 아니다. GDN prefill의 chunk 알고리즘, tile padding과 workspace, logits 범위는 추가 분석 대상이다. [5,8,9,13,15]
+
+## 13.9 FLOPs와 HBM Byte와 실제 시간을 분리하기
+
+한 kernel의 compute 성능을 $P_{\mathrm{eff}}$, HBM 실효 bandwidth를 $B_{\mathrm{eff}}$라 하면 단순한 이상화에서:
+
+$$
+t_{\mathrm{kernel}}\gtrsim
+\max\left(\frac{F}{P_{\mathrm{eff}}},\frac{D_{\mathrm{HBM}}}{B_{\mathrm{eff}}}\right).
+$$
+
+Compute와 memory가 완전히 직렬이라는 가정이 아니므로 두 항을 무조건 더하지 않는다. 이 식은 전체 forward의 모든 kernel과 collective가 완전히 겹친다는 뜻도 아니다. 실제 step의 critical path에는 kernel 사이 dependency, launch와 synchronization, 통신, queue가 추가된다. GPU peak를 넣으면 더 낙관적인 하한일 뿐이다. [25,35]
+
+172K full KV의 raw BF16 payload는 약 11.272 GB다. 이를 step마다 한 번 읽는 모형이면 full attention 본체 약 67.633 GFLOP를 나눈 산술 강도는 약 6 FLOP/byte다. 이 숫자는 $H_q/H_{kv}=6$과 연결된다. Shared KV tile을 query group에서 잘 재사용하는 조건이 중요하며, 반복 load와 cache locality에 따라 실제 traffic이 바뀐다.
+
+전체 model weight 54 GB를 한 번, KV 11.272 GB를 한 번 읽는 **설명용 단일 GPU 모형**은 H200 명목 4.8 TB/s에서 약 13.60 ms의 bandwidth 하한을 준다. FFN/GDN activation, recurrent state, 임시 공간과 기타 이동은 제외했다. 이것은 73.5 token/s를 보장하는 벤치마크가 아니다. 실제 kernel은 적은 FLOPs에서도 bandwidth와 launch의 제약으로 오래 걸릴 수 있다. [21,35]
+
+## 13.10 CUDA Graph의 이득도 비용 회계로 보기
+
+설명용으로 GPU kernel 계산이 총 2 ms이고 host launch gap이 critical path에 1 ms를 추가한다면, 그 gap을 전부 없애는 이상적 graph 효과는 3 ms에서 2 ms, 즉 1.5배다. GPU 작업 자체가 20 ms이고 같은 gap 1 ms라면 이상적 효과는 1.05배다. 실제 launch/compute overlap과 capture 범위가 다르므로 이 값들은 원리를 위한 가정이다.
+
+Graph는 launch gap을 줄이지만 KV scan byte나 GEMM의 곱셈 수를 직접 줄이지 않는다. Shape bucket을 늘리면 padding 낭비를 줄일 수 있으나 graph 수와 capture 시간, graph pool memory가 늘 수 있다. 따라서 비교 실험에서는 replay 범위, batch bucket, 메모리와 latency를 함께 남긴다. [19,22]
+
 
 # 14 요청 길이와 동시성의 메모리 계산
 
@@ -1040,6 +1342,39 @@ $\tau$는 단계당 latency, $B_{\mathrm{eff}}$는 이 모델에서 송신 방�
 
 NVLink bridge가 없는 PCIe GPU node와 NVSwitch 기반 node는 같은 TP degree라도 통신 비용이 다를 수 있다. 여러 node로 확장하면 NIC 수와 대역폭, GPU-NIC 연결, RDMA, switch 경쟁과 collective 경로를 함께 봐야 한다.
 
+## 15.5 TP에서 행렬을 나누면 왜 Collective가 생기는가
+
+SwiGLU FFN을 intermediate feature 축으로 TP 분할한다고 하자. Rank $r$는 up/gate 행렬의 column 일부와 down 행렬의 대응 row 일부를 가진다. 각 rank에서:
+
+$$
+u_r=\mathrm{SiLU}(XW_{g,r})\odot(XW_{u,r}),\qquad
+Y_r=u_rW_{d,r}.
+$$
+
+원래 output을 복원하려면 $Y=\sum_rY_r$가 필요하다. 각 rank가 다음 계산을 위해 완전한 output을 가져야 한다면 all-reduce 같은 collective가 등장한다. Sequence-parallel layout 등에서는 reduce-scatter/all-gather로 재배열될 수 있다. “weight를 나눴으니 GPU당 FLOPs만 나누면 된다”는 계산은 이 결합 비용을 빠뜨린다. [20,37]
+
+Attention도 query head별 결과와 output projection을 분할하는 방식에서 부분 결과 결합이 필요할 수 있다. KV head의 shard/replication은 query head 분할과 다른 제약이다. Qwen KV4의 TP8에서 단순 head 분할이 불가능한 경우를 7.7절처럼 따로 계산한다. 실제 지원 TP degree는 GDN head/state 차원과 backend 제약까지 확인한다.
+
+## 15.6 GPU를 늘리는 것이 이득이 되는 조건
+
+설명용 단순 모형으로, 분할 가능한 작업 시간을 $C$, 분할되지 않는 나머지를 $U$, GPU 수를 $P$, 추가 통신을 $t_{\mathrm{comm}}$라 하자.
+
+$$
+t_1=C+U,\qquad t_P\simeq C/P+U+t_{\mathrm{comm}}.
+$$
+
+$$
+t_P<t_1\quad\Longleftrightarrow\quad
+t_{\mathrm{comm}}<C(1-1/P).
+$$
+
+이 식은 이상적인 $C/P$를 가정한 판단 도구다. 실제로는 GPU별 GEMM이 작아져 효율이 떨어지고 workload 불균형, topology와 HBM 경로, overlap이 바뀐다. 그래도 절약하는 작업 시간보다 통신이 커지면 한 요청 latency가 악화될 수 있다는 이유는 드러난다.
+
+PP는 activation을 stage 사이에 전달한다. 한 요청 한 token의 다음 stage는 이전 stage를 기다리므로 GPU 수만큼 한 token이 빨라지는 구조가 아니다. 여러 요청 또는 microbatch가 stage를 채울 때 throughput과 utilization 이득을 얻을 수 있고, pipeline bubble과 stage 불균형을 관리해야 한다.
+
+Replica는 모델과 weight를 복제하므로 한 요청의 weight memory를 줄이지 못하지만, 독립 요청을 나누어 처리량을 늘릴 수 있다. 한 장에 모델과 상태가 들어가고 replica별 부하를 잘 분산할 수 있다면 TP와 다른 후보가 된다. 두 방식은 “GPU를 더 쓴다”는 공통점보다 어떤 정보를 공유·교환하는지가 다르다.
+
+
 # 16 운영에서 확인할 항목과 해석
 
 ## 16.1 배포 전에 고정할 값
@@ -1068,6 +1403,19 @@ Workload는 prompt/output 길이의 p50/p90/p99와 최대값, arrival rate, 동�
 Head sharing과 latent 구조는 학습된 표현을 바꾸고, KV quantization은 저장 오차를 추가하며, window/selection은 접근 가능한 정보를 바꾼다. 이 변화들은 같은 정확도 축이 아니다. 다음 token perplexity, 특정 위치의 exact retrieval, 긴 코드 수정, 여러 근거 문장 결합을 구분해 본다.
 
 길이가 늘 때 성능이 떨어지면 positional extrapolation, 압축 간섭, indexer 선택, quantization과 runtime의 cache 관리 중 무엇이 원인인지 조건을 나눠 확인한다. “메모리가 작아서 정확도가 낮다”라는 한 문장으로 원인을 확정하지 않는다.
+
+## 16.4 고객에게 근거를 들어 답하는 절차
+
+먼저 checkpoint와 revision, 입력·출력 길이 및 목표 동시성, TTFT/ITL의 목표 percentile을 기록한다. 다음으로 raw weight와 요청별 KV/state를 계산해 물리적으로 들어갈 후보를 거른다. 이 단계는 처리량 검증이 아니다. 그 다음 prefill/decode의 FLOPs와 data movement, TP collective 및 queueing의 가설을 세우고 실제 workload로 측정한다.
+
+Qwen의 172K 요청 한 건은 본문의 BF16 KV와 FP32 recurrent 및 BF16 conv 가정에서 raw 상태 약 10.6414 GiB다. Weight를 설명용 54 GB로 잡으면 8건의 상태와 합계는 약 145.41 GB다. 따라서 H200 141 GB 한 장은 이 가정에서 workspace 이전에도 8건을 수용할 수 없다. KV payload만 FP8로 바꾸면 같은 합이 약 100.32 GB로 감소하지만 scale·allocator·graph pool과 peak 메모리는 별도다. 이론상 용량 여유와 ITL SLO 달성은 다시 나눠 확인한다. [13,15,16,21,23,24]
+
+이때 고객에게는 다음처럼 답할 수 있다. “모델 이름만으로 구성을 확정하기 어렵습니다. 주어진 170K 입력과 2K 출력, 동시성에서 상태가 얼마인지 먼저 계산했습니다. KV precision과 TP/replica 후보를 정한 뒤 품질과 TTFT/ITL을 비교하겠습니다. NVLink가 없는 장비의 TP는 collective가 병목일 수 있어 같은 GPU 수의 replica와 별도로 측정하겠습니다.” 이 문장은 배포가 완료됐다는 보고가 아니라 검증 가능한 설계 답변의 예다.
+
+최소 비교군은 같은 checkpoint와 workload를 고정한 단일 GPU, 지원되는 TP2 또는 TP4, 동일 총 GPU 수의 replica다. KV dtype 비교는 별도 축으로 두고 짧은 요청과 긴 요청을 모두 평가한다. Warmup/capture 구간과 steady state를 구분하고, 요청 실패·preemption·queue time을 포함해 p50/p95/p99 latency와 SLO 충족 throughput을 본다. 엔진별 benchmark의 계측 경계를 확인한다. [22,23,27,28]
+
+Prompt 길이는 prefill 비용과 초기 상태를, 출력 길이는 상태를 유지하며 decode를 반복하는 시간을 바꾼다. 동시 활성 sequence 수와 초당 도착 요청 수는 같은 값이 아니다. 처리량을 높이려고 batch limit만 올렸을 때 queue와 tail latency가 커질 수 있으므로 완료된 token/s와 대기 중 요청을 함께 관측한다. 구조 이해는 이 실험의 원인 가설을 만드는 데 쓰인다.
+
 
 # 17 Attention 최적화의 계보와 학습 지도
 
@@ -1108,7 +1456,7 @@ Mooncake Transfer Engine과 NIXL은 이 상태 이동에 활용할 수 있는 �
 
 # 19 주석이 포함된 원문 참고자료
 
-모델 설정은 2026년 11월 1일 확인 기준이다. 링크가 main 또는 latest를 가리키는 구현 자료는 이후 바뀔 수 있으므로 실제 배포 기록에는 사용 버전과 commit을 함께 남긴다. 논문의 개선률은 그 논문의 모델과 학습 및 평가 조건에 한정된다.
+모델 설정과 추가 구현 자료는 2026년 11월 2일 확인 기준이다. 링크가 main 또는 latest를 가리키는 구현 자료는 이후 바뀔 수 있으므로 실제 배포 기록에는 사용 버전과 commit을 함께 남긴다. 논문의 개선률은 그 논문의 모델과 학습 및 평가 조건에 한정된다.
 
 ## 19.1 Attention과 Cache의 원 논문
 
@@ -1220,6 +1568,18 @@ E4M3와 E5M2의 표현 범위와 정밀도 특성을 다룬다. 모든 KV precis
 **[34] Mooncake Transfer Engine과 NVIDIA NIXL 공식 저장소.** [Mooncake](https://github.com/kvcache-ai/Mooncake) · [NIXL](https://github.com/ai-dynamo/nixl)  
 별도 참고 장의 상태 이동 구성요소를 확인하는 자료다.
 
+## 19.5 비용 유도와 분산 행렬 곱을 위한 추가 자료
+
+**[35] NVIDIA. Matrix Multiplication Background User Guide 및 GPU Performance Background User Guide.** [GEMM](https://docs.nvidia.com/deeplearning/performance/dl-performance-matrix-multiplication/index.html) · [GPU 성능](https://docs.nvidia.com/deeplearning/performance/dl-performance-gpu-background/index.html)  
+GEMM의 $2MNK$ FMA 계산 관례, arithmetic intensity와 shape에 따른 성능 제약을 확인한다. 문서의 특정 세대 threshold를 H200 모든 workload의 고정 경계로 옮기지 않는다. 본문의 Qwen FLOPs와 이상 byte는 이 원리와 config shape로 직접 유도했다. 2026년 11월 2일 조회.
+
+**[36] Shazeer. GLU Variants Improve Transformer. 2020.** [원문 링크](https://arxiv.org/abs/2002.05202)  
+SwiGLU 등 gated FFN의 세 선형변환을 설명하는 원 논문이다. $6Ndm$ 근사와 gate를 단순한 token routing으로 혼동하지 않는 근거다.
+
+**[37] Shoeybi et al. Megatron LM Training Multi Billion Parameter Language Models Using Model Parallelism. 2019 공개 2020 v4.** [원문 링크](https://arxiv.org/abs/1909.08053v4)  
+FFN과 attention의 intra-layer tensor 분할 및 결합 통신을 이해하기 위한 원 자료다. 훈련 논문의 성능 수치를 inference의 보장 scaling으로 사용하지 않으며, 본문은 행렬 분할과 collective가 생기는 구조에 한정해 참조한다.
+
+
 # 20 용어집과 발표자 확인 항목
 
 ## 20.1 용어를 실행과 연결하기
@@ -1280,5 +1640,11 @@ E4M3와 E5M2의 표현 범위와 정밀도 특성을 다룬다. 모든 KV precis
 ☐ FlashAttention과 PagedAttention과 CUDA Graph를 서로 다른 층위로 설명한다.
 
 ☐ TP의 rank별 KV 복제 가능성과 ring 송수신 byte 정의를 구분한다.
+
+☐ 주어진 checkpoint의 구조와 실행 옵션 및 품질 검증이 필요한 변경을 구분한다.
+
+☐ Qwen의 full attention output gate와 GDN projection까지 FLOPs에 합산할 수 있다.
+
+☐ TP FFN의 부분 결과 합에서 collective가 필요한 이유를 행렬식으로 설명한다.
 
 ☐ Capacity 계산과 bandwidth 하한과 실제 tokens/s를 구분해 보고할 수 있다.
