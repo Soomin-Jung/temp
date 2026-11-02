@@ -32,6 +32,8 @@
 |---:|---|---|
 | 0 | [00-foundations.md](00-foundations.md) | 수식과 Transformer block을 어떻게 읽는가? |
 | 0a | [행렬곱 완전 기초부터 Qwen3.8 Q/K/V까지](00a-matrix-gemm-to-qkv-from-zero.md) | GEMM α/β/C, FMA, Projection, **Q/K/V 생성·가중합·sqrt(d_k)·exp/Softmax**, CUDA Core/Tensor Core, Prefill/Decode 병목, LM Head/Logits, MHA/MQA/GQA 및 27B Cache |
+| 0b | [TP=1부터 TP=N까지: FFN·Attention 분할, KV Cache와 통신 Byte 계산](00b-tp-and-llm-inference-cost-from-first-principles.md) | **FMA→2MNK, FFN/GQA FLOPs, TP Feature·Head Sharding, KV 복제와 All-Reduce**, H200 Bound를 수학부터 연결 |
+| 발표 | [1회차 발표 마스터 플로우 — Hardware / Attention / KV Cache](presentation-session-01-hardware-attention-kv-cache.md) | **18슬라이드·74분**: GEMM→Tensor Core→FFN/QKV→KV→Prefill/Decode→TP→하드웨어 한계. Recurrent State는 후속 회차 |
 | 1 | [01-full-attention.md](01-full-attention.md) | MHA/MQA/GQA와 KV cache는 무엇인가? |
 | 2 | [02-mla-low-rank-attention.md](02-mla-low-rank-attention.md) | MLA는 어떻게 token별 KV를 latent로 압축하는가? |
 | 3 | [03-linear-recurrent-attention.md](03-linear-recurrent-attention.md) | Linear Attention에서 DeltaNet/GDN/KDA까지 어떻게 이어지는가? |
