@@ -176,7 +176,7 @@ S_h=\frac{Q_hK_h^\top}{\sqrt{256}}+M:\ [T,T]
 여기서 S의 (i,j) 원소는 **i번째 Query와 j번째 Key의 내적**이다. Causal Mask M은 현재 위치가 미래 토큰을 읽지 못하게 막는다. Mask 이후 각 Query 행의 Softmax로 확률 가중치를 만든다.
 
 ```math
-P_h=\operatorname{softmax}(S_h):[T,T],\qquad
+P_h=\mathrm{softmax}(S_h):[T,T],\qquad
 O_h=P_hV_h:[T,256]
 ```
 
@@ -195,7 +195,7 @@ O_h=P_hV_h:[T,256]
 | GQA (Qwen 실제) | 24 | 4 | 6개 Q Head가 1개 KV 공유 |
 
 ```math
-O_i=\operatorname{softmax}\!\left(
+O_i=\mathrm{softmax}\!\left(
 \frac{Q_iK_{g(i)}^\top}{\sqrt{d_h}}+M\right)V_{g(i)}
 ```
 
@@ -208,7 +208,7 @@ g(i)는 Query Head i가 매핑되는 KV Head 번호다. **KV Head 감소 = KV Pr
 Qwen의 Dense SwiGLU FFN, d=5120, m=17408을 간소화해 쓰자.
 
 ```math
-G=\operatorname{SiLU}(XW_g),\quad U=XW_u,\quad
+G=\mathrm{SiLU}(XW_g),\quad U=XW_u,\quad
 Y=(G\odot U)W_d
 ```
 
