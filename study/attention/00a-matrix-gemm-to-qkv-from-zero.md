@@ -1625,6 +1625,11 @@ Q head 24, KV head 4, head dimension 256이면:
 Full Attention 16개 층, KV head 4, head dimension 256, BF16일 때 1 token의 총 raw KV byte는?
 
 
+### 문제 6. Q/K/V 데이터 흐름
+
+- Q와 K를 곱하면 V가 만들어지는가?
+- `P=softmax(QKᵀ/√d_k+M)`의 P와 `V=XW_V`는 각각 무엇인가?
+
 ### 문제 7. GEMM과 FMA
 
 - α=1, β=0인 GEMM에서 기존 C는 결과에 기여하는가?
@@ -1642,11 +1647,6 @@ Full Attention 16개 층, KV head 4, head dimension 256, BF16일 때 1 token의 
 - Decode가 Memory-bound라면 Prefill보다 **절대 Byte 총량**이 반드시 큰가?
 - W는 SM 하나에 모델 전체를 한 번에 적재하는가?
 - Attention 출력/FFN 출력과 Vocabulary Logits 생성은 어떻게 구분할까?
-
-### 문제 6. Q/K/V 데이터 흐름
-
-- Q와 K를 곱하면 V가 만들어지는가?
-- `P=softmax(QKᵀ/√d_k+M)`의 P와 `V=XW_V`는 각각 무엇인가?
 
 <details>
 <summary>정답과 풀이</summary>
@@ -1689,14 +1689,11 @@ Full Attention 16개 층, KV head 4, head dimension 256, BF16일 때 1 token의 
 4. Shazeer, *Fast Transformer Decoding: One Write-Head is All You Need* (2019): [arXiv:1911.02150](https://arxiv.org/abs/1911.02150).
 5. Ainslie et al., *GQA: Training Generalized Multi-Query Transformer Models from Multi-Head Checkpoints* (2023): [arXiv:2305.13245](https://arxiv.org/abs/2305.13245).
 6. NVIDIA — [CUDA Programming Guide](https://docs.nvidia.com/cuda/cuda-programming-guide/) 및 [Hopper Architecture In-Depth](https://developer.nvidia.com/blog/nvidia-hopper-architecture-in-depth/): SM, Tensor Core, 연산과 메모리 계층.
+7. Hugging Face Transformers — [Qwen3.5 configuration implementation](https://github.com/huggingface/transformers/blob/main/src/transformers/models/qwen3_5/configuration_qwen3_5.py): 설정의 실제 의미와 Layer Type 생성 규칙.
 8. NVIDIA — [cuBLAS GEMM 일반식 αAB+βC](https://docs.nvidia.com/cuda/cublas/index.html): α/β 스칼라와 누적 C의 의미.
 9. NVIDIA — [Floating-Point and FMA](https://docs.nvidia.com/cuda/floating-point/index.html): FMA single-rounding 정의.
-10. Vaswani et al. (2017) — [Attention Is All You Need](https://arxiv.org/abs/1706.03762): sqrt(d_k) scale, Softmax, Value의 가중합.
-11. NVIDIA — [CUDA Programming Guide](https://docs.nvidia.com/cuda/cuda-programming-guide/01-introduction/programming-model.html): GPU Memory, SM, caches/register/shared memory.
-12. NVIDIA — [FlashAttention 튜닝 노트](https://developer.nvidia.com/blog/tuning-flash-attention-for-peak-performance-in-nvidia-cuda-tile/): Online Softmax, fusion과 HBM IO.
-13. vLLM — [Anatomy of a High-Throughput LLM Inference System](https://vllm-project.github.io/2025/09/05/anatomy-of-vllm.html): prefill/decode와 compute/memory 경향.
-14. Hugging Face — [CausalLMOutputWithPast](https://github.com/huggingface/transformers/blob/main/src/transformers/modeling_outputs.py): vocab logits와 KV cache/hidden states 구분.
-
-7. Hugging Face Transformers — [Qwen3.5 configuration implementation](https://github.com/huggingface/transformers/blob/main/src/transformers/models/qwen3_5/configuration_qwen3_5.py): 설정의 실제 의미와 Layer Type 생성 규칙.
-
+10. NVIDIA — [CUDA Programming Guide](https://docs.nvidia.com/cuda/cuda-programming-guide/01-introduction/programming-model.html): GPU Memory, SM, caches/register/shared memory.
+11. NVIDIA — [FlashAttention 튜닝 노트](https://developer.nvidia.com/blog/tuning-flash-attention-for-peak-performance-in-nvidia-cuda-tile/): Online Softmax, fusion과 HBM IO.
+12. vLLM — [Anatomy of a High-Throughput LLM Inference System](https://vllm-project.github.io/2025/09/05/anatomy-of-vllm.html): prefill/decode와 compute/memory 경향.
+13. Hugging Face — [CausalLMOutputWithPast](https://github.com/huggingface/transformers/blob/main/src/transformers/modeling_outputs.py): vocab logits와 KV cache/hidden states 구분.
 **주의:** 외부 자료의 아키텍처 구조는 버전별로 달라질 수 있다. 본 문서의 Qwen 수치는 **2026-11-02에 확인한 공식 config 기반**이며, 실제 서빙 측정 결과를 대체하지 않는다.
