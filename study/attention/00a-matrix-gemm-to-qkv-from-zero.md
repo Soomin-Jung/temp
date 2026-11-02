@@ -317,7 +317,7 @@ uv^\top=
 ```
 
 - `[2,1]×[1,3]=[2,3]`
-- 내적은 **하나의 점수**, 외적은 **하나의 행렬**을 만든다.
+- 내적은 **하나의 점수**, 외적(Outer Product)은 **하나의 행렬**을 만든다. 3차원 벡터의 수직 방향을 구하는 외적(Cross Product)과는 다른 연산이다.
 - 나중에 Gated DeltaNet의 recurrent state를 공부할 때 $k_tv_t^\top$형태의 state 갱신이 왜 행렬인지 이해하는 토대가 된다.
 
 ---
@@ -477,18 +477,99 @@ Y_{2,2}=0(0)+1(1)+1(3)+2(-1)=2
 
 # 6. Self-Attention은 '같은 입력을 세 가지 역할로 변환'하는 것부터 시작
 
+
 ## 6.1 Q/K/V는 어디서 생기나?
+
+**정답: 셋 모두 같은 입력 X에서 각각의 학습된 가중치로 계산한다. Q와 K의 곱으로 V를 만들지 않는다.**
 
 ```math
 Q=XW_Q,\qquad K=XW_K,\qquad V=XW_V
 ```
 
-- **Q, Query:** 지금 위치가 무엇을 찾는지 표현한 벡터.
-- **K, Key:** 각 위치가 어떤 특징으로 조회될 수 있는지 표현.
-- **V, Value:** 조회된 위치가 실제로 제공할 정보의 표현.
-- `W_Q,W_K,W_V`는 **서로 다른 학습된 가중치**다.
-- Self-Attention에서 **같은 sequence X로 Q/K/V를 만든다**는 것이 'self'의 의미다.
-- Self-Attention이라는 이름이 Query/Key/Value가 동일한 숫자를 가진다는 뜻은 **아니다**.
+- **X:** 이 Attention 층에 들어온 token별 hidden state를 행으로 모은 행렬. 첫 층에서는 embedding에서 유래한 표현이고, 깊은 층에서는 앞선 블록을 통과한 표현이다.
+- **W_Q/W_K/W_V:** 모델이 학습하여 보유하는 세 개의 **서로 다른 파라미터 집합**. 추론 때 입력 문장에 따라 새로 학습되는 행렬이 아니다.
+- **Q (Query):** 이 위치가 다른 위치에서 **어떤 특징을 찾을지** 표현.
+- **K (Key):** 이 위치가 조회될 때 **어떤 특징으로 매칭될지** 표현.
+- **V (Value):** 조회 비율이 결정되면 **실제로 전달·혼합할 정보**의 표현.
+
+Self-Attention의 **self**는 Q/K/V가 같은 시퀀스의 X에서 유래한다는 뜻이다. Q, K, V가 같은 숫자라는 뜻은 아니다. Q/K/V는 사람이 붙인 역할 이름이지 자연어 문장으로 번역된 질문·답변·내용 자체가 아니다.
+
+### 6.1.1 X에서 Q/K/V가 갈라지는 과정을 숫자로 확인
+
+두 token이 한 Attention 층에 들어왔다고 가정한다. 행은 token, 열은 feature다. 수치는 **학습 흐름을 보여 주는 가상의 작은 예제**이며 실제 Qwen 파라미터가 아니다.
+
+```math
+X=
+\begin{bmatrix}
+1&1\\
+0&1
+\end{bmatrix}
+\quad [2,2]
+```
+
+서로 다른 세 가중치 행렬을 다음과 같이 **예제로 정한다**.
+
+```math
+W_Q=\begin{bmatrix}1&-1\\0&1\end{bmatrix},
+\quad
+W_K=\begin{bmatrix}1&0\\0&1\end{bmatrix},
+\quad
+W_V=\begin{bmatrix}10&-20\\0&20\end{bmatrix}
+```
+
+**Query 생성:** 입력 X의 첫 행 [1,1]과 W_Q의 각 열을 내적하면 [1×1+1×0, 1×(-1)+1×1]=[1,0]이다. 둘째 행은 [0,1]이 된다.
+
+```math
+Q=XW_Q=
+\begin{bmatrix}1&0\\0&1\end{bmatrix}
+```
+
+**Key 생성:** X에 **다른** 가중치 W_K를 곱한다.
+
+```math
+K=XW_K=
+\begin{bmatrix}1&1\\0&1\end{bmatrix}
+```
+
+**Value 생성:** X에 **또 다른** 가중치 W_V를 곱한다. 첫 token의 Value 첫 성분은 1×10+1×0=10, 둘째 성분은 1×(-20)+1×20=0이다.
+
+```math
+V=XW_V=
+\begin{bmatrix}10&0\\0&20\end{bmatrix}
+```
+
+| 시점 | Q (찾는 특징) | K (매칭 특징) | V (전달할 숫자) |
+|---|---|---|---|
+| Token 1 | [1,0] | [1,1] | [10,0] |
+| Token 2 | [0,1] | [0,1] | [0,20] |
+
+여기까지는 **Projection 세 번**일 뿐이다. 아직 Q–K 비교도, 어떤 Value를 가져올지 결정하는 계산도 일어나지 않았다.
+
+### 6.1.2 흔히 헷갈리는 '생성'과 '조회'를 구분하기
+
+```mermaid
+flowchart TD
+  X["입력 hidden states X"] --> Q["Q = X W_Q"]
+  X --> K["K = X W_K"]
+  X --> V["V = X W_V"]
+  Q --> S["QKᵀ = Attention Score"]
+  K --> S
+  S --> P["scale + causal mask + softmax = P"]
+  P --> O["O = PV, Value의 가중합"]
+  V --> O
+```
+
+| 질문 | 정확한 답 |
+|---|---|
+| Q와 K를 내적하면 V가 나오는가? | **아니오.** QKᵀ의 출력은 토큰 위치끼리의 **점수 행렬 S**다. |
+| 그럼 V는 언제 만들어지는가? | Q/K와 **나란히**, XW_V Projection으로 이미 만들어진다. |
+| Softmax로 생성된 P는 무엇인가? | 각 Query가 **어느 위치의 V를 얼마나 섞을지** 나타내는 가중치다. |
+| V에 무엇을 곱하는가? | **P×V**. 해당 위치의 Value 벡터를 가중합해 O를 만든다. |
+| O는 최종 생성 token인가? | **아니오.** Attention 블록의 중간 출력이다. 이후 output projection 및 후속 블록/레이어 연산을 거친다. |
+
+또한 **QKᵀ를 계산하는 행렬곱**과 **Outer Product(외적)**은 다른 개념이다. QKᵀ의 **각 원소는 Query 한 행과 Key 한 행의 내적**으로 만든다. 행렬곱 자체를 외적 관점으로 전개할 수는 있지만 여기서는 **점수 생성 = 내적 기반 행렬곱**으로 이해하면 된다.
+
+이 예제에서 만들어진 **바로 그 Q/K/V**를 7장에서 그대로 사용해 Score→Mask→Softmax→Value 혼합을 끝까지 계산한다.
 
 ## 6.2 아직 head를 무시한, 한 head의 모양
 
@@ -554,170 +635,151 @@ flowchart LR
 
 ---
 
+
 # 7. Attention 전체를 손으로 계산하기 — Token 2개, Feature 2개
 
-## 7.1 아주 작은 Attention 입력
+## 7.1 6장에서 직접 만든 Q/K/V를 그대로 가져오자
 
-**설명용 가정:** 이미 Projection을 끝낸 다음의 값이 다음과 같다고 하자. 실제 Qwen 가중치나 실제 문장과 관련 없는 연습 데이터다.
+6.1절의 **같은 X를 세 가중치에 곱해 생성한 결과**를 사용한다. 이전 장의 숫자와 다른 행렬을 갑자기 도입하지 않는다. 세 행렬은 **이미 Projection을 마친 값**이다.
 
 ```math
 Q=
 \begin{bmatrix}1&0\\0&1\end{bmatrix},
 \quad
 K=
-\begin{bmatrix}1&0\\0&1\end{bmatrix},
+\begin{bmatrix}1&1\\0&1\end{bmatrix},
 \quad
 V=
 \begin{bmatrix}10&0\\0&20\end{bmatrix}
 ```
 
-모두 shape `[2,2]`이고, `d_k=2`이다.
+각각 shape [2,2]이고, Key 차원 d_k=2다.
 
-## 7.2 첫 번째 곱: $QK^\top$
+- **Q의 첫 행 q₁=[1,0]:** 첫 token이 사용할 Query.
+- **K의 첫 행 k₁=[1,1]:** 첫 token이 제공하는 Key.
+- **V의 첫 행 v₁=[10,0]:** 첫 token이 실제 전달할 Value.
+- **Q의 둘째 행 q₂=[0,1]:** 둘째 token이 첫째/둘째 token의 정보를 조회할 때 쓰는 Query.
+
+## 7.2 첫 번째 곱: QKᵀ — V가 아니라 '점수'를 만든다
+
+Key는 각 token이 행으로 쌓여 있으므로 전치한 뒤 Query와 곱한다.
 
 ```math
-QK^\top=
-\begin{bmatrix}1&0\\0&1\end{bmatrix}
-\begin{bmatrix}1&0\\0&1\end{bmatrix}
-=
-\begin{bmatrix}1&0\\0&1\end{bmatrix}
+K^\top=
+\begin{bmatrix}1&0\\1&1\end{bmatrix}
 ```
 
-확인: $s_{1,1}=1(1)+0(0)=1$, $s_{2,1}=0(1)+1(0)=0$.
+```math
+S=QK^\top=
+\begin{bmatrix}1&0\\0&1\end{bmatrix}
+\begin{bmatrix}1&0\\1&1\end{bmatrix}
+=
+\boxed{\begin{bmatrix}1&0\\1&1\end{bmatrix}}
+```
 
-## 7.3 왜 $\sqrt{d_k}$로 나누나?
+이 숫자를 **칸별 내적**으로 확인해 보자.
 
-`d_k=2`이므로 $\sqrt{2}\approx1.4142$로 점수를 나눈다. 직관적으로 feature 수가 커질 때 내적 점수의 규모가 과도하게 커져 softmax가 지나치게 뾰족해지는 경향을 완화하기 위한 것이다.
+- S₁₁ = q₁·k₁ = 1×1+0×1 = **1**.
+- S₁₂ = q₁·k₂ = 1×0+0×1 = **0**.
+- S₂₁ = q₂·k₁ = 0×1+1×1 = **1**.
+- S₂₂ = q₂·k₂ = 0×0+1×1 = **1**.
+
+S의 행은 **질의하는 Query 위치**, 열은 **조회 대상 Key 위치**를 나타낸다. 아직 V는 계산에 참여하지 않았다. S에 저장된 것은 정보 내용이 아니라 **어떤 위치를 참조할지 판단하는 점수**다.
+
+## 7.3 왜 sqrt(d_k)로 나누나?
+
+d_k=2이므로 sqrt(2)≈1.4142로 나눈다. 차원이 커질 때 dot product 점수의 크기가 과도하게 커져 softmax가 포화되기 쉬운 현상을 완화하려는 scaling이다.
 
 ```math
-\frac{QK^\top}{\sqrt{2}}=
+\frac{S}{\sqrt{2}}\approx
 \begin{bmatrix}
 0.7071&0\\
-0&0.7071
+0.7071&0.7071
 \end{bmatrix}
 ```
 
-## 7.4 Causal Mask를 왜 더하나?
+## 7.4 Causal Mask를 적용하는 이유
 
-Auto-regressive Decoder는 현재 token이 **미래 token을 볼 수 없다**.
-
-두 위치에 대한 mask는:
+Auto-regressive Decoder에서 **첫 token은 미래의 둘째 token을 참조할 수 없고**, 둘째 token은 첫째와 자기 자신을 참조할 수 있다.
 
 ```math
 M=
-\begin{bmatrix}
-0&-\infty\\
-0&0
-\end{bmatrix}
+\begin{bmatrix}0&-\infty\\0&0\end{bmatrix}
 ```
 
-따라서:
-
 ```math
-Z=
+Z=\frac{S}{\sqrt{2}}+M=
 \begin{bmatrix}
 0.7071&-\infty\\
-0&0.7071
+0.7071&0.7071
 \end{bmatrix}
 ```
 
-- 1번 token Query는 **1번 Key**만 본다.
-- 2번 token Query는 **1번과 2번 Key**를 모두 볼 수 있다.
-- Attention의 `M`은 '메모리 크기'가 아니라 **mask 행렬**이다. 문맥에 따라 `M`의 의미를 확인해야 한다.
+Mask의 -∞는 이후 Softmax에서 해당 위치의 가중치가 0이 되도록 하는 수학적 표기다. 구현에서는 masking과 Softmax가 별도 메모리 행렬로 저장되지 않을 수도 있다.
 
-## 7.5 Softmax를 직접 계산하자
+## 7.5 Softmax: 점수를 '섞는 비율'로 만들기
 
-행 별 Softmax의 공식:
+각 Query 행에서 다음을 계산한다.
 
 ```math
-p_i=\frac{\exp(z_i)}{\sum_j\exp(z_j)}
+p_j=\frac{\exp(z_j)}{\sum_r\exp(z_r)}
 ```
 
-첫 번째 행은 $[0.7071,-\infty]$이다.
+- **첫 행** [0.7071, -∞]: 둘째 위치가 차단되어 [1,0].
+- **둘째 행** [0.7071,0.7071]: 두 점수가 동일하므로 각각 1/2. [0.5,0.5].
 
 ```math
-\mathrm{softmax}([0.7071,-\infty])=[1,0]
+P=\mathrm{softmax}(Z)=
+\boxed{\begin{bmatrix}1&0\\0.5&0.5\end{bmatrix}}
 ```
 
-두 번째 행은 `[0,0.7071]`이다.
+P에서 **둘째 행 첫 칸 0.5**의 뜻은 “둘째 token이 첫째 token의 Value에 50%의 가중치를 준다”는 것이다. 첫째/둘째 **토큰 중 하나만 고르는 작업이 아니다**. 여기의 Softmax는 최종 vocabulary token sampling과도 다르다.
+
+## 7.6 두 번째 곱: O=PV — 이미 만들어진 V를 섞기
+
+V는 처음부터 XW_V로 얻은 **동일한 Value 행렬**을 사용한다. **QKᵀ에서 V가 생긴 것이 아니다**.
 
 ```math
-p_{2,1}=
-\frac{e^0}{e^0+e^{0.7071}}
-\approx 0.3302
+O=PV=
+\begin{bmatrix}1&0\\0.5&0.5\end{bmatrix}
+\begin{bmatrix}10&0\\0&20\end{bmatrix}
 ```
 
-```math
-p_{2,2}=
-\frac{e^{0.7071}}{e^0+e^{0.7071}}
-\approx 0.6698
-```
-
-따라서 확률성 가중치 행렬은:
-
-```math
-P\approx
-\begin{bmatrix}
-1&0\\
-0.3302&0.6698
-\end{bmatrix}
-```
-
-**Softmax는 '하나의 token을 고르는 작업'이 아니다.** 여러 위치의 Value를 서로 다른 비율로 섞을 가중치를 만드는 과정이다. 마지막 Vocabulary Sampling과 구분한다.
-
-## 7.6 두 번째 곱: `O=PV`
-
-```math
-O=
-\begin{bmatrix}
-1&0\\
-0.3302&0.6698
-\end{bmatrix}
-\begin{bmatrix}
-10&0\\
-0&20
-\end{bmatrix}
-```
-
-첫 출력 행:
+첫 token의 출력:
 
 ```math
 o_1=1[10,0]+0[0,20]=[10,0]
 ```
 
-둘째 출력 행:
+둘째 token의 출력:
 
 ```math
-o_2\approx
-0.3302[10,0]+0.6698[0,20]
-\approx[3.302,13.396]
+o_2=0.5[10,0]+0.5[0,20]=[5,10]
 ```
 
-결과:
+따라서:
 
 ```math
-\boxed{
-O\approx
-\begin{bmatrix}
-10&0\\
-3.302&13.396
-\end{bmatrix}
-}
+\boxed{O=\begin{bmatrix}10&0\\5&10\end{bmatrix}}
 ```
 
-shape 추적:
+세 번의 행렬곱과 의미를 구별하자.
+
+| 계산 | 입력 | 출력 | 의미 |
+|---|---|---|---|
+| Q/K/V Projection | X×W_Q, X×W_K, X×W_V | Q, K, V | 같은 입력을 역할별 특징으로 변환 |
+| Score | Q[2,2]×Kᵀ[2,2] | S[2,2] | 각 Query–Key 내적 관계 |
+| Weighted Value | P[2,2]×V[2,2] | O[2,2] | 각 Query가 조회한 Value의 가중합 |
 
 ```text
-Q: [2,2]    Kᵀ: [2,2]
-   └─── QKᵀ ────────→ [2,2] Score
-                           ↓ mask, softmax
-                      P: [2,2]
-                      V: [2,2]
-                           ↓ matrix multiply
-                      O: [2,2]
+X [2,2] ──×W_Q──→ Q [2,2] ──┐
+       ├──×W_K──→ K [2,2] ──┴─→ QKᵀ = S [2,2]
+       └──×W_V──→ V [2,2]             ↓ scale/mask/softmax
+                      │             P [2,2]
+                      └───────────→ P×V = O [2,2]
 ```
 
-**이게 'Attention이 과거를 읽는다'의 수학적 실체다.** 한 Query 행이 각 Key와 점수를 계산하고, 그 가중치를 각 Value에 적용해 최종 표현을 만든다.
+**핵심:** Q와 K는 “누구의 정보를 얼마나 참고할까”에 대한 비율 P를 결정한다. V는 “그 비율로 가져올 실제 숫자 정보”다. O는 각 token의 문맥이 반영된 **중간 표현**이며, 마지막 생성 token이나 vocabulary logit 자체는 아니다.
 
 ---
 
@@ -1228,6 +1290,11 @@ Q head 24, KV head 4, head dimension 256이면:
 
 Full Attention 16개 층, KV head 4, head dimension 256, BF16일 때 1 token의 총 raw KV byte는?
 
+### 문제 6. Q/K/V 데이터 흐름
+
+- Q와 K를 곱하면 V가 만들어지는가?
+- `P=softmax(QKᵀ/√d_k+M)`의 P와 `V=XW_V`는 각각 무엇인가?
+
 <details>
 <summary>정답과 풀이</summary>
 
@@ -1236,6 +1303,7 @@ Full Attention 16개 층, KV head 4, head dimension 256, BF16일 때 1 token의 
 3. `[3,8]×[8,5]=[3,5]`.
 4. `24×256=6144` / `4×256=1024` / 6개.
 5. `2(K,V)×16(layer)×4(head)×256(dim)×2(byte)=65536` bytes = 64 KiB.
+6. **아니다.** Q/K를 곱하면 Score S가 나오고, scale/mask/softmax를 거쳐 P가 된다. V는 X에 W_V를 곱해 **별도로** 생성한 Value이고, 마지막에 P×V로 가중합한다.
 
 </details>
 
