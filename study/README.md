@@ -48,6 +48,7 @@
 
 - [Attention Architecture Study Guide](attention/README.md)
   - [수학적 기반과 Transformer Block](attention/00-foundations.md)
+  - [처음부터 계산하는 행렬곱·GEMM·Self-Attention·Qwen3.8 실습](attention/00a-matrix-gemm-to-qkv-from-zero.md)
   - [Full Softmax Attention — MHA, MQA, GQA와 KV Cache](attention/01-full-attention.md)
   - [MLA와 Low-Rank Attention](attention/02-mla-low-rank-attention.md)
   - [Linear/Recurrent Attention — DeltaNet, GDN, KDA](attention/03-linear-recurrent-attention.md)
