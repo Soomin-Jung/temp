@@ -207,6 +207,9 @@ $$
 
 각 $C_{ij}$를 만들려면 대략 $k$번의 곱과 덧셈이 필요하다. Multiply-add를 2 FLOP으로 세는 관례에서 큰 행렬 곱의 연산량은 약 $2mkn$ FLOP이다. 경계의 덧셈 하나 차이는 큰 행렬의 근사에서 생략한다.
 
+
+> **초심자용 연결:** 기존 GEMM/Projection 설명의 α, β, C, FMA의 Fused와 GPU CUDA Core/SFU/ Tensor Core 구분은 [행렬곱 입문 4.1.1–4.1.2절, 6.7절](00a-matrix-gemm-to-qkv-from-zero.md)에서 숫자 예제와 함께 설명한다.
+
 ## 2.2 GEMM과 GPU가 잘하는 일
 
 GEMM은 General Matrix Multiply이며 보통 $C\leftarrow\alpha AB+\beta C$ 형태를 말한다. LLM의 선형층은 대부분 이 행렬 곱에 해당한다. 여러 token을 $X\in\mathbb{R}^{N\times d}$의 행으로 묶고, 학습된 weight $W\in\mathbb{R}^{d\times d_{\mathrm{out}}}$를 곱하면 $Y=XW$가 된다.
@@ -385,6 +388,9 @@ Decode step에서 입력한 새 token은 각 full-attention 층에서 새 Q/K/V�
 “Prefill은 compute-bound, decode는 memory-bound”는 출발점으로 유용하지만 항상 참은 아니다. 매우 긴 prefill의 attention IO나 작은 chunk, 큰 decode batch, 특정 kernel과 GPU 구조가 비중을 바꾼다. CPU scheduling과 GPU collective가 병목일 수도 있다.
 
 Continuous batching은 끝난 sequence 자리를 새 요청으로 채워 빈 slot을 줄인다. Chunked prefill은 긴 prompt 작업을 나눠 다른 decode와 공존시키고 한 번에 처리하는 token과 activation peak를 제어한다. Batch를 키우면 weight reuse가 좋아질 수 있지만 요청별 cache 총량과 latency도 증가한다. [27,28]
+
+
+> **선행 개념:** Projection이 반드시 차원 축소가 아닌 이유(5.4절), **가중합·sqrt(d_k)·exp/Softmax**의 정의(6.4–6.6절), **Decode의 Weight/Cache 읽기와 Arithmetic Intensity**(8.3–8.4절), **FFN 이후 LM Head에서 Logits 생성**(8.5절)을 [기초 교재](00a-matrix-gemm-to-qkv-from-zero.md)에 별도로 확장했다. 이 장의 Q/K/V는 해당 개념 위에서 읽는다.
 
 # 5 Softmax Attention을 계산으로 이해하기
 
