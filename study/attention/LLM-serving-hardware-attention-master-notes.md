@@ -1,12 +1,13 @@
 ---
-
-> **2026-11-03 발표 1회차 범위 개편:** 기존의 종합 마스터 노트는 심화 참고서로 보존하고, 1회차는 **GEMM/FMA/FLOPs → Tensor Core → Attention 및 64층 Dense FFN → KV Cache → Prefill/Decode → TP=1↔TP=N의 FFN/Attention/KV 분할과 All-Reduce → H200 연산·HBM·통신 한계**를 중심으로 진행한다. **GDN의 Recurrent State 수식·분산 실행은 후속 심화 회차**로 분리한다. 시작은 [행렬곱 완전 기초(00a)](00a-matrix-gemm-to-qkv-from-zero.md), [TP·물리비용 초심자 심화(00b)](00b-tp-and-llm-inference-cost-from-first-principles.md), [발표 슬라이드 설계(1회차)](presentation-session-01-hardware-attention-kv-cache.md) 순서를 권장한다.
-
 title: "LLM 서빙과 Attention 메모리 종합 마스터 노트"
 subtitle: "Qwen3.8 27B 밀집 모델로 이해하는 계산 메모리 통신"
 date: "자료 확인 기준 2026년 11월 2일"
 lang: ko-KR
 ---
+
+> **2026-11-03 발표 1회차 범위 개편:** 기존의 종합 마스터 노트는 심화 참고서로 보존하고, 1회차는 **GEMM/FMA/FLOPs → Tensor Core → Attention 및 64층 Dense FFN → KV Cache → Prefill/Decode → TP=1↔TP=N의 FFN/Attention/KV 분할과 All-Reduce → H200 연산·HBM·통신 한계**를 중심으로 진행한다. **GDN의 Recurrent State 수식·분산 실행은 후속 심화 회차**로 분리한다. 시작은 [행렬곱 완전 기초(00a)](00a-matrix-gemm-to-qkv-from-zero.md), [TP·물리비용 초심자 심화(00b)](00b-tp-and-llm-inference-cost-from-first-principles.md), [발표 슬라이드 설계(1회차)](presentation-session-01-hardware-attention-kv-cache.md) 순서를 권장한다.
+
+> **추가: GPU 내부 메모리·Weight/KV Tiling의 실물 크기:** [00c 입문 교재](00c-gpu-memory-weight-kv-tiling-from-zero.md)는 HBM–L2–L1/Shared/Register 구조, BF16 FFN Weight 170 MiB, 32 KiB Weight Tile, KV Cache 10.498 GiB와 64 KiB KV Tile의 관계를 수치로 설명한다. **Weight Tile과 TP Weight Shard는 별개**이고, Tile을 사용해도 Full Decode의 전체 과거 조회 요구는 남는다.
 
 이 교재의 목적은 고객이 “Qwen3.8-27B를 배포해 주세요”라고 요청했을 때, 모델 이름과 GPU 개수 이상의 근거로 답할 수 있게 하는 것이다. 입력 길이와 동시성에 따라 필요한 메모리와 데이터 이동량이 어떻게 달라지는지 계산하고, Attention 설계가 그 비용을 어느 축에서 줄이는지 이해한다.
 
