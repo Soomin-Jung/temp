@@ -1,4 +1,7 @@
 ---
+
+> **2026-11-03 발표 1회차 범위 개편:** 기존의 종합 마스터 노트는 심화 참고서로 보존하고, 1회차는 **GEMM/FMA/FLOPs → Tensor Core → Attention 및 64층 Dense FFN → KV Cache → Prefill/Decode → TP=1↔TP=N의 FFN/Attention/KV 분할과 All-Reduce → H200 연산·HBM·통신 한계**를 중심으로 진행한다. **GDN의 Recurrent State 수식·분산 실행은 후속 심화 회차**로 분리한다. 시작은 [행렬곱 완전 기초(00a)](00a-matrix-gemm-to-qkv-from-zero.md), [TP·물리비용 초심자 심화(00b)](00b-tp-and-llm-inference-cost-from-first-principles.md), [발표 슬라이드 설계(1회차)](presentation-session-01-hardware-attention-kv-cache.md) 순서를 권장한다.
+
 title: "LLM 서빙과 Attention 메모리 종합 마스터 노트"
 subtitle: "Qwen3.8 27B 밀집 모델로 이해하는 계산 메모리 통신"
 date: "자료 확인 기준 2026년 11월 2일"
