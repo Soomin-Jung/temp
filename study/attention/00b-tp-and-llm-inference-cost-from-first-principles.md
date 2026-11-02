@@ -6,6 +6,8 @@
 > 모델 예시: PR #27 원고의 Qwen3.8-27B 텍스트 추론, Full/Gated Attention 16층과 GDN 48층.  
 > 범위 제한: GDN의 recurrent 수식·상태 샤딩/통신 최적화는 후속 심화 과정. 여기서는 **Full Attention과 모든 층의 Dense FFN**을 확실히 이해한다.
 
+> **GPU가 실제로 작은 데이터 조각을 어떻게 처리하는지가 아직 낯설다면:** [00c: HBM·L2·SM·Weight Tile·KV Tiling 실물 크기 계산](00c-gpu-memory-weight-kv-tiling-from-zero.md)을 먼저 읽는다. **Weight Tile은 TP Weight Shard가 아니며**, 한 GPU 안에서도 GEMM은 Tile 단위로 나눠 처리한다.
+
 **핵심 판정:** TP는 단순히 “모델 파라미터를 GPU 수로 나눈다”가 아니다. **레이어 안에서 출력 Feature 또는 입력 Feature, Attention Head를 나누고, 필요한 곳에서 결과를 다시 결합하는 실행 전략**이다. Weight, KV, 활성화, FLOP, 통신량은 **각각 다른 분할 규칙**을 갖는다.
 
 ## 0. 이 문서의 지도
