@@ -31,7 +31,7 @@
 | 순서 | 문서 | 핵심 질문 |
 |---:|---|---|
 | 0 | [00-foundations.md](00-foundations.md) | 수식과 Transformer block을 어떻게 읽는가? |
-| 0a | [행렬곱 완전 기초부터 Qwen3.8 Q/K/V까지](00a-matrix-gemm-to-qkv-from-zero.md) | 원소별 행렬곱 계산, GEMM, Projection, Self-Attention 손계산, MHA/MQA/GQA 및 실제 27B Cache |
+| 0a | [행렬곱 완전 기초부터 Qwen3.8 Q/K/V까지](00a-matrix-gemm-to-qkv-from-zero.md) | 내적·외적, **X에서 Q/K/V를 직접 만드는 손계산**, QKᵀ Score와 PV 가중합, MHA/MQA/GQA 및 실제 27B Cache |
 | 1 | [01-full-attention.md](01-full-attention.md) | MHA/MQA/GQA와 KV cache는 무엇인가? |
 | 2 | [02-mla-low-rank-attention.md](02-mla-low-rank-attention.md) | MLA는 어떻게 token별 KV를 latent로 압축하는가? |
 | 3 | [03-linear-recurrent-attention.md](03-linear-recurrent-attention.md) | Linear Attention에서 DeltaNet/GDN/KDA까지 어떻게 이어지는가? |
