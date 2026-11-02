@@ -205,9 +205,9 @@ Tokenizer는 텍스트를 정수 ID의 열로 만든다. Embedding은 각 ID를 
 
 행렬을 읽기 위한 최소 규칙은 다음과 같다. $A\in\mathbb{R}^{m\times k}$와 $B\in\mathbb{R}^{k\times n}$은 안쪽 차원 $k$가 같으므로 곱할 수 있고 결과는 $m\times n$이다. 전치 $A^\top$는 행과 열을 바꾼다. 내적은 두 벡터를 하나의 점수로 만들고, 외적은 두 벡터로 행렬을 만든다.
 
-$$
+```math
 C_{ij}=\sum_{r=1}^{k}A_{ir}B_{rj},\qquad C\in\mathbb{R}^{m\times n}.
-$$
+```
 
 각 $C_{ij}$를 만들려면 대략 $k$번의 곱과 덧셈이 필요하다. Multiply-add를 2 FLOP으로 세는 관례에서 큰 행렬 곱의 연산량은 약 $2mkn$ FLOP이다. 경계의 덧셈 하나 차이는 큰 행렬의 근사에서 생략한다.
 
@@ -218,9 +218,9 @@ $$
 
 GEMM은 General Matrix Multiply이며 보통 $C\leftarrow\alpha AB+\beta C$ 형태를 말한다. LLM의 선형층은 대부분 이 행렬 곱에 해당한다. 여러 token을 $X\in\mathbb{R}^{N\times d}$의 행으로 묶고, 학습된 weight $W\in\mathbb{R}^{d\times d_{\mathrm{out}}}$를 곱하면 $Y=XW$가 된다.
 
-$$
+```math
 \mathrm{FLOP}_{XW}\simeq 2Ndd_{\mathrm{out}}.
-$$
+```
 
 Prefill은 한 요청에서도 많은 위치를 $N$에 묶을 수 있다. 한 token decode는 동시 요청이 적으면 $N$이 작다. 같은 weight를 읽더라도 큰 $N$에서는 많은 token이 weight tile을 재사용할 수 있어 연산기의 처리량을 활용하기 쉬워진다.
 
@@ -230,9 +230,9 @@ Projection은 hidden representation을 학습된 가중치 행렬로 다른 feat
 
 행 단위 입력 표기로 Q/K/V는 다음과 같다.
 
-$$
+```math
 Q=XW_Q,\qquad K=XW_K,\qquad V=XW_V.
-$$
+```
 
 $W_Q$는 무엇을 찾을지, $W_K$는 어떤 기준으로 매칭할지, $W_V$는 매칭된 위치에서 어떤 정보를 전달할지를 학습한다. 구현에서는 세 선형변환을 한 큰 projection으로 묶어 계산한 뒤 view/split할 수 있다. 이 fusion은 수학적 역할을 합친다는 뜻이 아니라 실행과 메모리 접근을 효율화하는 방법이다.
 
@@ -240,16 +240,16 @@ $W_Q$는 무엇을 찾을지, $W_K$는 어떤 기준으로 매칭할지, $W_V$�
 
 Output projection은 head별 결과를 이어 붙여 residual stream으로 돌려보낸다.
 
-$$
+```math
 Y=\mathrm{Concat}(O_1,\ldots,O_{H_q})W_O.
-$$
+```
 
 밀집형 gated MLP는 예를 들어 다음처럼 쓴다.
 
-$$
+```math
 U=XW_u,\quad G=\mathrm{SiLU}(XW_g),\quad
 \mathrm{MLP}(X)=(U\odot G)W_d.
-$$
+```
 
 $\odot$는 원소별 곱이다. 이 FFN gate와 attention output gate, recurrent state의 forgetting gate는 모두 “gate”라는 단어를 쓰지만 작용 위치와 의미가 다르다. 뒤 장에서는 무엇에 곱하는 gate인지 항상 명시한다.
 
@@ -272,13 +272,13 @@ $X\in\mathbb R^{N\times d}$와 $W\in\mathbb R^{d\times m}$의 곱에서 $N$은 �
 
 곱셈 하나에서 입력과 weight와 출력을 각각 한 번만 HBM에서 읽거나 쓴다는 이상화로, 동일 원소 크기 $b$일 때:
 
-$$
+```math
 F=2Ndm,\qquad D_{\mathrm{ideal}}=b(Nd+dm+Nm).
-$$
+```
 
-$$
+```math
 I_{\mathrm{ideal}}=\frac{2Ndm}{b(Nd+dm+Nm)}.
-$$
+```
 
 $N$이 작고 weight 항 $dm$이 지배하면 $I\simeq2N/b$다. BF16의 $b=2$에서는 약 $N$ FLOP/byte다. Weight를 읽어 같은 batch의 여러 token에 쓸수록 byte당 연산이 늘어난다. 이는 실제 HBM traffic 보장이 아니라 재사용을 설명하는 최소 이동 모형이다. Tile 재로드, cache, layout, activation fusion은 실제 traffic을 바꾼다. [35]
 
@@ -301,10 +301,10 @@ FLOP은 연산 횟수, FLOP/s 또는 FLOPS는 초당 연산 처리량이다. GB�
 
 Roofline 모델은 실제 처리량의 상한을 다음처럼 본다. [25]
 
-$$
+```math
 P\le\min(P_{\mathrm{peak}},\ B_{\mathrm{HBM}}\ I),\qquad
 I=\frac{\mathrm{FLOP}}{\mathrm{HBM\ bytes\ moved}}.
-$$
+```
 
 메모리가 초당 $B_{\mathrm{HBM}}$ byte를 공급하고 byte당 $I$ FLOP을 수행한다면 공급 가능한 연산은 초당 $BI$다. 큰 GEMM에서 tile을 재사용하면 $I$를 높일 수 있다. 반대로 매번 많은 weight/KV를 읽고 조금만 계산하면 연산기가 기다릴 수 있다. 예를 들어 설명용 $P_{\mathrm{peak}}=300$ TFLOP/s, $B=3$ TB/s라면 두 상한이 만나는 강도는 100 FLOP/byte다.
 
@@ -402,11 +402,11 @@ Continuous batching은 끝난 sequence 자리를 새 요청으로 채워 빈 slo
 
 한 head에서 query $q_t\in\mathbb{R}^{d_k}$, 과거 위치의 key $k_i\in\mathbb{R}^{d_k}$와 value $v_i\in\mathbb{R}^{d_v}$를 두자. 이 장의 벡터는 열벡터다. [1]
 
-$$
+```math
 s_{t,i}=\frac{q_t^\top k_i}{\sqrt{d_k}}+m_{t,i},\qquad
 a_{t,i}=\frac{\exp(s_{t,i})}{\sum_{j\le t}\exp(s_{t,j})},
 \qquad o_t=\sum_{i\le t}a_{t,i}v_i.
-$$
+```
 
 $m_{t,i}$는 mask다. Causal 조건에서 미래 위치는 $-\infty$를 더해 softmax 확률을 0으로 만든다. Dot product는 query와 key의 학습된 feature가 얼마나 맞는지 점수화한다. 분모의 $\sqrt{d_k}$는 차원이 커질 때 dot product의 분산과 softmax 포화가 커지는 현상을 완화한다. Query와 key가 독립이고 각 성분 분산이 1이라는 단순 가정이면 내적 분산은 $d_k$, 표준편차는 $\sqrt{d_k}$다.
 
@@ -416,9 +416,9 @@ Softmax는 허용된 위치에 양수 가중치를 부여하고 합을 1로 만�
 
 이미 scale과 mask를 적용한 점수가 $[0,\ln3]$이라 하자. 지수는 $[1,3]$이므로 가중치는 $[1/4,3/4]$다. Value가 $v_1=(4,0)^\top$, $v_2=(0,8)^\top$이면:
 
-$$
+```math
 o=\tfrac14(4,0)^\top+\tfrac34(0,8)^\top=(1,6)^\top.
-$$
+```
 
 Query가 바뀌어 두 점수의 순서가 바뀌면 같은 V를 저장해도 다른 혼합 결과가 나온다. K는 “조회하는 기준”, V는 “전달되는 내용”을 분리한다. 두 역할이 같아야 할 수학적 필요는 없고, 특정 구조에서는 저장 표현을 공유하도록 학습할 수도 있다.
 
@@ -426,9 +426,9 @@ Query가 바뀌어 두 점수의 순서가 바뀌면 같은 V를 저장해도 �
 
 한 sequence, 한 head의 prefill에서 $Q,K\in\mathbb{R}^{T\times d_k}$, $V\in\mathbb{R}^{T\times d_v}$다.
 
-$$
+```math
 O=\mathrm{softmax}\left(\frac{QK^\top}{\sqrt{d_k}}+M\right)V.
-$$
+```
 
 $QK^\top$는 $T\times T$의 위치 간 점수다. 이를 그대로 HBM에 저장하면 길이 제곱에 비례하는 중간 메모리가 생긴다. 하지만 수학적으로 점수가 정의된다는 것과 구현이 전체 행렬을 HBM에 materialize해야 한다는 것은 다르다. FlashAttention은 이 지점의 IO를 개선한다.
 
@@ -438,10 +438,10 @@ Decode는 query 길이가 1이므로 $Q$가 $1\times d_k$, cache $K$는 $T\times
 
 Position 정보가 없다면 Q/K의 매칭만으로 순서를 구분하기 어렵다. RoPE는 query와 key의 일부 또는 전체 채널에 위치별 회전을 적용한다. [26]
 
-$$
+```math
 \widetilde q_t=R_tq_t,\quad \widetilde k_i=R_ik_i,\quad
 \widetilde q_t^\top\widetilde k_i=q_t^\top R_t^\top R_i k_i.
-$$
+```
 
 회전의 조합에 상대 위치 정보가 들어간다. 실제 구현은 positional dimension, base, scaling, partial rotation 등을 config로 정한다. RoPE 차원은 head dimension과 같을 필요가 없다. Qwen3.8-27B full attention은 head dimension 256 중 partial rotary factor 0.25, 즉 64차원을 회전에 사용한다. [13]
 
@@ -449,9 +449,9 @@ $$
 
 Attention output에 입력으로부터 만든 gate를 원소별로 곱하면, 조회한 정보 중 어떤 성분을 residual stream에 전달할지 조절할 수 있다. 설명용 표현은 다음과 같다.
 
-$$
+```math
 \widehat o_t=g(x_t)\odot o_t,\qquad y_t=W_O\widehat o_t.
-$$
+```
 
 Gate의 activation과 적용 위치는 구조별로 다르다. Qwen의 공식 구현은 projection과 output gate 경로를 별도로 다룬다. 이름에 gated가 붙었다고 과거 KV가 fixed state로 대체되는 것은 아니다. **Qwen의 full/Gated Attention 층은 여전히 token별 K/V를 보관**하고, Gated DeltaNet 층은 다른 recurrence를 사용한다. [13,15,30]
 
@@ -485,16 +485,16 @@ KV cache 없이 매번 prefix 전체를 실행하면 같은 이전 위치의 pro
 
 한 위치와 한 층의 K tensor는 $H_{kv}d_h$개 원소다. V도 같다면 둘을 합쳐 $2H_{kv}d_h$개다. Batch와 token과 층을 곱하면:
 
-$$
+```math
 M_{\mathrm{KV}}=B\,T\,L_f\,2H_{kv}d_hb.
-$$
+```
 
 2는 K와 V 때문이다. K와 V 차원 또는 dtype이 다를 때는:
 
-$$
+```math
 M_{\mathrm{KV}}=BT\sum_{\ell\in\mathcal L_f}
 H_{kv,\ell}\left(d_{k,\ell}b_{k,\ell}+d_{v,\ell}b_{v,\ell}\right).
-$$
+```
 
 요청마다 길이가 다르면 $BT$ 대신 $\sum_{s=1}^{B}T_s$를 사용한다. 공유하지 않는 raw tensor 합이라는 가정이다. Prefix sharing은 중복된 물리 block 수를 줄일 수 있으며, logical token 합과 physical allocation은 달라진다. [6,24,33]
 
@@ -502,17 +502,17 @@ $$
 
 새 query 한 head가 $T$개의 key와 점곱하면 약 $2Td_k$ FLOP, value 가중합은 약 $2Td_v$ FLOP이다. $d_k=d_v=d_h$일 때 query head 전체의 attention 본체 근사는:
 
-$$
+```math
 F_{\mathrm{decode,attn}}\simeq4BH_qTd_h.
-$$
+```
 
 Projection, softmax의 exp와 reduction, normalization, gate, output projection은 생략한 근사다. 여기에는 $H_q$가 들어가고 cache에는 $H_{kv}$가 들어간다는 차이가 중요하다. GQA로 KV head를 6배 줄여도 query head 계산이 6배 줄어드는 것은 아니다.
 
 Causal prefill의 유효 pair 수는 head당 $T(T+1)/2$다. 두 matmul의 pair당 약 $4d_h$ FLOP을 곱하면:
 
-$$
+```math
 F_{\mathrm{prefill,attn}}\simeq2BH_qd_hT(T+1).
-$$
+```
 
 실제 kernel의 tile padding과 mask 처리에 따라 실행 FLOP은 달라진다. Full attention을 exact하게 유지하면서 IO를 줄여도 허용된 모든 pair 관계를 처리하는 기본 계산 구조는 남는다.
 
@@ -520,10 +520,10 @@ $$
 
 Weight를 BF16으로 로드하고 KV cache만 FP8로 지정할 수 있다. 일반적으로 Q/K/V projection은 weight, activation, GEMM kernel의 지원 정밀도로 계산되고, 생성된 K/V는 cache에 쓸 때 FP8 저장 형식으로 quantize/cast될 수 있다. 읽을 때는 dequantize해 계산하거나 FP8을 직접 소비하는 지원 kernel 경로를 사용할 수 있다. 연산 정밀도, accumulator 정밀도, activation 정밀도, cache 저장 정밀도는 서로 다른 속성이다. [23,31]
 
-$$
+```math
 x_{\mathrm{stored}}=Q_{\mathrm{FP8}}(x/s),\qquad
 \widehat x\simeq s\,x_{\mathrm{stored}}.
-$$
+```
 
 $s$는 scale이고 위 식은 개념식이다. Per-tensor, per-head, block 또는 token/channel 단위 등 granularity와 static/dynamic scale 정책에 따라 수치 오차와 metadata 비용이 달라진다. FP8의 표현 범위와 mantissa가 BF16과 다르므로 outlier와 긴 문맥의 민감도를 평가해야 한다.
 
@@ -539,11 +539,11 @@ FP8 KV payload는 원소당 약 1 byte라 BF16의 절반이지만 scale, padding
 
 Query head 수는 $H_q$, KV head 수는 $H_{kv}$다. 각 query head $h$가 연결되는 KV head를 $g(h)$로 쓰면:
 
-$$
+```math
 o_{t,h}=\sum_{i\le t}
 \mathrm{softmax}_i\left(
 \frac{q_{t,h}^\top k_{i,g(h)}}{\sqrt{d_h}}\right)v_{i,g(h)}.
-$$
+```
 
 ![MHA GQA MQA의 head 연결](master-notes-figures/heads.svg){width=6.2in}
 
@@ -583,10 +583,10 @@ KV head 공유는 sequence의 token 수를 줄이지 않으므로 full causal pr
 
 Bias를 제외하고 Q/K/V projection parameter 수는 다음과 같다.
 
-$$
+```math
 P_{\mathrm{QKV}}=
 d_{\mathrm{model}}\left(H_qd_k+H_{kv}d_k+H_{kv}d_v\right).
-$$
+```
 
 같은 $H_q$에서 KV head를 줄이면 K/V projection 폭은 줄지만 Q projection 폭은 유지된다. 출력 폭과 $W_O$도 query head의 output dimension을 따른다. 따라서 model 전체 FLOPs와 속도가 cache 절감률만큼 줄어든다고 말할 수 없다.
 
@@ -600,11 +600,11 @@ TP에서 KV head가 rank별로 나뉘면 local head 수로 cache를 계산한다
 
 MLA는 K/V를 head별 원래 폭으로 모두 저장하기보다 공통 저차원 latent로 저장하도록 학습하는 구조다. 아래 식은 MLA의 content 경로를 단순화한 열벡터 표기다. [4]
 
-$$
+```math
 c_i=W_Dh_i,\qquad
 k_{i,h}^{C}=U_{K,h}c_i,\qquad
 v_{i,h}=U_{V,h}c_i,\qquad c_i\in\mathbb R^{r}.
-$$
+```
 
 저장하는 $r$이 전체 expanded KV 폭보다 작으면 token당 byte를 줄일 수 있다. GQA의 $H_{kv}$ 감소와 달리 여러 head가 같은 latent에서 서로 다른 up-projection으로 정보를 읽는다. kv_lora_rank 같은 설정 이름이 있어도 runtime LoRA adapter를 사용한다는 뜻은 아니다.
 
@@ -612,21 +612,21 @@ $$
 
 Query head의 content score를 보면:
 
-$$
+```math
 q_{t,h}^{C\top}k_{i,h}^{C}
 =q_{t,h}^{C\top}U_{K,h}c_i
 =(U_{K,h}^{\top}q_{t,h}^{C})^\top c_i.
-$$
+```
 
 오른쪽 식에서는 $U_K^\top q$를 현재 query에 대해 한 번 계산하고 저장된 latent $c_i$와 점곱할 수 있다. 모든 과거 위치에서 expanded K를 다시 만들고 저장하는 대신 계산의 결합 순서를 바꾼 것이다. 이것이 absorption의 핵심 직관이다.
 
 Value도 다음처럼 재배열한다.
 
-$$
+```math
 \sum_i a_{t,i,h}v_{i,h}
 =\sum_i a_{t,i,h}U_{V,h}c_i
 =U_{V,h}\left(\sum_i a_{t,i,h}c_i\right).
-$$
+```
 
 가중합 후 up-projection할 수 있고 output projection과 결합하는 구현도 가능하다. 그러나 attention weight는 head마다 다를 수 있어 모든 head의 가중합이 하나로 사라지는 것은 아니다. Matrix absorption은 연산 순서를 바꾸는 수학과 이를 실현하는 kernel 양쪽이 필요하다.
 
@@ -634,18 +634,18 @@ $$
 
 Expanded K에 위치마다 $R_i$를 곱하면 score에는 $q^\top R_t^\top R_iU_Kc_i$가 들어간다. 위치 $i$마다 회전이 달라 $U_K$를 모든 위치에 대해 동일한 query 변환으로 쉽게 흡수하기 어렵다. MLA의 decoupled positional 경로는 content score와 작은 positional score를 나눠 다루는 설계다.
 
-$$
+```math
 s_{t,i,h}\propto q_{t,h}^{C\top}k_{i,h}^{C}
 +q_{t,h}^{R\top}k_i^{R}.
-$$
+```
 
 Latent $c_i$와 positional key $k_i^R$를 cache하는 전형적인 경우 token·layer당 byte는 $(r+d_R)b$다. NoPE 등 다른 변형은 이 저장식을 그대로 쓰지 않는다. [4,10]
 
 ## 8.4 Cache 공식과 설명용 수치
 
-$$
+```math
 M_{\mathrm{MLA}}=BTL_{\mathrm{MLA}}(r+d_R)b
-$$
+```
 
 는 동일 dtype을 가정한 대표 형태다. 설명용 $r=512,d_R=64,b=2$면 한 layer당 1,152 byte/token이다. 16개 층이면 18 KiB/token이며 172K에서 약 2.953 GiB다. 이 수치는 **Qwen3.8-27B의 실제 구조가 아니라** latent cache를 설명하는 가정이다. Qwen의 실제 full attention은 4 KV head의 GQA이며 임의로 MLA cache로 바꿀 수 없다.
 
@@ -677,16 +677,16 @@ SWA는 현재 위치 $t$에서 최근 $W$개 위치만 참조한다. Causal 경�
 
 Local 층 $L_s$의 raw KV는 오래된 위치를 실제로 evict한다는 가정에서:
 
-$$
+```math
 M_{\mathrm{SWA}}=B L_s\min(T,W)\,2H_{kv}d_hb.
-$$
+```
 
 Global 층 $L_f$와 동일한 head/dtype으로 섞으면:
 
-$$
+```math
 M=B\,2H_{kv}d_hb
 \left(L_fT+L_s\min(T,W)\right).
-$$
+```
 
 예를 들어 full 4층과 local 12층, $W=4096$인 가상 stack은 긴 context에서 4개 global 층의 cache만 계속 증가한다. 모든 층을 full로 둔 경우보다 작지만 전체 모델이 $O(1)$ cache가 되는 것은 아니다.
 
@@ -696,10 +696,10 @@ SWA는 멀리 떨어진 원본 위치에 직접 접근할 기회를 줄인다. �
 
 Query마다 관련 후보 $k$개를 고르고 본 attention을 계산하는 개념형은:
 
-$$
+```math
 \mathcal I_t=\mathrm{TopK}_{i\le t}\,\mathrm{Index}(q_t,z_i),\qquad
 o_t=\mathrm{Attention}(q_t,K_{\mathcal I_t},V_{\mathcal I_t}).
-$$
+```
 
 $z_i$는 indexer가 쓰는 표현이며 main attention의 K와 같을 필요가 없다. Top-K main attention은 $T$ 대신 $k$개 위치를 읽어 계산을 줄일 수 있지만 indexer score, 후보 data 저장, top-k reduction, gather, 동기화를 추가한다. 전체 후보를 계속 저장하면 cache는 여전히 $O(T)$다. [17,18,32]
 
@@ -717,18 +717,18 @@ CSA는 DeepSeek-V4 문서의 **Compressed Sparse Attention**이다. 여기서는
 
 일반적인 설명용 window 길이를 $m$, stride를 $s$라 두면 닫힌 window 수는:
 
-$$
-N_c(T)=\max\left(0,\ 1+\operatorname{floor}\left(\frac{T-m}{s}\right)\right).
-$$
+```math
+N_c(T)=\max\left(0,\ 1+\left\lfloor\frac{T-m}{s}\right\rfloor\right).
+```
 
 겹치지 않는 $m=s$의 단순 경우 $N_c\simeq T/m$이다. 논문에서 말하는 compression rate와 실제 overlapping window의 길이를 항상 같은 변수로 취급하면 안 된다. 경계와 아직 닫히지 않은 window의 상태도 별도다.
 
 압축과 검색의 개념식은:
 
-$$
+```math
 c_j=\mathrm{Compress}(h_{(j-1)s+1:(j-1)s+m}),\quad
 \mathcal I_t=\mathrm{TopK}_j\,\mathrm{Index}(q_t,c_j).
-$$
+```
 
 오래된 정보는 compressed entry를 통해 읽고, 최근의 정밀한 raw token 정보는 local branch에서 읽는다. 압축 항목을 선택했다고 과거 원본의 full K/V를 무손실로 역변환하는 일반 경로가 생기는 것은 아니다. 특정 구조가 원본 block을 별도로 저장하고 되읽는다면 그 저장과 전송을 따로 계산해야 한다.
 
@@ -740,10 +740,10 @@ HCA는 **Heavily Compressed Attention**이다. 이름을 Hierarchical Attention�
 
 Non-overlap 압축률을 설명용 $m'$라 하면 global entry 수는 약 $T/m'$다. Query는 이 압축 항목 전체에 dense lookup한다. 따라서 dense attention이지만 원래 token 길이 대신 훨씬 짧은 압축 sequence에 대한 attention이다. V4 공개 config의 대표 HCA rate 128은 해당 모델의 설정이지 일반 HCA 전부의 비율이 아니다.
 
-$$
+```math
 F_{\mathrm{HCA,decode}}\propto W+T/m',\qquad
 F_{\mathrm{HCA,prefill}}\propto TW+T^2/m'.
-$$
+```
 
 이는 차원과 head를 고정한 branch-level 단순 근사다. Compressor와 projection, cache IO 및 실제 schedule 비용을 제외한다. 압축률이 높아도 원본의 구분 가능한 세부 정보는 줄 수 있으므로, local branch와 다른 층의 정보 접근이 보완한다.
 
@@ -751,14 +751,14 @@ $$
 
 층 $\ell$에서 compressed entry당 실제 저장 원소를 $E_{c,\ell}$, raw local entry당 원소를 $E_{w,\ell}$라 두면:
 
-$$
+```math
 M_{\mathrm{cache}}\simeq B\sum_\ell
 \left[
 N_{c,\ell}(T)E_{c,\ell}b_{c,\ell}
 +\min(T,W_\ell)E_{w,\ell}b_{w,\ell}
 +M_{\mathrm{index},\ell}(T)+M_{\mathrm{tail},\ell}
 \right].
-$$
+```
 
 여기에 scale와 metadata, alignment를 더한다. K와 V가 별도라면 $E$에 둘을 합산하고, 특정 구조가 K=V 또는 공통 latent를 저장한다면 2를 기계적으로 곱하지 않는다. “128:1 압축이니 모델 전체 KV가 1/128”이라는 결론은 local branch와 indexer와 tail을 빠뜨린다.
 
@@ -792,24 +792,24 @@ Sparse와 compression의 품질 문제도 분리한다. 선택에 실패하면 �
 
 Kernelized linear attention은 $\exp(q^\top k)$ 계열 softmax 유사도를 직접 계산하는 대신, feature map $\phi(q)^\top\phi(k)$ 같은 결합 가능한 형태를 사용한다. 설명을 위해 $\phi(q),\phi(k)\in\mathbb R^{d_\phi}$이고 $v\in\mathbb R^{d_v}$라 하자. [7]
 
-$$
+```math
 o_t=
 \frac{\sum_{i\le t}\phi(q_t)^\top\phi(k_i)v_i}
 {\sum_{i\le t}\phi(q_t)^\top\phi(k_i)}.
-$$
+```
 
 Query와 무관한 과거 합을 먼저 모으면:
 
-$$
+```math
 S_t=\sum_{i\le t}\phi(k_i)v_i^\top,\qquad
 z_t=\sum_{i\le t}\phi(k_i),
-$$
+```
 
-$$
+```math
 S_t=S_{t-1}+\phi(k_t)v_t^\top,\quad
 z_t=z_{t-1}+\phi(k_t),\quad
 o_t=\frac{S_t^\top\phi(q_t)}{z_t^\top\phi(q_t)}.
-$$
+```
 
 여기서 $S_t$의 shape는 $d_\phi\times d_v$이고 $z_t$는 $d_\phi$다. 원본 token을 목록으로 다시 읽지 않아도 과거 합을 state로 보존할 수 있다. 분모의 안정화와 feature map, 정규화 방식은 구조마다 다르며 모든 linear attention이 정확히 이 정규화식을 사용하는 것은 아니다.
 
@@ -833,10 +833,10 @@ Mamba는 selective state-space model 계열이고 DeltaNet은 associative memory
 
 Selective SSM을 단순화한 형태는:
 
-$$
+```math
 h_t=\overline A_t h_{t-1}+\overline B_t x_t,\qquad
 y_t=C_t h_t+D x_t.
-$$
+```
 
 입력에 따라 선택되는 파라미터와 discretization, scan이 핵심이다. 실제 Mamba layer는 projection, short convolution, gate 등을 포함하므로 이 한 줄이 모든 tensor와 kernel을 나타내지는 않는다. Mamba-2는 structured state space duality를 통해 SSM과 attention 계열의 연결 및 효율적인 실행 방법을 제시한다. [11,12]
 
@@ -844,11 +844,11 @@ $$
 
 이 장은 공식 구현과 대조하기 쉽게 **$S_t\in\mathbb R^{d_k\times d_v}$**로 쓴다. $k_t,q_t\in\mathbb R^{d_k}$, $v_t\in\mathbb R^{d_v}$는 열벡터다. State에서 key의 value 예측은 $S_{t-1}^\top k_t$다.
 
-$$
+```math
 \widehat v_t=S_{t-1}^\top k_t,\qquad
 e_t=v_t-\widehat v_t,\qquad
 S_t=S_{t-1}+\beta_t k_t e_t^\top.
-$$
+```
 
 예측한 값과 새 value의 차이만 현재 key 방향에 보정한다. 재구성 손실 $\frac12\|v-S^\top k\|_2^2$의 $S$에 대한 gradient는 $k(S^\top k-v)^\top$이므로 위 update는 학습률 $\beta$인 gradient descent 형태로 유도할 수 있다. [8]
 
@@ -856,10 +856,10 @@ $$
 
 $\|k_t\|_2=1$이면 update 후 같은 key로 읽은 값은:
 
-$$
+```math
 S_t^\top k_t
 =(1-\beta_t)\widehat v_t+\beta_t v_t.
-$$
+```
 
 $\beta=1$이면 그 key 방향의 예측을 새 value로 맞추고, $0<\beta<1$이면 부분 보정한다. 단위 길이가 아니면 $\|k\|^2$가 update 효과에 들어간다. Q/K normalization과 update strength는 안정성에 관계한다. 이 등식이 다른 모든 key의 기억을 보존한다는 뜻은 아니다. 비직교 key들 사이에는 간섭이 남는다.
 
@@ -869,18 +869,18 @@ $\beta=1$이면 그 key 방향의 예측을 새 value로 맞추고, $0<\beta<1$�
 
 먼저 state를 감쇠하고 그 state의 예측 오류를 보정하는 표기로 고정한다.
 
-$$
+```math
 S'_t=\alpha_tS_{t-1},\qquad
 e_t=v_t-S_t'^\top k_t,\qquad
 S_t=S'_t+\beta_t k_te_t^\top.
-$$
+```
 
 동일한 식을 전개하면:
 
-$$
+```math
 S_t=\alpha_t(I-\beta_t k_tk_t^\top)S_{t-1}
 +\beta_t k_tv_t^\top.
-$$
+```
 
 $\alpha$는 전체 memory의 감쇠, $\beta$는 현재 key 방향의 보정 강도다. 예를 들어 이전 스칼라 state 2를 $\alpha=0.8$로 줄이면 1.6이다. 새 value 5에 $\beta=0.5$로 보정하면 3.3이 된다. 감쇠 전 예측 2를 error에 넣으면 다른 식이 되므로, gate와 update의 순서를 말하지 않고 비슷한 식을 섞으면 안 된다. [9,15]
 
@@ -890,11 +890,11 @@ Qwen 계열 구현은 입력으로부터 decay 관련 값과 beta를 만들고, 
 
 KDA는 Kimi Delta Attention이며 Gated DeltaNet보다 세밀한 forgetting을 사용한다. 같은 $d_k\times d_v$ 방향에서 $D_t=\mathrm{Diag}(\alpha_{t,1},\ldots,\alpha_{t,d_k})$라 두면:
 
-$$
+```math
 S'_t=D_tS_{t-1},\qquad
 S_t=(I-\beta_t k_tk_t^\top)D_tS_{t-1}
 +\beta_t k_tv_t^\top.
-$$
+```
 
 Scalar $\alpha I$ 대신 key-feature 축의 대각 decay가 row마다 다른 기억 수명을 부여한다. 예를 들어 2행 state에 $\alpha=(1,0.1)$이면 첫 번째 key-feature 방향은 유지하고 두 번째는 강하게 줄인 뒤 delta correction한다. [10]
 
@@ -906,9 +906,9 @@ KDA는 diagonal-plus-low-rank transition을 효율적인 chunkwise 연산으로 
 
 Causal convolution은 다음 출력을 계산하기 위해 최근 입력을 필요로 한다. Kernel 길이 $k$의 depthwise convolution을 설명용으로 쓰면:
 
-$$
+```math
 \widetilde u_t=\sum_{j=0}^{k-1}w_j\odot u_{t-j}.
-$$
+```
 
 다음 token을 기다릴 때 과거 $k-1$개 $u$를 tail로 보존하면 된다. 새 입력을 붙이고 가장 오래된 것을 버린다. 이 convolution tail은 **최근 입력의 유한 길이 기록**이며, 긴 history의 key-value 관계를 요약한 **recurrent matrix state**와 다른 tensor다.
 
@@ -969,11 +969,11 @@ GDN 경로에서 QK 16개가 V 48개에 맞춰 반복되는 reference 구현은 
 
 BF16/FP16 cache의 raw byte는:
 
-$$
+```math
 \Delta M_{\mathrm{KV}}=
 16\times2\times4\times256\times2
 =65,536\ \mathrm{byte/token}=64\ \mathrm{KiB/token}.
-$$
+```
 
 FP8 cache payload는 원소당 1 byte 가정에서 32 KiB/token이다. 64개 전체 층을 이 식에 넣으면 token-wise KV를 4배 과대평가한다. GDN의 상태는 다음 절에서 별도 계산한다.
 
@@ -990,17 +990,17 @@ FP8 cache payload는 원소당 1 byte 가정에서 32 KiB/token이다. 64개 전
 
 공식 reference 구현은 state shape를 batch, V heads, key head dim, value head dim으로 설명한다. vLLM은 두 마지막 축의 순서가 반대일 수 있지만 원소 수는 동일하다. 이 사례의 한 GDN 층과 한 sequence는 $48\times128\times128$개 원소다. FP32를 가정하면:
 
-$$
+```math
 M_{\mathrm{rec,layer}}
 =48\times128\times128\times4
 =3,145,728\ \mathrm{byte}=3\ \mathrm{MiB}.
-$$
+```
 
 48개 GDN 층 전체는:
 
-$$
+```math
 M_{\mathrm{rec,seq}}=48\times3\ \mathrm{MiB}=144\ \mathrm{MiB}.
-$$
+```
 
 이는 context 길이에 선형으로 늘지 않는 state의 raw 원소 수다. Snapshot을 여러 개 보관하는 prefix 정책, allocator와 state slot 예약, TP 분할, dtype override, kernel padding은 별도다. Config의 FP32와 reference path에 근거한 계산이며 어떤 vLLM 배포에서도 항상 이 exact bytes가 관측된다는 보장은 아니다. [13,15,16]
 
@@ -1008,18 +1008,18 @@ $$
 
 GDN의 conv에 들어가는 packed Q/K/V 채널 수는:
 
-$$
+```math
 C_{\mathrm{conv}}=2H_kd_k+H_vd_v
 =2\times16\times128+48\times128=10,240.
-$$
+```
 
 추가 상태를 두지 않는 vLLM state shape의 기본 tail은 kernel 길이에서 1을 뺀 3 slot이다. Conv state를 BF16으로 둔 설명용 기본값은:
 
-$$
+```math
 M_{\mathrm{conv,seq}}
 =48\times10,240\times3\times2
 =2,949,120\ \mathrm{byte}=2.8125\ \mathrm{MiB}.
-$$
+```
 
 Transformers reference/cache convention에서 kernel 길이 전체인 4 slot을 보관하면 $48\times10,240\times4\times2=3.75$ MiB다. 이 차이는 저장 buffer convention의 예다. 실제 serving 계산에는 사용 중인 engine의 shape와 dtype을 넣는다. [15,16]
 
@@ -1027,12 +1027,12 @@ Transformers reference/cache convention에서 kernel 길이 전체인 4 slot을 
 
 172K 위치의 BF16 full KV와 FP32 recurrent, BF16 3-slot conv를 합친 raw 예시는:
 
-$$
+```math
 M_{\mathrm{request,raw}}
 =10.498046875\ \mathrm{GiB}
 +\frac{144+2.8125}{1024}\ \mathrm{GiB}
 \simeq10.6414\ \mathrm{GiB}.
-$$
+```
 
 KV만 FP8로 바꾸면 약 5.3924 GiB다. 고정 state 항은 그대로 남는다. 따라서 짧은 context에서는 state의 비중이 상대적으로 크고 긴 context에서는 16개 global attention 층의 KV가 주로 증가한다.
 
@@ -1077,14 +1077,14 @@ Naive attention은 점수 행렬, softmax 행렬을 HBM에 크게 저장했다�
 
 현재까지의 최대 점수 $m$, 지수합 $\ell$, value 누적합 $u$를 저장하고, 새로운 점수 tile $\mathcal B$를 읽으면:
 
-$$
+```math
 m'=\max\left(m,\max_{i\in\mathcal B}s_i\right),
-$$
+```
 
-$$
+```math
 \ell'=e^{m-m'}\ell+\sum_{i\in\mathcal B}e^{s_i-m'},\qquad
 u'=e^{m-m'}u+\sum_{i\in\mathcal B}e^{s_i-m'}v_i.
-$$
+```
 
 마지막에 $o=u/\ell$이다. 새로운 최대값 기준으로 이전 누적값을 다시 scale하므로 전체 점수행렬을 저장하지 않고도 softmax 가중합을 계산할 수 있다. Tiling은 on-chip memory의 작은 용량을 재사용에 활용한다.
 
@@ -1124,29 +1124,29 @@ FLOP은 계산의 횟수이고 FLOP/s는 속도다. 이후 수치는 forward inf
 
 기본 SwiGLU FFN의 세 projection은:
 
-$$
+```math
 F_{\mathrm{FFN}}\simeq6Ndm.
-$$
+```
 
 Output gate가 없는 일반 GQA의 Q/K/V/O projection 합은:
 
-$$
+```math
 F_{\mathrm{proj}}\simeq2Nd(2a_q+2a_{kv}).
-$$
+```
 
 두 식은 activation/normalization 등의 부가 연산을 제외한 직접 유도다. MHA에서 $a_q=a_{kv}=d$이면 projection은 $8Nd^2$다. Gate용 projection 폭이 추가되는 구조는 그 행렬을 따로 합산한다. [1,3,35,36]
 
 Decode의 full attention 본체 두 matmul은 한 layer에서:
 
-$$
+```math
 F_{\mathrm{full,decode}}\simeq4BH_qd_hT.
-$$
+```
 
 여기서는 sequence마다 한 query이므로 $N=B$다. Causal prefill 길이 $T$의 유효 pair는 $T(T+1)/2$이므로:
 
-$$
+```math
 F_{\mathrm{full,prefill}}\simeq2BH_qd_hT(T+1).
-$$
+```
 
 Softmax와 mask, tile padding을 제외한 pair 계산 근사다. Chunked prefill이 prefix를 함께 읽는 경우는 해당 query별 허용 key 수의 합을 사용한다. 각 chunk에 전체 prompt의 $T^2$를 반복 적용하지 않는다. [1,5]
 
@@ -1156,24 +1156,24 @@ Softmax와 mask, tile padding을 제외한 pair 계산 근사다. Chunked prefil
 
 한 full 층은 Q와 output gate를 함께 만들기 때문에 q_proj output 폭이 $2a_q=12288$다. K/V는 각각 1024, output projection의 input 폭은 6144다. 따라서:
 
-$$
+```math
 F_{\mathrm{full,proj}}=2d(3a_q+2a_{kv})
 =209715200\ \mathrm{FLOP}.
-$$
+```
 
 한 GDN 층은 packed QKV 폭 10240, output gate $z$ 폭 6144, decay와 beta용 $a,b$ projection 각각 48, output projection input 폭 6144다. 따라서:
 
-$$
+```math
 F_{\mathrm{GDN,proj}}=2d(10240+6144+48+48+6144)
 =231669760\ \mathrm{FLOP}.
-$$
+```
 
 한 층의 dense SwiGLU FFN은:
 
-$$
+```math
 F_{\mathrm{FFN,layer}}=6\times5120\times17408
 =534773760\ \mathrm{FLOP}.
-$$
+```
 
 | 주요 선형 연산 | 층 수 | 층당 token당 GFLOP | 전체 token당 GFLOP |
 |---|---:|---:|---:|
@@ -1209,10 +1209,10 @@ GDN의 convolution과 state update/read, full attention의 QK/AV, 각 normalizat
 
 한 kernel의 compute 성능을 $P_{\mathrm{eff}}$, HBM 실효 bandwidth를 $B_{\mathrm{eff}}$라 하면 단순한 이상화에서:
 
-$$
+```math
 t_{\mathrm{kernel}}\gtrsim
 \max\left(\frac{F}{P_{\mathrm{eff}}},\frac{D_{\mathrm{HBM}}}{B_{\mathrm{eff}}}\right).
-$$
+```
 
 Compute와 memory가 완전히 직렬이라는 가정이 아니므로 두 항을 무조건 더하지 않는다. 이 식은 전체 forward의 모든 kernel과 collective가 완전히 겹친다는 뜻도 아니다. 실제 step의 critical path에는 kernel 사이 dependency, launch와 synchronization, 통신, queue가 추가된다. GPU peak를 넣으면 더 낙관적인 하한일 뿐이다. [25,35]
 
@@ -1244,19 +1244,19 @@ Graph는 launch gap을 줄이지만 KV scan byte나 GEMM의 곱셈 수를 직접
 
 ## 14.2 운영 VRAM 회계식
 
-$$
+```math
 M_{\mathrm{VRAM}}=M_{\mathrm{weight}}+M_{\mathrm{request}}+M_{\mathrm{execution}}+M_{\mathrm{runtime}}.
-$$
+```
 
 요청별 상태와 실행 중 임시 메모리는 각각 다음처럼 나눈다.
 
-$$
+```math
 M_{\mathrm{request}}=M_{\mathrm{KV}}+M_{\mathrm{rec}}+M_{\mathrm{conv}}.
-$$
+```
 
-$$
+```math
 M_{\mathrm{execution}}=M_{\mathrm{activation}}+M_{\mathrm{workspace}}+M_{\mathrm{graph}}.
-$$
+```
 
 마지막 runtime 항에 allocator reserve, cache block rounding, scale와 metadata, communication buffer, fragmentation 등을 포함해 중복 합산하지 않도록 정의한다. GPU memory utilization 설정이 곧 KV에 배정된 비율이라는 뜻은 아니다. KV pool 사용률은 그 pool 안의 사용량이며 node 전체 VRAM 점유율과 다르다. [24]
 
@@ -1266,9 +1266,9 @@ $$
 
 FFN intermediate dimension이 17,408이고 한 중간 tensor가 $N\times17408$ BF16이라면:
 
-$$
+```math
 M_{\mathrm{temp}}=N\times17,408\times2\ \mathrm{byte}.
-$$
+```
 
 $N=32,768$이면 약 1.0625 GiB다. Gate와 up output이 동시에 필요하거나 fusion/reuse가 다르면 peak는 달라진다. 이 값은 특정 단일 tensor의 설명용 크기이며 전체 FFN peak가 아니다. 긴 prompt를 한 번에 크게 처리하면 KV pool에 여유가 있어도 transient activation/workspace 때문에 OOM이 날 수 있다.
 
@@ -1276,11 +1276,11 @@ $N=32,768$이면 약 1.0625 GiB다. Gate와 up output이 동시에 필요하거�
 
 172K의 full KV를 step마다 한 번 읽는다고 가정하면 BF16 raw traffic는 약 11.272 GB다. H200 SXM의 명목 4.8 TB/s를 완벽히 사용한다는 극단적 이상화에서는:
 
-$$
+```math
 t_{\mathrm{KV,ideal}}\ge
 \frac{11.272\ \mathrm{GB}}{4800\ \mathrm{GB/s}}
 \simeq2.35\ \mathrm{ms}.
-$$
+```
 
 별도로 54 GB weight를 완전히 한 번 읽는 가정은 약 11.25 ms다. 실제 ITL은 이 숫자와 같지 않다. TP shard와 cache 재사용, batch의 weight 공유, kernel의 반복 load, 연산 overlap, 다른 요청, recurrent state와 FFN, CPU와 collective가 결과를 바꾼다.
 
@@ -1290,10 +1290,10 @@ $$
 
 Full KV 약 11.272 GB만 전송하고 payload bandwidth를 단방향 50 GB/s로 **가정**하면:
 
-$$
+```math
 t_{\mathrm{transfer,ideal}}=
 \frac{11.272}{50}\simeq0.2254\ \mathrm{s}.
-$$
+```
 
 400 Gb/s line rate를 8로 나누면 50 GB/s지만 실효 payload는 더 작을 수 있다. 25 GB/s면 약 0.451 s, 12.5 GB/s면 약 0.902 s다. Recurrent/conv state, scale와 metadata, protocol, memory registration, GPU/NIC affinity, synchronization과 queueing은 제외했다. 이 계산은 통신량의 감각을 주며 end-to-end TTFT를 예측하지 않는다.
 
@@ -1301,10 +1301,10 @@ $$
 
 상태 예산을 요청당 상태로 나누면 capacity의 상한을 근사할 수 있다.
 
-$$
+```math
 B_{\mathrm{capacity}}\lesssim
 \frac{M_{\mathrm{available,state}}}{M_{\mathrm{request,state}}}.
-$$
+```
 
 이 상한에 가까운 수의 요청을 동시에 올릴 수 있어도 TPOT SLO를 만족한다는 뜻은 아니다. 여러 요청이 각자의 큰 KV를 매 step 읽으면 HBM 경쟁이 커진다. 상태 용량에 따른 admission 한계와 지속 가능한 latency/throughput 한계는 따로 측정한다.
 
@@ -1327,16 +1327,16 @@ $$
 
 Rank 수 $P$, 각 rank가 가진 reduction input tensor 크기 $S$ byte인 단순 ring을 생각하자. Reduce-scatter와 all-gather를 합치면 한 rank가 **보내는** byte는:
 
-$$
+```math
 V_{\mathrm{send}}\simeq 2\frac{P-1}{P}S.
-$$
+```
 
 받는 양도 같으므로 send와 receive를 모두 더한 endpoint traffic은 $4(P-1)S/P$다. Full-duplex 경로의 이상화 시간 모델은:
 
-$$
+```math
 t_{\mathrm{ring}}\simeq2(P-1)\tau
 +2\frac{P-1}{P}\frac{S}{B_{\mathrm{eff}}}.
-$$
+```
 
 $\tau$는 단계당 latency, $B_{\mathrm{eff}}$는 이 모델에서 송신 방향에 정의한 effective bandwidth다. 이 식은 단순 ring의 모델이며 NCCL이 항상 ring만 고른다는 뜻은 아니다. Tree, topology, channel 수와 overlap이 실제값을 바꾼다. [20]
 
@@ -1358,10 +1358,10 @@ NVLink bridge가 없는 PCIe GPU node와 NVSwitch 기반 node는 같은 TP degre
 
 SwiGLU FFN을 intermediate feature 축으로 TP 분할한다고 하자. Rank $r$는 up/gate 행렬의 column 일부와 down 행렬의 대응 row 일부를 가진다. 각 rank에서:
 
-$$
+```math
 u_r=\mathrm{SiLU}(XW_{g,r})\odot(XW_{u,r}),\qquad
 Y_r=u_rW_{d,r}.
-$$
+```
 
 원래 output을 복원하려면 $Y=\sum_rY_r$가 필요하다. 각 rank가 다음 계산을 위해 완전한 output을 가져야 한다면 all-reduce 같은 collective가 등장한다. Sequence-parallel layout 등에서는 reduce-scatter/all-gather로 재배열될 수 있다. “weight를 나눴으니 GPU당 FLOPs만 나누면 된다”는 계산은 이 결합 비용을 빠뜨린다. [20,37]
 
@@ -1371,14 +1371,14 @@ Attention도 query head별 결과와 output projection을 분할하는 방식에
 
 설명용 단순 모형으로, 분할 가능한 작업 시간을 $C$, 분할되지 않는 나머지를 $U$, GPU 수를 $P$, 추가 통신을 $t_{\mathrm{comm}}$라 하자.
 
-$$
+```math
 t_1=C+U,\qquad t_P\simeq C/P+U+t_{\mathrm{comm}}.
-$$
+```
 
-$$
+```math
 t_P<t_1\quad\Longleftrightarrow\quad
 t_{\mathrm{comm}}<C(1-1/P).
-$$
+```
 
 이 식은 이상적인 $C/P$를 가정한 판단 도구다. 실제로는 GPU별 GEMM이 작아져 효율이 떨어지고 workload 불균형, topology와 HBM 경로, overlap이 바뀐다. 그래도 절약하는 작업 시간보다 통신이 커지면 한 요청 latency가 악화될 수 있다는 이유는 드러난다.
 
