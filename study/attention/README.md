@@ -26,12 +26,13 @@
 
 ## 2. 권장 학습 순서
 
-처음부터 순서대로 읽는 것을 권장한다.
+입문 학습은 **00a(행렬 원소 계산) → 00c(GPU Memory·Tiling) → 00b(TP와 통신 비용)** 순서가 가장 자연스럽다. 이후 Attention 문서 01부터 심화한다.
 
 | 순서 | 문서 | 핵심 질문 |
 |---:|---|---|
 | 0 | [00-foundations.md](00-foundations.md) | 수식과 Transformer block을 어떻게 읽는가? |
 | 0a | [행렬곱 완전 기초부터 Qwen3.8 Q/K/V까지](00a-matrix-gemm-to-qkv-from-zero.md) | GEMM α/β/C, FMA, Projection, **Q/K/V 생성·가중합·sqrt(d_k)·exp/Softmax**, CUDA Core/Tensor Core, Prefill/Decode 병목, LM Head/Logits, MHA/MQA/GQA 및 27B Cache |
+| 0c | [GPU HBM→L2→SM 메모리 구조와 Weight·KV Tile 초심자 교재](00c-gpu-memory-weight-kv-tiling-from-zero.md) | 170 MiB FFN Weight를 32 KiB Tile로 계산하는 과정, 실제 GEMM Shape, 172K KV 10.498 GiB의 작은 구간 조회와 Bandwidth 비용 |
 | 0b | [TP=1부터 TP=N까지: FFN·Attention 분할, KV Cache와 통신 Byte 계산](00b-tp-and-llm-inference-cost-from-first-principles.md) | **FMA→2MNK, FFN/GQA FLOPs, TP Feature·Head Sharding, KV 복제와 All-Reduce**, H200 Bound를 수학부터 연결 |
 | 발표 | [1회차 발표 마스터 플로우 — Hardware / Attention / KV Cache](presentation-session-01-hardware-attention-kv-cache.md) | **18슬라이드·74분**: GEMM→Tensor Core→FFN/QKV→KV→Prefill/Decode→TP→하드웨어 한계. Recurrent State는 후속 회차 |
 | 1 | [01-full-attention.md](01-full-attention.md) | MHA/MQA/GQA와 KV cache는 무엇인가? |
