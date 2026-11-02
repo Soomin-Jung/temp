@@ -63,7 +63,7 @@ x=\begin{bmatrix}2&5&-1\end{bmatrix}
 x^\top=\begin{bmatrix}2\\5\\-1\end{bmatrix}
 ```
 
-여기서 `\top`은 **transpose(전치)**로 행과 열을 바꾼다는 뜻이다. 숫자 자체는 변하지 않는다.
+여기서 $\top$은 **transpose(전치)**로 행과 열을 바꾼다는 뜻이다. 숫자 자체는 변하지 않는다.
 
 ## 1.3 Matrix — 행과 열이 있는 숫자 표
 
@@ -77,10 +77,10 @@ A=\begin{bmatrix}
 ```
 
 - **행(row):** 가로줄. 첫 행은 `[1,2,3]`, 둘째 행은 `[4,5,6]`.
-- **열(column):** 세로줄. 첫 열은 `[1,4]^\top`.
-- `A_{2,3}=6`: 2번째 행, 3번째 열에 위치한 값.
-- `[2,3]`은 **2행 3열**이다. `2\times3`이 '두 숫자를 곱하라'는 명령이 아니라 이 문맥에선 **shape 표기**라는 점에 유의한다.
-- 원소의 총개수는 `2\times3=6`개다.
+- **열(column):** 세로줄. 첫 열은 $[1,4]^\top$.
+- $A_{2,3}=6$: 2번째 행, 3번째 열에 위치한 값.
+- `[2,3]`은 **2행 3열**이다. $2\times3$이 '두 숫자를 곱하라'는 명령이 아니라 이 문맥에선 **shape 표기**라는 점에 유의한다.
+- 원소의 총개수는 $2\times3=6$개다.
 
 ```text
            열 1   열 2   열 3
@@ -133,7 +133,7 @@ C=AB\in\mathbb{R}^{M\times N}
              결과는 바깥 M × N
 ```
 
-출력 원소 `C_{i,j}`는 **A의 i번째 행**과 **B의 j번째 열**에서 대응하는 원소를 하나씩 곱해 모두 더한 값이다.
+출력 원소 $C_{i,j}$는 **A의 i번째 행**과 **B의 j번째 열**에서 대응하는 원소를 하나씩 곱해 모두 더한 값이다.
 
 ```math
 C_{i,j}=\sum_{k=1}^{K} A_{i,k}B_{k,j}
@@ -142,7 +142,7 @@ C_{i,j}=\sum_{k=1}^{K} A_{i,k}B_{k,j}
 - `i`: 출력의 **몇 번째 행인가?**
 - `j`: 출력의 **몇 번째 열인가?**
 - `k`: 하나의 출력 값을 만들기 위해 순회하는 **공통 축**.
-- `\sum`: 해당 항들을 모두 더하라는 기호.
+- $\sum$: 해당 항들을 모두 더하라는 기호.
 
 ## 2.2 진짜 숫자로: 2×3 행렬 곱하기 3×2 행렬
 
@@ -166,7 +166,7 @@ B=
 - `A`의 열 3 = `B`의 행 3이므로 곱할 수 있다.
 - 결과 `C=AB`는 **2행 2열**이 된다.
 
-출력의 **왼쪽 위** `C_{1,1}`을 계산해보자.
+출력의 **왼쪽 위** $C_{1,1}$을 계산해보자.
 
 ```text
 A의 첫 번째 행 → [1, 2, 3]
@@ -181,7 +181,7 @@ B의 첫 번째 열 ↓ [7, 9, 11]
 C_{1,1} = 1(7)+2(9)+3(11)=58
 ```
 
-출력의 **오른쪽 위** `C_{1,2}`는 **같은 첫 행**과 **B의 둘째 열**이다.
+출력의 **오른쪽 위** $C_{1,2}$는 **같은 첫 행**과 **B의 둘째 열**이다.
 
 ```math
 C_{1,2}=1(8)+2(10)+3(12)=8+20+36=64
@@ -255,11 +255,11 @@ C_{2,2}=4(8)+5(10)+6(12)=32+50+72=154
 \begin{bmatrix}19&22\\43&50\end{bmatrix}
 ```
 
-기호 `\odot`가 있으면 elementwise를 의도한다. 행렬을 붙여 쓴 `AB`는 보통 행렬곱을 의미한다. 원소별 곱은 FFN의 gate 및 attention output gate를 설명할 때 다시 등장한다.
+기호 $\odot$가 있으면 elementwise를 의도한다. 행렬을 붙여 쓴 `AB`는 보통 행렬곱을 의미한다. 원소별 곱은 FFN의 gate 및 attention output gate를 설명할 때 다시 등장한다.
 
 ## 2.5 순서를 바꾸면 결과도 바뀐다
 
-일반적으로 `AB\ne BA`다. **행렬곱은 교환법칙이 성립하지 않는다**.
+일반적으로 $AB\ne BA$다. **행렬곱은 교환법칙이 성립하지 않는다**.
 
 위 예시의 `A`는 `[2,3]`, `B`는 `[3,2]`이므로:
 
@@ -298,7 +298,7 @@ K^\top=\begin{bmatrix}1&3&5\\2&4&6\end{bmatrix}
 \quad \mathrm{shape}(K^\top)=[2,3]
 ```
 
-`Q=[2,2]`와 `K=[3,2]`는 곧바로 `QK`를 계산할 수 없지만, `QK^\top`는 `[2,2]×[2,3]=[2,3]`이므로 가능하다. **왜 Attention 수식에서 K에 전치가 붙는가**의 첫 번째 답이다.
+`Q=[2,2]`와 `K=[3,2]`는 곧바로 `QK`를 계산할 수 없지만, $QK^\top$는 `[2,2]×[2,3]=[2,3]`이므로 가능하다. **왜 Attention 수식에서 K에 전치가 붙는가**의 첫 번째 답이다.
 
 ## 3.3 외적(Outer Product) = 열 × 행
 
@@ -318,7 +318,7 @@ uv^\top=
 
 - `[2,1]×[1,3]=[2,3]`
 - 내적은 **하나의 점수**, 외적은 **하나의 행렬**을 만든다.
-- 나중에 Gated DeltaNet의 recurrent state를 공부할 때 `k_tv_t^\top`형태의 state 갱신이 왜 행렬인지 이해하는 토대가 된다.
+- 나중에 Gated DeltaNet의 recurrent state를 공부할 때 $k_tv_t^\top$형태의 state 갱신이 왜 행렬인지 이해하는 토대가 된다.
 
 ---
 
@@ -332,7 +332,7 @@ uv^\top=
 C=\alpha AB+\beta C_0
 ```
 
-`\alpha=1`, `\beta=0`이면 `C=AB`, 우리가 방금 손으로 계산한 행렬곱이다. 단순 행렬곱 `Y=XW`도 GEMM 계열 계산으로 볼 수 있다.
+$\alpha=1$, $\beta=0$이면 `C=AB`, 우리가 방금 손으로 계산한 행렬곱이다. 단순 행렬곱 `Y=XW`도 GEMM 계열 계산으로 볼 수 있다.
 
 행렬곱은 출력 칸마다 내적을 반복한다. 이는 많은 곱셈-덧셈을 병렬화하는 데 적합하다.
 
@@ -468,8 +468,8 @@ Y_{2,2}=0(0)+1(1)+1(3)+2(-1)=2
 
 두 방식은 **서로 전치한 동일한 선형변환 설명**이다.
 
-- 이 문서: `x:[1,d_{in}]`, `W:[d_{in},d_{out}]`
-- 열벡터 문서: `x:[d_{in},1]`, `W:[d_{out},d_{in}]`
+- 이 문서: $x:[1,d_{in}]$, $W:[d_{in},d_{out}]$
+- 열벡터 문서: $x:[d_{in},1]$, $W:[d_{out},d_{in}]$
 
 라이브러리의 실제 Weight 저장 배열 shape과 교재의 수학적 행렬 방향도 다를 수 있으니 **수학적 논리 shape과 파라미터 저장 layout을 동일시하지 않는다.**
 
@@ -498,13 +498,13 @@ Q=XW_Q,\qquad K=XW_K,\qquad V=XW_V
 Q:[3,2],\quad K:[3,2],\quad V:[3,2]
 ```
 
-`QK^\top`를 계산하면:
+$QK^\top$를 계산하면:
 
 ```math
 [3,2]\times[2,3]=[3,3]
 ```
 
-이 `3\times3`은 "**3개 Query 위치 각각이 3개 Key 위치에 대해 갖는 점수**"다.
+이 $3\times3$은 "**3개 Query 위치 각각이 3개 Key 위치에 대해 갖는 점수**"다.
 
 ```text
                   Key 위치
@@ -534,9 +534,9 @@ Query  Q1  │s1,1 │s1,2 │s1,3 │
 
 네 단계로 쪼개면:
 
-1. `S=QK^\top`: Query–Key 내적. **행렬곱**.
-2. `Z=S/\sqrt{d_k}+M`: 점수 스케일 및 Mask. **원소별 연산**.
-3. `P=\mathrm{softmax}(Z)`: 각 Query 행을 확률성 가중치로 정규화. **지수·합·나눗셈**, 일반 GEMM과 다름.
+1. $S=QK^\top$: Query–Key 내적. **행렬곱**.
+2. $Z=S/\sqrt{d_k}+M$: 점수 스케일 및 Mask. **원소별 연산**.
+3. $P=\mathrm{softmax}(Z)$: 각 Query 행을 확률성 가중치로 정규화. **지수·합·나눗셈**, 일반 GEMM과 다름.
 4. `O=PV`: Value를 가중합. **행렬곱**.
 
 ```mermaid
@@ -573,7 +573,7 @@ V=
 
 모두 shape `[2,2]`이고, `d_k=2`이다.
 
-## 7.2 첫 번째 곱: `QK^\top`
+## 7.2 첫 번째 곱: $QK^\top$
 
 ```math
 QK^\top=
@@ -583,11 +583,11 @@ QK^\top=
 \begin{bmatrix}1&0\\0&1\end{bmatrix}
 ```
 
-확인: `s_{1,1}=1(1)+0(0)=1`, `s_{2,1}=0(1)+1(0)=0`.
+확인: $s_{1,1}=1(1)+0(0)=1$, $s_{2,1}=0(1)+1(0)=0$.
 
-## 7.3 왜 `\sqrt{d_k}`로 나누나?
+## 7.3 왜 $\sqrt{d_k}$로 나누나?
 
-`d_k=2`이므로 `\sqrt{2}\approx1.4142`로 점수를 나눈다. 직관적으로 feature 수가 커질 때 내적 점수의 규모가 과도하게 커져 softmax가 지나치게 뾰족해지는 경향을 완화하기 위한 것이다.
+`d_k=2`이므로 $\sqrt{2}\approx1.4142$로 점수를 나눈다. 직관적으로 feature 수가 커질 때 내적 점수의 규모가 과도하게 커져 softmax가 지나치게 뾰족해지는 경향을 완화하기 위한 것이다.
 
 ```math
 \frac{QK^\top}{\sqrt{2}}=
@@ -633,7 +633,7 @@ Z=
 p_i=\frac{\exp(z_i)}{\sum_j\exp(z_j)}
 ```
 
-첫 번째 행은 `[0.7071,-\infty]`이다.
+첫 번째 행은 $[0.7071,-\infty]$이다.
 
 ```math
 \mathrm{softmax}([0.7071,-\infty])=[1,0]
@@ -741,9 +741,9 @@ QK^\top:\ [T,d_h][d_h,T]=[T,T]
 PV:\ [T,T][T,d_v]=[T,d_v]
 ```
 
-Query가 여러 개이므로 **큰 MatMul/GEMM 형태**가 될 수 있다. 여러 token의 Projection 역시 `X:[T,d_{model}]`와 `W`의 큰 행렬곱이다.
+Query가 여러 개이므로 **큰 MatMul/GEMM 형태**가 될 수 있다. 여러 token의 Projection 역시 $X:[T,d_{model}]$와 `W`의 큰 행렬곱이다.
 
-**주의:** 수학적으로 `T\times T` score matrix가 존재한다고 해서 이를 실제 HBM에 통째로 만들어야 하는 것은 아니다. FlashAttention 같은 kernel은 타일 단위로 처리한다. 또한 causal mask가 적용된다.
+**주의:** 수학적으로 $T\times T$ score matrix가 존재한다고 해서 이를 실제 HBM에 통째로 만들어야 하는 것은 아니다. FlashAttention 같은 kernel은 타일 단위로 처리한다. 또한 causal mask가 적용된다.
 
 ## 8.2 Decode: 신규 Query 하나로 과거 K/V를 조회
 
@@ -789,7 +789,7 @@ pV_{\mathrm{cache}}:
 
 여러 feature 공간에서 서로 다른 query–key 관계를 계산하도록 `Q/K/V`를 **여러 개의 작은 집합(head)**으로 나눈 것이다. Head 수는 token 수가 아니라 **병렬로 학습된 표현의 묶음 개수**다.
 
-예를 들어 `H_q=4`, `d_h=2`라면 각 token은 논리적으로 Query head 4개, head당 feature 2개를 가진다. Query projection 출력 폭은 `4\times2=8`이다.
+예를 들어 `H_q=4`, `d_h=2`라면 각 token은 논리적으로 Query head 4개, head당 feature 2개를 가진다. Query projection 출력 폭은 $4\times2=8$이다.
 
 Head별 `Q_i`는 서로 다른 값이며, 학습된 기능을 '문법 전담', '검색 전담'처럼 고정적으로 단정할 수는 없다.
 
@@ -861,7 +861,7 @@ g(i)=\left\lfloor\frac{i}{H_q/H_{kv}}\right\rfloor
 
 `T=2` token, `d_h=2`, Query head `4`개라고 하자.
 
-| 메커니즘 | `H_q` | `H_{kv}` | Query shape | K shape | V shape |
+| 메커니즘 | `H_q` | $H_{kv}$ | Query shape | K shape | V shape |
 |---|---:|---:|---|---|---|
 | MHA | 4 | 4 | `[2,4,2]` | `[2,4,2]` | `[2,4,2]` |
 | GQA | 4 | 2 | `[2,4,2]` | `[2,2,2]` | `[2,2,2]` |
@@ -1130,7 +1130,7 @@ H_{key}=16,\quad d_k=128,\quad
 H_{value}=48,\quad d_v=128
 ```
 
-Key head 하나가 대응하는 Value head 묶음은 `48/16=3`개이므로 하나의 key head가 다루는 value feature 폭은 `3\times128=384`다.
+Key head 하나가 대응하는 Value head 묶음은 `48/16=3`개이므로 하나의 key head가 다루는 value feature 폭은 $3\times128=384$다.
 
 ```math
 N_{\mathrm{state\ elements/layer}}
@@ -1160,8 +1160,8 @@ FP32 state의 원소당 4 byte를 적용하면:
 |---|---|---|
 | `Q=XW_Q`, `K=XW_K`, `V=XW_V` | Linear Projection/GEMM | Tensor Core 처리량, weight 읽기 |
 | FFN의 `XW` 3회 | 큰 GEMM + activation/gate | Compute, weight/activation traffic |
-| Prefill `QK^\top` | 여러 token 위치의 MatMul | 연산량, tiling, attention IO |
-| `\mathrm{softmax}` | 지수·정규화·reduction | 특수 연산 및 데이터 접근 |
+| Prefill $QK^\top$ | 여러 token 위치의 MatMul | 연산량, tiling, attention IO |
+| $\mathrm{softmax}$ | 지수·정규화·reduction | 특수 연산 및 데이터 접근 |
 | `PV` | Value weighted sum MatMul | 연산량 및 Value 접근 |
 | Decode 시 cache 조회 | Query 1개와 긴 K/V history | HBM 대역폭·latency |
 | KV Cache 유지 | token별 저장소 | HBM capacity |
@@ -1182,11 +1182,11 @@ FP32 state의 원소당 4 byte를 적용하면:
 | A | Tensor Core MMA: `D=AB+C` | 왜 행렬곱을 가속하는 연산기가 필요한가 |
 | B | `[2,3]×[3,2]=[2,2]` + 숫자 예제 | 행 하나×열 하나→출력 원소 하나 |
 | C | `XW` → Q/K/V 세 분기 | Projection과 학습 가중치 |
-| D | `QK^\top` → Mask/Softmax → `PV` | Query가 과거를 조회하는 실제 수식 |
+| D | $QK^\top$ → Mask/Softmax → `PV` | Query가 과거를 조회하는 실제 수식 |
 | E | MHA / GQA / MQA의 head-to-KV 화살표 | 같은 공식, 다른 Head 공유 |
 | F | Prefill `[T,D]×[D,T]`, Decode `[1,D]×[D,L]` | 실행 shape과 물리적 병목의 연결 |
 | G | Qwen `5120→6144` / `5120→1024` | 공식 config의 숫자 회수 |
-| H | `64\ \mathrm{KiB/token}` / 172K = 10.498 GiB | Cache가 실제 용량 비용으로 이어짐 |
+| H | $64\ \mathrm{KiB/token}$ / 172K = 10.498 GiB | Cache가 실제 용량 비용으로 이어짐 |
 
 발표 슬라이드는 여기 적힌 **수식과 도식만** 넣고, 계산 방법·이유·예외·설명 예제는 이 문서를 발표자 노트로 활용하면 된다.
 
@@ -1210,11 +1210,11 @@ A=\begin{bmatrix}2&1\\0&3\end{bmatrix},
 B=\begin{bmatrix}4&5\\6&7\end{bmatrix}
 ```
 
-`C=AB`일 때 `C_{1,2}`는?
+`C=AB`일 때 $C_{1,2}$는?
 
 ### 문제 3. Attention shape
 
-한 head에서 Query 3 token, Key 5 token, head dimension 8이라면 `QK^\top` shape은? (일반적인 cross-length 연산을 위한 단순 shape 질문이며, causal self-attention에서는 허용 위치에 마스크가 적용됨.)
+한 head에서 Query 3 token, Key 5 token, head dimension 8이라면 $QK^\top$ shape은? (일반적인 cross-length 연산을 위한 단순 shape 질문이며, causal self-attention에서는 허용 위치에 마스크가 적용됨.)
 
 ### 문제 4. GQA
 
@@ -1232,7 +1232,7 @@ Full Attention 16개 층, KV head 4, head dimension 256, BF16일 때 1 token의 
 <summary>정답과 풀이</summary>
 
 1. `[3,2]` / 불가능(5≠3) / `[1,6144]`.
-2. 첫 행과 둘째 열: `2\times5+1\times7=17`.
+2. 첫 행과 둘째 열: $2\times5+1\times7=17$.
 3. `[3,8]×[8,5]=[3,5]`.
 4. `24×256=6144` / `4×256=1024` / 6개.
 5. `2(K,V)×16(layer)×4(head)×256(dim)×2(byte)=65536` bytes = 64 KiB.
@@ -1245,9 +1245,9 @@ Full Attention 16개 층, KV head 4, head dimension 256, BF16일 때 1 token의 
 
 - GQA가 head 축을 줄인다면 MLA는 **무엇을 압축**하는가?
 - GDN은 왜 token-by-token KV를 저장하지 않고도 과거를 활용할 수 있는가?
-- `k_tv_t^\top` 외적이 recurrent state와 연결되는 원리는 무엇인가?
+- $k_tv_t^\top$ 외적이 recurrent state와 연결되는 원리는 무엇인가?
 - 같은 산술 FLOPs여도 왜 작은 Decode Batch에서 Weight를 읽는 시간이 커지는가?
-- FlashAttention은 왜 `QK^\top`의 수학적 형태를 유지하면서 HBM IO를 줄일 수 있는가?
+- FlashAttention은 왜 $QK^\top$의 수학적 형태를 유지하면서 HBM IO를 줄일 수 있는가?
 
 위 질문은 [Full Attention](01-full-attention.md), [Linear/Recurrent Attention](03-linear-recurrent-attention.md), [LLM 서빙 종합 마스터 노트](LLM-serving-hardware-attention-master-notes.md)에 이어진다.
 
