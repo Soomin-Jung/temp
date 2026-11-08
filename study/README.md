@@ -48,6 +48,10 @@
 
 - [Attention Architecture Study Guide](attention/README.md)
   - [수학적 기반과 Transformer Block](attention/00-foundations.md)
+  - [처음부터 계산하는 행렬곱·GEMM·Self-Attention·Qwen3.8 실습](attention/00a-matrix-gemm-to-qkv-from-zero.md)
+  - [HBM·L2·SM, Weight Matrix·Tile, GEMM/KV 데이터 이동 실전 기초](attention/00c-gpu-memory-weight-kv-tiling-from-zero.md)
+  - [FFN·QKV의 TP 분할, KV Head 복제, All-Reduce Byte 및 H200 Bound 심화](attention/00b-tp-and-llm-inference-cost-from-first-principles.md)
+  - [1회차 발표 흐름과 슬라이드별 발표자 설명](attention/presentation-session-01-hardware-attention-kv-cache.md)
   - [Full Softmax Attention — MHA, MQA, GQA와 KV Cache](attention/01-full-attention.md)
   - [MLA와 Low-Rank Attention](attention/02-mla-low-rank-attention.md)
   - [Linear/Recurrent Attention — DeltaNet, GDN, KDA](attention/03-linear-recurrent-attention.md)
