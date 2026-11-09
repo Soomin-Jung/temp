@@ -27,6 +27,7 @@ export LLM_MODEL='pro'
 - Jira가 Basic 인증을 사용하면 `export JIRA_USERNAME='my-user'`를 추가하고 `--jira-auth basic` 옵션을 사용하세요. 이때 `JIRA_TOKEN`에는 해당 환경이 요구하는 암호/토큰을 넣습니다.
 - 사내 API Gateway가 `X-API-Key` 헤더를 요구하면 `--jira-auth x-api-key`를 사용하세요.
 - `LLM_BASE_URL`은 **OpenAI SDK의 base_url**입니다. 보통 URL이 `/v1`로 끝나야 합니다. 코드에서 `/chat/completions`를 자동으로 덧붙입니다.
+- Jira(`requests.Session.verify=False`)와 내부 LLM(`openai.DefaultHttpxClient(verify=False)`) 양쪽 모두 **SSL/TLS 서버 인증서 검증이 비활성화**되어 있습니다. 사설 CA를 설정할 수 없는 내부 시험 환경을 전제로 하며, 서버 인증이 되지 않아 중간자 공격에 취약할 수 있습니다.
 - 원본 토큰을 소스 파일에 하드코딩하거나 결과 디렉터리를 Git에 커밋하지 마세요.
 
 ### 2. 실행
