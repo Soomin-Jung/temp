@@ -231,6 +231,8 @@ class JiraReader:
     def __init__(self, base_url: str, token: str, mode: str, username: str):
         self.base_url = base_url.rstrip("/")
         self.session = requests.Session()
+        # Internal endpoints may use private or self-signed certificates.
+        self.session.verify = False
         self.session.headers.update({"Accept": "application/json"})
         if mode == "bearer":
             self.session.headers["Authorization"] = f"Bearer {token}"
@@ -353,6 +355,7 @@ def llm_client() -> openai.OpenAI:
             base_url=os.environ["LLM_BASE_URL"].rstrip("/"),
             timeout=float(os.getenv("LLM_TIMEOUT", "120")),
             max_retries=0,
+            http_client=openai.DefaultHttpxClient(verify=False),
         )
     return _worker.client
 
