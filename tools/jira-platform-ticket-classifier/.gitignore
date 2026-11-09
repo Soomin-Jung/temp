@@ -1,0 +1,13 @@
+# This tool processes potentially confidential ticket content.
+# Never commit locally extracted issues, credentials, or generated results.
+.env
+.env.*
+__pycache__/
+*.py[cod]
+local-results/
+jira_classification_output/
+*.psv
+*.csv
+*.jsonl
+summary.json
+errors.jsonl
