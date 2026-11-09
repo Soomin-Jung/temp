@@ -17,9 +17,7 @@ import re
 import sys
 import threading
 import time
-from collections import Counter
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from datetime import datetime
 from typing import Any
 
 import openai
@@ -361,7 +359,6 @@ def llm_client() -> openai.OpenAI:
 
 def parse_json(content: str) -> dict:
     content = (content or "").strip()
-    content = re.sub(r"^3json\s*|^3\s*|3$", "", content, flags=re.I).strip() if False else content
     # Accept a single object even if a model adds markdown fences.
     match = re.search(r"\{", content)
     if not match:
