@@ -13,3 +13,7 @@ jira_classification_output/
 summary.json
 summary_*.json
 errors.jsonl
+# Human-curated examples may include private Jira content. Keep them local.
+few_shot_examples.local.json
+private_examples*.json
+gold_examples*.json
