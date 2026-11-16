@@ -1,0 +1,115 @@
+[
+  {
+    "ticket": {
+      "key": "SAMPLE-1",
+      "title": "일부 모델 API 응답 지연",
+      "issue_type": "요청",
+      "status": "완료",
+      "created": "2026-01-01T09:00:00+0900",
+      "comments_incomplete": false,
+      "comments": [],
+      "description": "특정 장문 요청에서 게이트웨이 504 오류가 발생했습니다.\n조사 결과 공통 Router의 요청 제한 시간이 모델 처리 시간보다 짧았습니다.\nRouter timeout 값을 상향하고 장문 요청의 정상 응답을 확인했습니다."
+    },
+    "result": {
+      "decision": "INCLUDE",
+      "category": "INCIDENT",
+      "subcategories": [
+        "ROUTING_API",
+        "ROLLBACK_RECOVERY"
+      ],
+      "server_action": "YES",
+      "summary_3lines": [
+        "장문 요청에서 504 응답 발생",
+        "Router 요청 제한 시간 원인 확인 후 설정 변경",
+        "장문 요청 정상 응답 확인"
+      ],
+      "claims": [
+        "INCIDENT_HANDLING",
+        "E2E_OWNERSHIP"
+      ],
+      "action_taken": "공통 Router의 요청 제한 시간을 조정했다.",
+      "verified_outcome": "장문 요청의 정상 응답을 확인했다.",
+      "autonomy_link": "DIRECT_OPERATION",
+      "evidence_quote": "Router timeout 값을 상향하고 장문 요청의 정상 응답을 확인했습니다.",
+      "evidence_source": "DESCRIPTION",
+      "time_evidence": "",
+      "report_priority": "HIGH",
+      "follow_up": "변경 적용 시각과 영향 범위를 운영 로그로 확인",
+      "evidence": "서버 Router 설정 변경과 검증 결과가 원문에 명시되어 있다.",
+      "confidence": 0.95
+    }
+  },
+  {
+    "ticket": {
+      "key": "SAMPLE-2",
+      "title": "개인 개발 도구 인증 설정 문의",
+      "issue_type": "요청",
+      "status": "완료",
+      "created": "2026-01-01T09:00:00+0900",
+      "comments_incomplete": false,
+      "comments": [],
+      "description": "개발자 개인 PC에서 CLI 인증 오류가 발생해 환경변수 설정 방법을 문의했습니다.\n담당자가 로컬 환경변수 설정 경로를 안내했습니다.\n서버 설정 및 공통 API에는 변경이 없었습니다."
+    },
+    "result": {
+      "decision": "EXCLUDE",
+      "category": "CLIENT_SUPPORT",
+      "subcategories": [
+        "CLIENT_CONFIGURATION",
+        "USER_GUIDANCE"
+      ],
+      "server_action": "NO",
+      "summary_3lines": [
+        "개인 PC CLI 인증 오류 문의",
+        "로컬 환경변수 설정 안내",
+        "서버와 플랫폼의 기술 조치 없음"
+      ],
+      "claims": [],
+      "action_taken": "확인되지 않음",
+      "verified_outcome": "확인되지 않음",
+      "autonomy_link": "NOT_PROVEN",
+      "evidence_quote": "",
+      "evidence_source": "NONE",
+      "time_evidence": "",
+      "report_priority": "LOW",
+      "follow_up": "",
+      "evidence": "로컬 사용 환경 안내만 있고 플랫폼 팀이 수행한 서버 작업이 없다.",
+      "confidence": 0.96
+    }
+  },
+  {
+    "ticket": {
+      "key": "SAMPLE-3",
+      "title": "간헐적 모델 호출 타임아웃",
+      "issue_type": "요청",
+      "status": "완료",
+      "created": "2026-01-01T09:00:00+0900",
+      "comments_incomplete": false,
+      "comments": [],
+      "description": "공통 추론 API를 호출할 때 간헐적으로 timeout이 발생한다는 요청입니다.\n운영팀의 로그 확인이 필요하다는 의견이 등록되었습니다.\n원인 분석 결과나 서버 변경 내역은 기록되지 않았습니다."
+    },
+    "result": {
+      "decision": "REVIEW",
+      "category": "INCIDENT",
+      "subcategories": [
+        "PERFORMANCE"
+      ],
+      "server_action": "UNKNOWN",
+      "summary_3lines": [
+        "공통 추론 API에서 간헐적 타임아웃 신고",
+        "운영 로그 확인 필요 의견만 존재",
+        "기술 조치 및 복구 결과 확인 불가"
+      ],
+      "claims": [],
+      "action_taken": "확인되지 않음",
+      "verified_outcome": "확인되지 않음",
+      "autonomy_link": "NOT_PROVEN",
+      "evidence_quote": "",
+      "evidence_source": "NONE",
+      "time_evidence": "",
+      "report_priority": "LOW",
+      "follow_up": "로그 조사나 실제 변경 내역을 확인",
+      "evidence": "플랫폼 장애 가능성은 있지만 실제 조치 내역이 없다.",
+      "confidence": 0.89
+    }
+  }
+]
