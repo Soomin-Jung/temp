@@ -54,18 +54,56 @@ LLM 분류 | 완료 389/800 | 남음 411 | ETA 00:07:28
 
 **주의:** `--limit 20`은 Jira 데이터를 **전부 수집한 뒤** 앞의 20건만 LLM으로 분류합니다. 전체 수집량 확인, 댓글 처리, API 제한 테스트가 목적일 때 유용합니다.
 
-### 3. 출력 파일 (증빙 중심 v2)
+### 3. 추론 강도와 분류 일관성
 
-기존 분류 파일은 보존하고 새 결과에는 `_evidence-v2` 접미사가 붙습니다.
+기본 모델은 환경변수 `LLM_MODEL`(예: `pro`)을 사용하며, **추론 강도 `max`를 기본 요청**합니다.
+
+```bash
+# 권장: 본격 처리 전 1건으로 내부 서버가 max를 지원하는지 점검
+python classify_jira.py --project DEMO --limit 1 --workers 1 --output ./local-results
+
+# 기본값은 max. 내부 API가 이 필드를 거절할 때만 명시적으로 끄기
+python classify_jira.py --project DEMO --reasoning-effort off --output ./local-results
+
+# 출력 토큰 한도가 추론/답변에 부족한 경우
+python classify_jira.py --project DEMO --max-output-tokens 8192 --output ./local-results
+```
+
+- OpenAI 호환 `/chat/completions`의 요청 본문에 `reasoning_effort: "max"`를 넣습니다. **내부 서버의 모델·API Gateway가 `max`를 실제 해석/적용하는지는 별도 확인이 필요**합니다. 단순히 HTTP 200이 나왔다고 실제 추론 강도가 바뀌었다고 단정할 수 없습니다. 400이면 최초 호출에서 중지하고 `--reasoning-effort off` 등을 안내합니다.
+- `max`에서 **시간 지연과 생성 토큰 수 증가**가 발생할 수 있어 출력 상한 기본값을 4,096으로 조정했습니다. `LLM_TIMEOUT` 기본값은 240초입니다. 일부 서버는 `max_tokens`에 추론 토큰을 포함해 JSON 답변이 잘릴 수 있습니다.
+- 매 티켓의 분류 결과를 다음 요청에 넣는 **최근 3건 동적 주입은 사용하지 않습니다**. 병렬 워커의 종료 순서가 달라지고 오분류가 누적될 위험이 있기 때문입니다.
+- 대신 선택적으로 **사람이 확인한 고정 예시 3건**(포함/제외/검토 각 1건)을 모든 요청 앞에 똑같이 넣을 수 있습니다.
+
+```bash
+# 저장소의 예제는 실제 데이터가 아닌 합성 사례입니다.
+python classify_jira.py --project DEMO --limit 20 --workers 4 \
+  --examples-file ./few_shot_examples.sample.json --output ./local-results
+
+# 실제 운영 시: 사람이 검증한 3건을 내부 파일로 작성. Git에 올리지 마세요.
+python classify_jira.py --project DEMO --workers 10 \
+  --examples-file ./few_shot_examples.local.json --output ./local-results
+```
+
+예시 JSON은 `[{"ticket": {...}, "result": {...}}, ...]` 배열입니다. `ticket`은 분류기에 전달되는 정규화된 Jira 필드(`key`, `title`, `description`, `comments` 등), `result`는 분류 JSON 전체 스키마여야 합니다. 스크립트는 예시 개수(정확히 3개), INCLUDE/EXCLUDE/REVIEW 균형, INCLUDE의 원문 인용 일치 여부를 검증합니다.
+
+**권장:** 이미 오판이 많았던 경계 사례를 세 개만 골라 사람이 정답을 확정하세요. 예를 들어 (1) 사용자 오류였지만 실제 공통 API 서버를 수정해 해결한 **포함**, (2) 개발자 PC·클라이언트 설정만 안내한 **제외**, (3) 플랫폼 장애 의심만 있고 조치 기록이 없는 **검토**입니다. 합성 예시는 형식 시연용이며 정확도 향상을 보장하지 않습니다.
+
+설정별 재현성을 위해 체크포인트에는 분류 스키마, 모델명, 추론 강도, 고정 예시의 SHA-256 축약 지문을 저장합니다. 하나라도 바뀌면 Jira 원본 캐시는 재사용하되 **LLM 분류는 새로 수행**하며, 예전 결과는 남습니다. 같은 설정으로 재실행하면 처리 완료 건을 건너뜁니다.
+
+추론 강도나 예시 도입 전후를 판단하려면 **사람이 정답을 확정한 동일한 약 60~80건**(INCLUDE/EXCLUDE/REVIEW 균형 + 어려운 경계 사례)에 대해 비교하세요. 특히 INCLUDE의 오포함(기술 조치가 없는데 포함), 중요 기술 사례의 누락, 동일 티켓 재실행 시 판정 일치율을 보세요. 전체 포함 건수가 늘었다고 정확도가 높아진 것은 아닙니다.
+
+### 4. 출력 파일 (증빙 중심 v3)
+
+기존 분류 파일은 보존하고 새 결과에는 `_evidence-v3` 접미사가 붙습니다.
 
 | 파일 | 내용 |
 | --- | --- |
-| `all_tickets_evidence-v2.psv` | 전체 티켓(모델 분석 실패 시 검토필요 표시) |
-| `selected_tickets_evidence-v2.psv` | 직접적인 플랫폼 대응 성과 후보 |
-| `high_priority_tickets_evidence-v2.psv` | 원문 증빙·조치·효과가 비교적 명확한 1차 심층검토 후보 |
-| `excluded_tickets_evidence-v2.psv` | 일반 사용자 문의 등 제외 |
-| `review_tickets_evidence-v2.psv` | 실제 수행 여부 또는 근거 확인이 필요한 건 |
-| `summary_evidence-v2.json` | 분류 건수 및 지원 주장별 건수 |
+| `all_tickets_evidence-v3.psv` | 전체 티켓(모델 분석 실패 시 검토필요 표시) |
+| `selected_tickets_evidence-v3.psv` | 직접적인 플랫폼 대응 성과 후보 |
+| `high_priority_tickets_evidence-v3.psv` | 원문 증빙·조치·효과가 비교적 명확한 1차 심층검토 후보 |
+| `excluded_tickets_evidence-v3.psv` | 일반 사용자 문의 등 제외 |
+| `review_tickets_evidence-v3.psv` | 실제 수행 여부 또는 근거 확인이 필요한 건 |
+| `summary_evidence-v3.json` | 분류 건수 및 지원 주장별 건수 |
 | `jira_issues.jsonl` | Jira 원본 검색 캐시(민감 데이터 가능) |
 | `classifications.jsonl` | 이전 버전과 신규 버전을 함께 담는 체크포인트 |
 | `errors.jsonl` | LLM 실패 건. 다음 실행 시 다시 시도 |
@@ -78,7 +116,7 @@ CSV 열:
 티켓번호|생성일|티켓제목|요약1|요약2|요약3|관련성|주요유형|세부항목|지원주장|실제기술조치|확인된운영결과|직접운영권연계|원문근거|근거출처|시간증빙원문|보고우선순위|추가확인사항|판단근거|신뢰도
 ```
 
-### 4. 분류 및 경영진 보고용 주장
+### 5. 분류 및 경영진 보고용 주장
 
 먼저 기술적으로 **INCLUDE / EXCLUDE / REVIEW**를 판단한 다음, INCLUDE에 해당하는 경우에만 아래 중 실제 활동으로 뒷받침되는 주장을 0~3개 연결합니다.
 
@@ -107,7 +145,7 @@ CSV 열:
 **검증 순서 추천:** INCLUDE 30건, EXCLUDE 20건, REVIEW 20건으로 표본 정확도 검토 → 전체 INCLUDE 요약 탐색 → 우선검토 후보 약 20~40건 원문·배포/모니터링 로그 대조 → 경영진용 대표 사례 3~5건 선별. 중요 사례는 시각과 효과를 별도로 검증해야 합니다.
 
 
-### 5. 실행 제어
+### 6. 실행 제어
 
 ```bash
 # 모델 분류 정책을 바꾸었을 때 전체 다시 분류 (Jira 캐시는 재사용)
@@ -127,7 +165,7 @@ Jira는 페이지 단위로 순차 수집하며, 모델 추론만 기본 10개 *
 
 **429 처리:** Jira와 LLM 모두 HTTP 429 수신 시 최소 6초를 기다린 뒤 최대 100회 재시도합니다. LLM 워커는 동일한 쿨다운 상태를 공유해 재시도 폭주를 완화합니다. 일반적인 5xx/네트워크 오류는 짧게 제한하여 재시도합니다. 전체 사용량 제한을 위반하지 않는다는 보장은 없으므로 필요 시 `--workers`를 낮추세요.
 
-**재시작:** Jira 수집 결과는 원자적으로 저장하고, LLM 분류는 티켓 단위로 체크포인트에 즉시 추가합니다. 중단 후 같은 명령을 다시 실행하면 완료된 **v2** 분류는 건너뜁니다. 기존 v1 분류는 보존하지만 새 결과에는 사용하지 않으므로 **처음 v2를 실행하면 전체를 다시 모델로 분석합니다.** `--reclassify`는 기존 체크포인트를 타임스탬프가 포함된 백업 파일로 옮긴 다음 재분류합니다. 단, 신규/수정 티켓을 반영하려면 `--refresh-jira` 후 관련 분류를 `--reclassify`해야 합니다. 단순 새로고침만으로는 이미 분류된 티켓이 자동 재분류되지 않습니다.
+**재시작:** Jira 수집 결과는 원자적으로 저장하고, LLM 분류는 티켓 단위로 체크포인트에 즉시 추가합니다. 중단 후 **같은 모델·추론 강도·예시**로 다시 실행하면 완료된 **v3** 분류는 건너뜁니다. 기존 v1/v2 분류는 보존하지만 새 결과에는 사용하지 않으므로 **처음 v3를 실행하면 전체를 다시 모델로 분석합니다.** `--reclassify`는 기존 체크포인트를 타임스탬프가 포함된 백업 파일로 옮긴 다음 재분류합니다. 단, 신규/수정 티켓을 반영하려면 `--refresh-jira` 후 관련 분류를 `--reclassify`해야 합니다. 단순 새로고침만으로는 이미 분류된 티켓이 자동 재분류되지 않습니다.
 
 ## 주의사항
 
