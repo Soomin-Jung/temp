@@ -7,6 +7,7 @@ No credentials, issue data, or model responses are uploaded to this repository.
 from __future__ import annotations
 
 import argparse
+from collections import deque
 import csv
 import hashlib
 import html
@@ -15,9 +16,11 @@ import json
 import os
 from pathlib import Path
 import re
+import shutil
 import sys
 import threading
 import time
+import unicodedata
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Any
 
@@ -252,12 +255,14 @@ class Cooldown:
     def __init__(self):
         self.lock = threading.Lock()
         self.until = 0.0
-    def wait(self):
+    def wait(self, on_wait=None):
         while True:
             with self.lock:
                 remaining = self.until - time.monotonic()
             if remaining <= 0:
                 return
+            if on_wait is not None:
+                on_wait(remaining)
             time.sleep(min(remaining, 1.0))
     def rate_limited(self, delay: float):
         with self.lock:
@@ -386,6 +391,209 @@ def print_progress(stage: str, done: int, total: int, started: float):
         f"\r{stage} | 완료 {done}/{total} | 남음 {remaining} | ETA {fmt_eta(eta)}",
         end="", flush=True,
     )
+
+
+def terminal_clip(value: str, limit: int) -> str:
+    """Clip a terminal row by display columns, including wide Korean glyphs."""
+    if limit < 1:
+        return ""
+    consumed = 0
+    chars = []
+    for char in value:
+        width = 0 if unicodedata.combining(char) else (
+            2 if unicodedata.east_asian_width(char) in {"F", "W"} else 1
+        )
+        if consumed + width > limit:
+            if chars:
+                chars[-1] = "…"
+            break
+        chars.append(char)
+        consumed += width
+    return "".join(chars)
+
+
+class WorkerDashboard:
+    """Thread-safe snapshots; the renderer is the only writer during LLM work.
+
+    Worker bars are indeterminate activity indicators, not invented request %.
+    The bottom bar counts real completed classification attempts.
+    """
+
+    def __init__(self, workers: int, total: int, cached: int, mode: str = "auto",
+                 log_interval: float = 5.0):
+        self.workers = workers
+        self.total = total
+        self.cached = cached
+        self.pending = total - cached
+        self.lock = threading.Lock()
+        self.main_ident = threading.get_ident()
+        self.thread_slots: dict[int, int] = {}
+        self.slots = [
+            {"key": "", "stage": "대기", "detail": "", "started": 0.0,
+             "done": 0, "failed": 0}
+            for _ in range(workers)
+        ]
+        self.preflight = ""
+        self.processed = 0
+        self.failed = 0
+        self.succeeded = 0
+        self.recent_completions = deque(maxlen=51)
+        self.started = time.monotonic()
+        self.log_interval = log_interval
+        self.stop_event = threading.Event()
+        self.render_thread = None
+        self.rendered_lines = 0
+        self.mode = mode
+        if mode == "auto":
+            terminal_height = shutil.get_terminal_size((120, 25)).lines
+            self.mode = "live" if (
+                sys.stdout.isatty() and terminal_height >= workers + 5
+            ) else "plain"
+
+    def begin(self, key: str):
+        ident = threading.get_ident()
+        with self.lock:
+            if ident not in self.thread_slots:
+                self.thread_slots[ident] = len(self.thread_slots)
+            index = self.thread_slots[ident]
+            if index >= self.workers:
+                raise RuntimeError("Dashboard worker slot count exceeded")
+            row = self.slots[index]
+            row.update(key=key, stage="준비", detail="", started=time.monotonic())
+
+    def status(self, stage: str, detail: str = ""):
+        ident = threading.get_ident()
+        with self.lock:
+            if ident == self.main_ident:
+                self.preflight = f"{stage} {detail}".strip()
+            else:
+                index = self.thread_slots.get(ident)
+                if index is not None:
+                    row = self.slots[index]
+                    row["stage"] = stage
+                    row["detail"] = detail
+
+    def finish(self, success: bool):
+        ident = threading.get_ident()
+        with self.lock:
+            index = self.thread_slots.get(ident)
+            if index is not None:
+                row = self.slots[index]
+                row["stage"] = "완료" if success else "오류"
+                row["detail"] = ""
+                row["done"] += 1
+                row["failed"] += int(not success)
+
+    def complete(self, success: bool):
+        with self.lock:
+            self.processed += 1
+            self.succeeded += int(success)
+            self.failed += int(not success)
+            self.recent_completions.append(time.monotonic())
+
+    def clear_preflight(self):
+        with self.lock:
+            self.preflight = ""
+
+    def start(self):
+        self.render_thread = threading.Thread(
+            target=self._render_loop, name="jira-dashboard", daemon=True
+        )
+        if self.mode == "live":
+            sys.stdout.write("\x1b[?25l")
+            sys.stdout.flush()
+        self.render_thread.start()
+
+    def stop(self):
+        self.stop_event.set()
+        if self.render_thread is not None:
+            self.render_thread.join(timeout=3)
+        self._render()
+        if self.mode == "live":
+            sys.stdout.write("\x1b[?25h")
+            sys.stdout.flush()
+
+    @staticmethod
+    def _activity_bar(row: dict, now: float, width: int = 12) -> str:
+        if row["stage"] in {"대기", "완료", "오류"}:
+            return "[" + "·" * width + "]"
+        position = int(now * 3) % (width - 2)
+        return "[" + " " * position + "███" + " " * (width - position - 3) + "]"
+
+    def _snapshot(self):
+        with self.lock:
+            return (
+                [dict(row) for row in self.slots], self.preflight,
+                self.processed, self.succeeded, self.failed,
+                tuple(self.recent_completions),
+            )
+
+    def _lines(self):
+        rows, preflight, processed, succeeded, failed, timestamps = self._snapshot()
+        now = time.monotonic()
+        active = sum(r["stage"] not in {"대기", "완료", "오류"} for r in rows)
+        header = f"LLM 워커 상태 | 활동 {active}/{self.workers}"
+        if preflight:
+            header += f" | 최초 요청 확인: {preflight}"
+        lines = [header]
+        for index, row in enumerate(rows, 1):
+            bar = self._activity_bar(row, now)
+            elapsed = fmt_eta(now - row["started"]) if row["started"] else "--:--"
+            lines.append(
+                f"W{index:02d} {bar} {row['stage']:<7} "
+                f"{row['key'] or '-':<15.15} {row['detail']:<14.14} "
+                f"경과 {elapsed} | 처리 {row['done']} | 오류 {row['failed']}"
+            )
+        attempted = self.cached + processed
+        fraction = attempted / self.total if self.total else 1.0
+        filled = min(28, int(fraction * 28))
+        overall = "[" + "█" * filled + "░" * (28 - filled) + "]"
+        remaining = max(0, self.pending - processed)
+        eta = "--:--"
+        if remaining == 0:
+            eta = "00:00:00"
+        elif len(timestamps) >= 2:
+            duration = timestamps[-1] - timestamps[0]
+            rate = (len(timestamps) - 1) / duration if duration > 0 else 0
+            if rate:
+                eta = fmt_eta(remaining / rate)
+        lines.append(
+            f"전체 {overall} {attempted}/{self.total} ({fraction * 100:.1f}%) "
+            f"| 신규 성공 {succeeded} | 실패 {failed} "
+            f"| 남음 {remaining} | ETA {eta}"
+        )
+        return lines
+
+    def _render(self):
+        lines = self._lines()
+        if self.mode == "live":
+            columns = max(20, shutil.get_terminal_size((120, 25)).columns - 1)
+            prefix = f"\x1b[{self.rendered_lines}F" if self.rendered_lines else ""
+            text = prefix + "".join(
+                "\x1b[2K" + terminal_clip(line, columns) + "\n" for line in lines
+            )
+            sys.stdout.write(text)
+            sys.stdout.flush()
+            self.rendered_lines = len(lines)
+        else:
+            print("\n".join(lines), flush=True)
+
+    def _render_loop(self):
+        interval = 0.3 if self.mode == "live" else self.log_interval
+        self._render()
+        while not self.stop_event.wait(interval):
+            self._render()
+
+
+def classify_worker(issue: dict, args, dashboard: WorkerDashboard) -> dict:
+    dashboard.begin(issue["key"])
+    try:
+        result = classify(issue, args, dashboard)
+    except BaseException:
+        dashboard.finish(False)
+        raise
+    dashboard.finish(True)
+    return result
 
 
 _worker = threading.local()
@@ -543,12 +751,21 @@ def build_messages(payload: dict, few_shots: list[dict]) -> list[dict]:
     return messages
 
 
-def classify(issue: dict, args) -> dict:
+def classify(issue: dict, args, dashboard: WorkerDashboard | None = None) -> dict:
+    if dashboard:
+        dashboard.status("입력 준비", "Jira 본문 정리")
     payload = issue_payload(issue, args.max_description, args.max_comments, args.comment_chars)
     messages = build_messages(payload, args.few_shots)
     last_error = None
     for attempt in range(101):
-        _llm_cooldown.wait()
+        _llm_cooldown.wait(
+            on_wait=(
+                (lambda seconds: dashboard.status("429 대기", f"{seconds:.0f}초 남음"))
+                if dashboard else None
+            )
+        )
+        if dashboard:
+            dashboard.status("LLM 요청", f"시도 {attempt + 1}")
         try:
             request_options = {
                 "model": args.model,
@@ -561,6 +778,8 @@ def classify(issue: dict, args) -> dict:
             if args.reasoning_effort != "off":
                 request_options["extra_body"] = {"reasoning_effort": args.reasoning_effort}
             reply = llm_client().chat.completions.create(**request_options)
+            if dashboard:
+                dashboard.status("응답 검증", "JSON·원문 대조")
             result = validate(parse_json(reply.choices[0].message.content or ""), payload)
             # Missing comments means the claim may be based on incomplete evidence.
             if payload["comments_incomplete"] and result["decision"] == "INCLUDE":
@@ -585,20 +804,28 @@ def classify(issue: dict, args) -> dict:
                 except (ValueError, TypeError):
                     delay = 6.0
                 _llm_cooldown.rate_limited(delay)
+                if dashboard:
+                    dashboard.status("429 대기", f"재시도 {attempt + 1}회")
                 continue
             if e.status_code in {500, 502, 503, 504} and attempt < 5:
+                if dashboard:
+                    dashboard.status("서버 재시도", f"HTTP {e.status_code}")
                 time.sleep(min(2 ** attempt, 20))
                 continue
             break
         except (openai.APIConnectionError, openai.APITimeoutError) as e:
             last_error = type(e).__name__
             if attempt < 5:
+                if dashboard:
+                    dashboard.status("통신 재시도", type(e).__name__)
                 time.sleep(min(2 ** attempt, 20))
                 continue
             break
         except (ValueError, IndexError, AttributeError) as e:
             last_error = f"invalid model JSON: {e}"
             if attempt < 2:
+                if dashboard:
+                    dashboard.status("JSON 재요청", f"시도 {attempt + 2}")
                 messages.append({
                     "role": "user",
                     "content": "이전 답변이 JSON 스키마를 위반했습니다. 요구된 필드만 포함한 유효한 JSON 객체를 반환하세요.",
@@ -756,38 +983,53 @@ def run(args):
         f"| 기존 분류={len(issues)-len(pending)} | 남음={len(pending)}"
     )
     errors = []
-    start = time.monotonic()
-    with classified_file.open("a", encoding="utf-8") as checkpoint:
-        # Check one real request before launching ten concurrent workers. If the
-        # internal endpoint rejects reasoning_effort, avoid 800 identical failures.
-        worker_issues = pending
-        if pending:
-            first_issue = pending[0]
-            try:
-                result = classify(first_issue, args)
-                results[first_issue["key"]] = result
-                append_jsonl(checkpoint, result)
-            except RuntimeError as e:
-                if "LLM HTTP 400" in str(e):
-                    raise RuntimeError(f"첫 LLM 호출 실패: {e}") from e
-                errors.append({"key": first_issue["key"], "error": str(e)})
-            except Exception as e:
-                errors.append({"key": first_issue["key"], "error": str(e)})
-            print_progress("LLM 분류", 1, len(pending), start)
-            worker_issues = pending[1:]
-        with ThreadPoolExecutor(max_workers=args.workers) as pool:
-            futures = {pool.submit(classify, issue, args): issue["key"] for issue in worker_issues}
-            for count, future in enumerate(as_completed(futures), 2):
-                key = futures[future]
+    dashboard = WorkerDashboard(
+        args.workers, len(issues), len(issues) - len(pending),
+        mode=args.progress, log_interval=args.progress_log_interval,
+    )
+    dashboard.start()
+    try:
+        with classified_file.open("a", encoding="utf-8") as checkpoint:
+            # One real request before parallel processing catches a rejected
+            # reasoning_effort parameter without triggering 800 HTTP 400s.
+            worker_issues = pending
+            if pending:
+                first_issue = pending[0]
+                first_success = False
                 try:
-                    result = future.result()
-                    results[key] = result
+                    result = classify(first_issue, args, dashboard)
+                    results[first_issue["key"]] = result
                     append_jsonl(checkpoint, result)
+                    first_success = True
+                except RuntimeError as e:
+                    if "LLM HTTP 400" in str(e):
+                        raise RuntimeError(f"첫 LLM 호출 실패: {e}") from e
+                    errors.append({"key": first_issue["key"], "error": str(e)})
                 except Exception as e:
-                    errors.append({"key": key, "error": str(e)})
-                print_progress("LLM 분류", count, len(pending), start)
-    if pending:
-        print()
+                    errors.append({"key": first_issue["key"], "error": str(e)})
+                finally:
+                    dashboard.complete(first_success)
+                    dashboard.clear_preflight()
+                worker_issues = pending[1:]
+            with ThreadPoolExecutor(max_workers=args.workers) as pool:
+                futures = {
+                    pool.submit(classify_worker, issue, args, dashboard): issue["key"]
+                    for issue in worker_issues
+                }
+                for future in as_completed(futures):
+                    key = futures[future]
+                    success = False
+                    try:
+                        result = future.result()
+                        results[key] = result
+                        append_jsonl(checkpoint, result)
+                        success = True
+                    except Exception as e:
+                        errors.append({"key": key, "error": str(e)})
+                    finally:
+                        dashboard.complete(success)
+    finally:
+        dashboard.stop()
     if errors:
         with (output / "errors.jsonl").open("w", encoding="utf-8") as f:
             for item in errors:
@@ -807,6 +1049,14 @@ def main():
     parser.add_argument("--output", default="./jira_classification_output")
     parser.add_argument("--model", default=os.getenv("LLM_MODEL", "pro"))
     parser.add_argument("--workers", type=int, default=10)
+    parser.add_argument(
+        "--progress", choices=["auto", "live", "plain"], default="auto",
+        help="Live worker dashboard in a TTY; periodic plain logs otherwise",
+    )
+    parser.add_argument(
+        "--progress-log-interval", type=float, default=5.0,
+        help="Seconds between plain-text progress snapshots",
+    )
     parser.add_argument("--jira-auth", choices=["bearer", "basic", "x-api-key"], default="bearer")
     parser.add_argument("--page-size", type=int, default=50)
     parser.add_argument("--max-description", type=int, default=9000)
@@ -834,6 +1084,8 @@ def main():
         parser.error("max-comments >= 2; text limits >= 100")
     if args.max_output_tokens < 256:
         parser.error("max-output-tokens >= 256")
+    if args.progress_log_interval < 1.0:
+        parser.error("progress-log-interval must be >= 1.0 second")
     try:
         args.few_shots, args.examples_fingerprint = load_few_shots(args.examples_file)
         run(args)
