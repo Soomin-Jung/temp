@@ -9,5 +9,7 @@ jira_classification_output/
 *.psv
 *.csv
 *.jsonl
+*.jsonl.*
 summary.json
+summary_*.json
 errors.jsonl
