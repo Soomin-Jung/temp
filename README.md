@@ -15,6 +15,7 @@
 - `moc/` : MOC control-plane 설계와 capability
 - `weekly-report/` : vLLM/모델/serving 생태계 주간 변화 추적
 - `tools/` : 저장소 검증·자동화 도구와 독립 실행 도구 패키지
+  - [Dify CE Console OIDC integration (1.17.1)](tools/dify-ce-oidc/README.md)
 
 세부 ownership과 문서 수명주기는 [Repository Structure and Document Lifecycle](docs/conventions/repository-structure.md)을 따른다.
 
